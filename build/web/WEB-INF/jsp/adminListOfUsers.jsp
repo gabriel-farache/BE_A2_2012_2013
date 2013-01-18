@@ -1,5 +1,5 @@
 <%-- 
-    Document   : ListOfUsers
+    Document   : adminListOfUsers
     Created on : 13 janv. 2013, 19:52:58
     Author     : Fangli
 --%>
