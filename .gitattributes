@@ -1,2 +1,5 @@
 # Disable LF normalization for all files
 * -text
+dist/
+* -png
+* -xml
