@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:element name="items">
+		<xs:complexType>
+			<xs:all>
+				<xs:element ref="messages" minOccurs="0"/>
+				<xs:element ref="tasks" minOccurs="0"/>
+			</xs:all>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="messages">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="message" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="message">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="title"/>
+				<xs:element ref="sender"/>
+				<xs:element ref="recipients"/>
+				<xs:element ref="creationDate"/>
+				<xs:element ref="content"/>
+				<xs:element ref="attachments" minOccurs="0"/>
+			</xs:sequence>
+			<xs:attribute name="id" type="xs:integer" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="tasks">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="task" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="task">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="title"/>
+				<xs:element ref="sender"/>
+				<xs:element ref="recipients"/>
+				<xs:element ref="creationDate"/>
+				<xs:element ref="dueDate"/>
+				<xs:element ref="budget"/>
+				<xs:element ref="consumed"/>
+				<xs:element ref="RAE"/>
+				<xs:element ref="content"/>
+				<xs:element ref="attachments" minOccurs="0"/>
+			</xs:sequence>
+			<xs:attribute name="id" type="xs:integer" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="title" type="xs:string"/>
+	<xs:element name="sender" type="xs:string"/>
+	<xs:element name="recipients">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="recipient" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="recipient">
+		<xs:complexType>
+			<xs:attribute name="type" type="xs:string" use="required"/>
+			<xs:attribute name="id" type="xs:string"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="creationDate">
+		<xs:simpleType>
+			<xs:restriction base="xs:string">
+				<xs:pattern value="\d{2}/\d{2}/\d{4} \d{2}:\d{2}"/>
+			</xs:restriction>
+		</xs:simpleType>
+	</xs:element>
+	<xs:element name="dueDate">
+		<xs:simpleType>
+			<xs:restriction base="xs:string">
+				<xs:pattern value="\d{2}/\d{2}/\d{4} \d{2}:\d{2}"/>
+			</xs:restriction>
+		</xs:simpleType>
+	</xs:element>
+	<xs:element name="content" type="xs:string"/>
+	<xs:element name="budget" type="xs:float"/>
+	<xs:element name="consumed" type="xs:float"/>
+	<xs:element name="RAE" type="xs:float"/>
+	<xs:element name="attachments">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="attachment" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="attachment">
+		<xs:complexType>
+			<xs:simpleContent>
+				<xs:extension base="xs:string">
+					<xs:attribute name="name" type="xs:string" use="required"/>
+				</xs:extension>
+			</xs:simpleContent>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>
