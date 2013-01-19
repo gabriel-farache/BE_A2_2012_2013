@@ -616,6 +616,8 @@ public class Db_Request_Model {
      * @param token The token of the session
      */
     public void disconnectUser(String token) {
-        Db_Request_Model.tokenID.remove(token);
+        if (token != null) {
+            Db_Request_Model.tokenID.remove(token);
+        }
     }
 }

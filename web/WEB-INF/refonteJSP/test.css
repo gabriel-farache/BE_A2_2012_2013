@@ -1,0 +1,198 @@
+body, html {
+    margin: 0 ;
+    padding: 0 ;
+    font-family: "arial" ;
+    height: 100% ;
+}
+
+#header-banner {
+    width:auto;
+    height:170px;
+    background: url(images/header.png) center 0px no-repeat;
+
+}
+
+div#wrapper {
+    min-height: 100% ;
+    position: relative ;
+}
+
+/* MENU DU HAUT */
+
+
+
+nav#main_nav {
+    border: 1px solid #333;
+    border-top-color: #707070;
+    background: -webkit-linear-gradient(bottom , #666666 0pt, #5E5E5E 50%, #707070 51%, #808080 100%) 0 0 transparent;
+    text-align: center;
+    height: 40px;
+
+}
+nav#main_nav ul {
+    list-style-type: none ;
+    margin: 0 ;
+    padding: 0 ;
+}
+
+nav#main_nav > ul {
+    position: absolute ;
+    padding-left: 100px ;
+    
+    width: 94% ;
+}
+
+nav#main_nav li a {
+    font-weight: bold ;
+    display: table-cell ;
+    vertical-align: middle ;
+    text-align: center ;
+    text-decoration: none ;
+    text-transform: uppercase ;
+    
+    width: 120px ;
+    height: 40px ;
+    font-size: 1em;
+
+}
+
+nav#main_nav > ul > li > a {
+    -webkit-transition: all 0.2s ease-in ;
+    text-decoration: none;
+    color: white;
+    border-left: 1px solid #555;
+    border-right: 1px solid #555;
+    text-shadow: -1px -1px 0 #444;
+    font-family: Helvetica, Arial, Verdana, sans-serif;
+} 
+
+nav#main_nav > ul > li:hover > a {
+    background: -webkit-linear-gradient(bottom , #444444 0pt, #3E3E3E 50%, #505050 51%, #606060 100%) repeat scroll 0 0 transparent;
+    text-shadow: -1px -1px 0 #000;
+} 
+
+nav#main_nav > ul > li {
+    margin-right: 4px ;
+    float: left ;
+}
+
+nav#main_nav ul li ul {
+    position: absolute ;
+    float: left ;
+}
+
+nav#main_nav ul li ul {
+    visibility: hidden ;
+    opacity: 0 ;
+    -webkit-transition: all 0.2s ease-in ;
+}
+
+nav#main_nav ul li:hover ul {
+    visibility: visible ;
+    opacity: 1 ;
+}
+
+nav#main_nav ul li ul li a {
+    background-color: #9DE ;
+    -webkit-transition: all 0.1s ease-out ;
+}
+
+
+nav#main_nav ul li ul li:hover a {
+    background-color: white ;
+    border: 1px solid black ;
+}
+
+/* CONTENU PRINCIPAL */
+
+div#main_content {
+    clear: both ;
+    padding-top: 80px ;
+}
+
+/* MENU DE GAUCHE */
+
+div#main_content aside {
+    margin: 0 ;
+    padding: 0 ;
+    display: block ;
+    float: left ;
+    background-color: green ;
+    width: 250px ;
+}
+
+div#main_content aside ul {
+    list-style-type: none ;
+    padding: 0 ;
+    margin-left: 50px ;
+}
+
+div#main_content aside ul li {
+    padding: 0 ;
+    margin: 0 ;
+    background-color: #ff0 ;
+    width: 130px ;
+    margin-bottom: 10px ;
+}
+
+div#main_content aside ul li > a {
+    display: table-cell ;
+    vertical-align: middle ;
+    width: 130px ;
+    height: 40px ;
+    font-weight: bold ;
+    text-decoration: none ;
+    text-transform: uppercase ;
+    text-align: center ;
+    background-color: #eee ;
+    border: 1px solid black ;
+}
+
+div#main_content aside ul li .user_info {
+    position: absolute ;
+    width: 300px ;
+    height: 80px ;
+    margin: 0 ;
+    margin-top: -50px ;
+    margin-left: 140px ;
+    background-color: #00f ;
+    border: 1px solid red ;
+    padding-left: 20px ;
+    display: none ;
+    visible: hidden ;
+    opacity: 0 ;
+    -webkit-transition: all ;
+}
+
+div#main_content aside ul li:hover .user_info {
+    display: block ;
+    visible: visible ;
+    opacity: 1 ;
+}
+
+div#main_content {
+    clear: both ;
+    overflow: hidden ;
+    padding-bottom: 80px ;
+}
+
+div#main_content section {
+    display: block ;
+    margin: 0 ;
+    float: left ;
+    background-color: red ;
+    width: 550px ;
+}
+
+footer#main_footer {  
+    display: table-cell ;
+    vertical-align: middle ;
+    text-align: center ;
+    clear: both ;
+    position: absolute ;
+    bottom: 0 ; left: 0 ;
+    display: block ;
+    height: 60px ;
+    width: 100% ;
+    background-color: #486 ;
+}
