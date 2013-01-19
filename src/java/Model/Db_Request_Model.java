@@ -378,10 +378,26 @@ public class Db_Request_Model {
      *
      * @return
      */
-    public ArrayList<TaskHeader> getTasksHeader() {
+    private ArrayList<TaskHeader> getTasksHeader() {
         try {
             Db_Request_Model.idb = InteractDB.getInstance();
             return Db_Request_Model.idb.getTasksHeaders();
+        } catch (SQLException ex) {
+            System.err.append(ex.getLocalizedMessage() + "  " + ex.getMessage());
+            Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+    }
+
+    /**
+     * Gets the header of all tasks
+     *
+     * @return
+     */
+    public ArrayList<TaskHeader> getTasksHeader(String id_member) {
+        try {
+            Db_Request_Model.idb = InteractDB.getInstance();
+            return (id_member == null ? this.getTasksHeader() : Db_Request_Model.idb.getTasksHeaders(id_member));
         } catch (SQLException ex) {
             System.err.append(ex.getLocalizedMessage() + "  " + ex.getMessage());
             Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
@@ -454,23 +470,25 @@ public class Db_Request_Model {
         Integer idMess = Db_Request_Model.idb.addMessage(m.getTitle(), m.getCreationDate().getTime(), m.getContent());
         if (idMess != null) {
             for (Recipient recipient : recipients) {
-                if (recipient.getType().equals(RecipientType.GROUP)) {
-                    Db_Request_Model.idb.addSendMessageToGroup(m.getSender().trim(), recipient.getId(), idMess);
-                    ArrayList<String> members = Db_Request_Model.idb.getMembersGroup(recipient.getId());
-                    for (String member : members) {
-                        if (!Db_Request_Model.idb.messageIsAssociatedWithMember(idMess, member)) {
-                            Db_Request_Model.idb.addSendMessageToMember(m.getSender().trim(), member, idMess, RecipientType.USER_IN_GROUP);
+                if (recipient.getId()!= null && recipient.getId().trim().compareToIgnoreCase("") != 0) {
+                    if (recipient.getType().equals(RecipientType.GROUP)) {
+                        Db_Request_Model.idb.addSendMessageToGroup(m.getSender().trim(), recipient.getId(), idMess);
+                        ArrayList<String> members = Db_Request_Model.idb.getMembersGroup(recipient.getId());
+                        for (String member : members) {
+                            if (!Db_Request_Model.idb.messageIsAssociatedWithMember(idMess, member)) {
+                                Db_Request_Model.idb.addSendMessageToMember(m.getSender().trim(), member, idMess, RecipientType.USER_IN_GROUP);
+                            }
                         }
-                    }
-                } else if (recipient.getType().equals(RecipientType.ALL)) {
-                    ArrayList<Member> members = Db_Request_Model.idb.getAllMembers();
-                    for (Member member : members) {
-                        Db_Request_Model.idb.addSendMessageToMember(m.getSender().trim(), member.getId_member(), idMess, RecipientType.USER);
-                    }
+                    } else if (recipient.getType().equals(RecipientType.ALL)) {
+                        ArrayList<Member> members = Db_Request_Model.idb.getAllMembers();
+                        for (Member member : members) {
+                            Db_Request_Model.idb.addSendMessageToMember(m.getSender().trim(), member.getId_member(), idMess, RecipientType.USER);
+                        }
 
-                } else {
-                    Db_Request_Model.idb.addSendMessageToMember(m.getSender().trim(), recipient.getId(), idMess, recipient.getType());
-                    // NON FONCITONNEl notifyNewMessage(recipient.getId(), m);
+                    } else {
+                        Db_Request_Model.idb.addSendMessageToMember(m.getSender().trim(), recipient.getId(), idMess, RecipientType.USER);
+                        // NON FONCITONNEl notifyNewMessage(recipient.getId(), m);
+                    }
                 }
             }
             if (m.hasAttachments()) {
@@ -537,15 +555,15 @@ public class Db_Request_Model {
     }
 
     public Message createMessage(String idSender, ArrayList<String> members, String title, String message, MessageStatus ms) {
-        MessageHeader mH = new MessageHeader(idSender);
+        MessageHeader mH = new MessageHeader("");
         Message m = new Message(mH);
-        mH.setCreationDate(Calendar.getInstance().getTime().toString());
-        mH.setTitle(title);
-
+        m.setCreationDate(Calendar.getInstance().getTime().toString());
+        m.setTitle(title);
+        m.setSender(idSender);
         for (String member : members) {
             m.addRecipient(new MessageRecipient(RecipientType.USER, member.trim(), ms));
         }
-        System.err.println("createMessage");
+        System.err.println("createMessage   " + idSender + " --- " + mH.getSender() + " --- " + m.getSender());
         m.setContent(message);
         return (m);
     }

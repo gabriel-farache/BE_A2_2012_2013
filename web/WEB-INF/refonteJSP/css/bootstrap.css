@@ -2214,9 +2214,6 @@ table th[class*="span"],
   background-color: #dff0d8;
 }
 
-.table tbody tr.default td {
-  background-color: #999999;
-}
 .table tbody tr.error td {
   background-color: #f2dede;
 }
@@ -2233,9 +2230,6 @@ table th[class*="span"],
   background-color: #d0e9c6;
 }
 
-.table tbody tr.default:hover td {
-  background-color: #dff0d8;
-} 
 .table-hover tbody tr.error:hover td {
   background-color: #ebcccc;
 }

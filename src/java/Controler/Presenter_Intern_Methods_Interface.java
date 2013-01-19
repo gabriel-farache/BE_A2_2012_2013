@@ -123,7 +123,7 @@ public interface Presenter_Intern_Methods_Interface {
      * @return
      */
     @WebMethod(operationName = "getAllTasks")
-    public ArrayList<TaskHeader> getAllTasks(@WebParam(name = "token") String token);
+    public ArrayList<TaskHeader> getAllTasks(@WebParam(name = "token") String token, @WebParam(name = "onlyUserTasks") boolean onlyUserTasks);
 
     /**
      * Gets all the members

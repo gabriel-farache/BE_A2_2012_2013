@@ -1,90 +1,285 @@
 <%-- 
-    Document   : CreateNewUser
-    Created on : 13 janv. 2013, 19:52:58
-    Author     : Fangli
+    Document   : createNewUser
+    Created on : Jan 20, 2013, 12:12:42 AM
+    Author     : gabriel
 --%>
 
+<!DOCTYPE html>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<!DOCTYPE html>
-<html>
+<html lang="fr">
     <head>
-        <!-- début header -->
-        <jsp:include page="header.jsp" >
-            <jsp:param name="title" value="PESO - Administration" />
-        </jsp:include>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <link href="<c:url value="/css/main.css"/>" rel="stylesheet" type="text/css" />
-        <script language="text/javascript">
-            function checkPass(){
-                windows.alert(document.getElementById("pass"))
-                windows.alert(document.getElementById("pass_confi"))
-                if(document.getElementById("pass") == document.getElementById("pass_confi"))
-                {
-                    document.maforme.Submit.disabled = false; 
-                }
-                else
-                {
-                    document.maforme.Submit.disabled = true; 
-                }
+        <title>Bootstrap, from Twitter</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="">
+        <meta name="author" content="">
+
+        <!-- Le styles -->
+        <link href="<c:url value="/css/bootstrap.css"/>" rel="stylesheet">
+        <style type="text/css">
+            body {
+                padding-top: 60px;
+                padding-bottom: 40px;
             }
-        </script>
-        <!-- fin header -->
+            .sidebar-nav-fixed .accordion-body {
+                max-height: 500px;
+                overflow-y: auto;
+                overflow-x:auto;
+            }
+            .navbar .accordion-body:before {
+                content:normal;
+            }
+            .sidebar-nav-fixed {
+                padding: 9px 0;
+                position:fixed;
+                left:20px;
+                top:60px;
+                width:250px;
+            }
+
+            .row-fluid > .span-fixed-sidebar {
+                margin-left: 290px;
+            }
+
+        </style>
+        <link href="css/bootstrap.css" rel="stylesheet">
+
+        <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+        <!--[if lt IE 9]>
+          <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+
+        <!-- Fav and touch icons -->
+        <link rel="apple-touch-icon-precomposed" sizes="144x144" href="ico/apple-touch-icon-144-precomposed.png">
+        <link rel="apple-touch-icon-precomposed" sizes="114x114" href="ico/apple-touch-icon-114-precomposed.png">
+        <link rel="apple-touch-icon-precomposed" sizes="72x72" href="ico/apple-touch-icon-72-precomposed.png">
+        <link rel="apple-touch-icon-precomposed" href="ico/apple-touch-icon-57-precomposed.png">
+        <link rel="shortcut icon" href="ico/favicon.png">
     </head>
-    <body onload="checkPass();">
 
+    <body>
 
+        <div class="navbar navbar-inverse navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container-fluid">
+                    <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                    <a class="brand pull-left" href="#">PESO</a>
+                    <div class="nav-collapse collapse">
+                        <ul class="nav">
+                            <li class="active"><a href="welcome">Acceuil</a></li>
+                            <li class="dropdown">
+                                <a id="drop1" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">T&acirc;ches <b class="caret"></b></a>
+                                <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
+                                    <li><a tabindex="-1" href="myTasks">Mes t&acirc;ches</a></li>
+                                    <li><a tabindex="-1" href="listOfTasks">Toutes les t&acirc;ches</a></li>
+                                    <li class="divider"></li>
+                                    <% if (session.getAttribute("isAdmin") != null) {%>                                                                             
+                                    <li><a tabindex="-1" href="createTask">Cr&eacute;er une nouvelle t&acirc;che</a></li>
+                                    <% }%>
+                                </ul>
+                            </li>
+                            <li class="dropdown">
+                                <a id="drop2" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Messagerie <b class="caret"></b></a>
+                                <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
+                                    <li><a tabindex="-1" href="inbox">Bo&icirc;te de r&eacute;c&eacute;ption</a></li>
+                                    <li><a tabindex="-1" href="createMessage">Envoyer un message</a></li>
+                                </ul>
+                            </li>
+                            <li class="dropdown">
+                                <a id="drop3" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Groupes <b class="caret"></b></a>
+                                <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
+                                    <li><a tabindex="-1" href="listOfGroup">Consulter liste groupes</a></li>
+                                    <li class="divider"></li>
+                                    <% if (session.getAttribute("isAdmin") != null) {%>                                                                             
+                                    <li><a tabindex="-1" href="createGroup">Ajouter un nouveau groupe</a></li>
+                                    <% }%>                           
+                                </ul>
+                            </li>
+                            <li class="dropdown">
+                                <a id="drop4" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Utilisateurs <b class="caret"></b></a>
+                                <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
+                                    <li><a tabindex="-1" href="listOfUser">Consulter liste utilisateurs</a></li>
+                                    <li><a tabindex="-1" href="listOfGroup">Consulter liste groupes</a></li>
+                                    <li class="divider"></li>
+                                    <% if (session.getAttribute("isAdmin") != null) {%>                                                                             
+                                    <li><a tabindex="-1" href="createNewUser">Ajouter un nouvel utilisateur</a></li> 
+                                    <% }%>                                  
+                                </ul>
+                            </li>
+                        </ul>
+                        <% if (session.getAttribute("token") != null) {%> 
+                        <a href="deconnection"><input type="button" class="btn btn-danger pull-right" value="D&eacute;connexion"/></a>
+                            <%} else {%>
+                        <ul class="nav pull-right">
+                            <li class="dropdown">
+                                <a id="drop5" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Se connecter <b class="caret"></b></a>
+                                <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
+                                    <li>
+                                        <form class="form-actions" action="welcome" method="post">
+                                            <div class="control-group">
+                                                <label class="control-label" for="utilisateur">Nom d'utilisateur</label>
+                                                <div class="controls">
+                                                    <input class="span2" type="text" placeholder="Email" id="utilisateur" name="utilisateur">
+                                                </div>
+                                            </div>
+                                            <div class="control-group">
+                                                <label class="control-label" for="pass">Mot de passe</label>
+                                                <div class="controls">
+                                                    <input class="span2" type="password" placeholder="password" id="pass" name="pass">
+                                                </div>
+                                            </div>
+                                            <div class="control-group">
+                                                <div class="controls">
+                                                    <button type="submit" class="btn btn-primary">Se connecter</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <% }%>
 
-        <div id="popUpMenu">    	
-
-            <div class="blog_box">
-                <div class="dat">
-                    <div class="cleare"></div>
+                    </div><!--/.nav-collapse -->
                 </div>
-                <div class="text">
-                    <h2>Nouvel utilisateur</h2>
-                    <article>
-                        <br />
-                        <form name ="maform" action="<c:url value="userCreated"/>" method="post">
-                            <fieldset>   
-                                <p>
-                                    <label for="id">ID (optionnel)</label> : <input type="text" name="id" id="id" placeholder="Identifiant"/>
-                                    </br>
-                                    </br>
-                                    <label for="nom">Nom</label> : <input type="text" name="nom" id="nom" placeholder="Nom" required/>
-                                    </br>
-                                    </br>
-                                    <label for="prenom">Prénom</label> : <input type="text" name="prenom" id="prenom" placeholder="Prénom" required/>
-                                    </br></br>
-                                    <label for="mail">Adresse mail</label> : <input type="email" name="mail" id="mail" placeholder="Email" required/>
-                                    </br></br>
-                                    <label for="pass">Mot de passe</label> : <input type="password" name="pass" id="pass" placeholder="*****" required="required"/>
-                                    </br></br>
-                                    <label for="pass_confi">Confirmer le mot de passe</label> : <input type="password" name="pass_confi" id="pass_confi"  placeholder="*****" required="required" onkeyup="checkPass();"/>
-                                    </br></br>
-                                    <input type="submit" class="submit_but" value="Créer" />
+            </div>
+        </div>
 
-                                </p>
-                            </fieldset>   
+        <div class="container-fluid">
+            <div class="row-fluid">
+                <div class="span2">
+                    <div class="well sidebar-nav-fixed">
+                        <div class="accordion" id="accordion">
+                            <div class="accordion-group">
+                                <div class="accordion-heading">
+                                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#tasksDetail">
+                                        Mes t&acirc;ches
+                                    </a>
+                                </div>
+                                <div id="tasksDetail" class="accordion-body  collapse" style="height: 0px; ">
+                                    <div class="accordion-inner">
+                                        <ul>
+                                            ${myTasks}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-group">
+                                <div class="accordion-heading">
+                                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#messages">
+                                        Messagerie
+                                    </a>
+                                </div>
+                                <div id="messages" class="accordion-body collapse" style="height: 0px; ">
+                                    <div class="accordion-inner">
+                                        <ul>
+                                            ${myMessages}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-group">
+                                <div class="accordion-heading">
+                                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#users">
+                                        Utilisateurs
+                                    </a>
+                                </div>
+                                <div id="users" class="accordion-body collapse" style="height: 0px; ">
+                                    <div class="accordion-inner">
+                                        <ul>
+                                            ${users}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-group">
+                                <div class="accordion-heading">
+                                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#groups">
+                                        Groupes
+                                    </a>
+                                </div>
+                                <div id="groups" class="accordion-body collapse" style="height: 0px; ">
+                                    <div class="accordion-inner">
+                                        <ul>
+                                            ${groups}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div><!--/.well -->
+                </div><!--/span-->
+
+                <div class="span9 offset2">
+                    <!-- Example row of columns -->
+                    <div class="row-fluid"> 
+                        <form method="POST"  action="<c:url value="userCreated"/>">
+                            <fieldset>
+                                <legend>Nom(s)</legend>
+                                <div>
+                                    <input type="text" name="nom" id="nom" placeholder="Nom" value="${nom}" required/>
+                                </div>
+                            </fieldset>
+                            <fieldset>
+                                <legend>Prénom</legend>
+                                <div>
+                                    <input type="text" name="prenom" id="prenom" placeholder="Prénom" value="${prenom}" required/>                                
+                                </div>
+                            </fieldset>
+                            <fieldset>
+                                <legend>Adresse mail</legend>
+                                <div>
+                                    <input type="email" name="mail" id="mail" placeholder="Email" value="${mail}" required/>                               
+                                </div>
+                            </fieldset>
+                            <fieldset>
+                                <legend>Mot de passe</</legend>
+                                <div>
+                                    <input type="${ro}" name="pass" id="pass" placeholder="*****" required="required" />
+                                </div>
+                                <legend>Confirmer le mot de passe</</legend>
+                                <div>
+                                    <input type="${ro}" name="pass_confi" id="pass_confi"  placeholder="*****" required="required" />                                </div>
+                            </fieldset>
+
+                            <div class="span1 pull-right">
+                                <input class="btn btn-primary" type="submit" value="Créer"/>
+                                <input type="hidden" id="id" value="${id}"/>
+                            </div>
                         </form>
-                    </article>
+                    </div>
+                    <hr>
+                    <footer>
+                        <p>&copy; PESO 2012</p>
+                    </footer>
                 </div>
-
-
-
-
+                <!-- /container -->
             </div>
-            <div class="cleare"></div>
-
-
-
-            <div class="cleare" style="height:20px"></div>
-            <div class="drop_line_footer"></div>
-            <div id="footer">
-
-                <p>Projet Sopra | <a href="#">BE 4IR</a> </p>
-            </div>
-        </div>	
-    </div>
-</body>
+            <!-- Le javascript
+            ================================================== -->
+            <!-- Placed at the end of the document so the pages load faster -->
+            <script src="<c:url value="/resources/js/jquery.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-transition.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-alert.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-modal.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-dropdown.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-scrollspy.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-tab.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-tooltip.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-popover.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-button.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-collapse.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-carousel.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-typeahead.js"/>"></script>
+        </div>
+    </body>
 </html>

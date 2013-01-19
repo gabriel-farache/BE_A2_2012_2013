@@ -1,5 +1,5 @@
 <%-- 
-    Document   : AdminListOfMessages
+    Document   : inbox
     Created on : 13 janv. 2013, 19:52:58
     Author     : Fangli
 --%>
@@ -48,7 +48,7 @@
                                     <input type="hidden" class="submit_but" name="sender" value="toto" />
                                     <input type="hidden" class="submit_but" name="groupe" value="1" />
                                     <input type="submit" class="submit_but" value="Répondre" formaction="<c:url value="repondreMessage"/>"/>
-                                    <input type="submit" class="submit_but" value="Supprimer le message" formaction="<c:url value="adminListOfMessages"/>"/>
+                                    <input type="submit" class="submit_but" value="Supprimer le message" formaction="<c:url value="inbox"/>"/>
 
                                 </form></br></br>
 

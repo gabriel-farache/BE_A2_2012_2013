@@ -1,6 +1,6 @@
 <%-- 
-    Document   : checkUser
-    Created on : Jan 20, 2013, 12:20:47 AM
+    Document   : inbox
+    Created on : Jan 19, 2013, 7:43:30 PM
     Author     : gabriel
 --%>
 
@@ -219,55 +219,43 @@
                 </div><!--/span-->
 
                 <div class="span9 offset2">
-                    <!-- Example row of columns -->
-                    <div class="row-fluid"> 
-                        <fieldset>
-                            <legend>ID</legend>
-                            <p>${id}</p>
-                        </fieldset>
-                        <fieldset>
-                            <legend>Nom(s)</legend>
-                            <p>${nom}</p>
-                        </fieldset>
-                        <fieldset>
-                            <legend>Prénom</legend>
-                            <p>${prenom}</p>
-                        </fieldset>
-                        <fieldset>
-                            <legend>Adresse mail</legend>
-                            <p>${mail}</p>
-                        </fieldset>
-
-                        <% if (session.getAttribute("isAdmin") != null) {%> 
-                        <div class="span1 pull-right">
-                            <a href="createNewUser?idUser=${id}"><input class="btn btn-primary" type="submit" value="Modifier" /></a>
-                        </div>
-                        <% } %>
+                    <div class="hero-unit">
+                        <h1>Mes messages</h1>
                     </div>
+                    <!-- Example row of columns -->
+                    <div class="row-fluid">
+                        <div class="row-fluid">
+                            ${messageList}
+                        </div>
+                    </div>
+
                     <hr>
+
                     <footer>
                         <p>&copy; PESO 2012</p>
                     </footer>
-                </div>
-                <!-- /container -->
+
+                </div> <!-- /container -->
+
             </div>
-            <!-- Le javascript
-            ================================================== -->
-            <!-- Placed at the end of the document so the pages load faster -->
-            <script src="<c:url value="/resources/js/jquery.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-transition.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-alert.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-modal.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-dropdown.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-scrollspy.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-tab.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-tooltip.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-popover.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-button.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-collapse.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-carousel.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-typeahead.js"/>"></script>
         </div>
+        <!-- Le javascript
+        ================================================== -->
+        <!-- Placed at the end of the document so the pages load faster -->
+        <script src="<c:url value="/resources/js/jquery.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-transition.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-alert.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-modal.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-dropdown.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-scrollspy.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-tab.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-tooltip.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-popover.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-button.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-collapse.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-carousel.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-typeahead.js"/>"></script>
+
     </body>
 </html>

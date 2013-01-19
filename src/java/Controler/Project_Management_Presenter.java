@@ -45,6 +45,10 @@ import peopleObjects.*;
 public class Project_Management_Presenter extends Project_Management_Presenter_Intern_Methods {
 
     private static Project_Management_Presenter me = null;
+    private static String group = "";
+    private static String user = "";
+    private static String mess = "";
+    private static String tasks = "";
 
     public static Project_Management_Presenter getInstance() {
         if (Project_Management_Presenter.me == null) {
@@ -56,15 +60,15 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
     public Project_Management_Presenter() {
         System.out.println("Lancement du serveur web");
 
-        try {
-            Endpoint.publish(
-                    "http://localhost:8081/BE_A2_2012_2013/Project_Management_Presenter_Intern_Methods",
-                    Project_Management_Presenter_Intern_Methods.getInstance());
-            Project_Management_Presenter_Intern_Methods.getInstance();
-        } catch (Exception ex) {
-            Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
+        /*try {
+         Endpoint.publish(
+         "http://localhost:8081/BE_A2_2012_2013/Project_Management_Presenter_Intern_Methods",
+         Project_Management_Presenter_Intern_Methods.getInstance());
+         Project_Management_Presenter_Intern_Methods.getInstance();
+         } catch (Exception ex) {
+         Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
 
-        }
+         }*/
     }
 
     @RequestMapping(value = {"*"}, method = {RequestMethod.GET, RequestMethod.POST})
@@ -74,8 +78,8 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
     }
 
     @RequestMapping(value = {"error"}, method = {RequestMethod.GET, RequestMethod.POST})
-    public String errorPage(HttpServletRequest request) {
-        String token = this.getTokenSession(request.getSession());
+    public String errorPage(HttpServletRequest request, ModelMap m) {
+        String token = this.getTokenSession(request.getSession(), m);
         if (token != null) {
             if ((Project_Management_Presenter_Intern_Methods.model.isValidToken(token)) != null) {
                 return null;
@@ -86,7 +90,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
 
     @RequestMapping(value = {"createMessage"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String createMessage(HttpServletRequest request, ModelMap m) {
-        String token = this.getTokenSession(request.getSession());
+        String token = this.getTokenSession(request.getSession(), m);
         try {
             String[] users = request.getParameterValues("selectUsersForm");
             String uss = "";
@@ -97,8 +101,10 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         } catch (Exception e) {
         }
         try {
-            String user = request.getParameter("idSender");
-            m.addAttribute("user", user);
+            Message mess = this.getMessageBody((String) request.getParameter("idMess"), token);
+            m.addAttribute("recipient", mess.getSender());
+            m.addAttribute("title", "Réponse au message : " + mess.getTitle());
+            m.addAttribute("message", "\n\n------- Message original envoyé le " + mess.getStringCreationDate() + " -------\n" + mess.getContent());
         } catch (Exception e) {
         }
         if (token != null) {
@@ -110,8 +116,11 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
     }
 
     @RequestMapping(value = {"connection", "index", "/"}, method = {RequestMethod.GET, RequestMethod.POST})
-    public String displayConnexionPage(HttpSession session) {
-        if (this.getTokenSession(session) == null || Project_Management_Presenter.model.isValidToken(this.getTokenSession(session)) == null) {
+    public String displayConnexionPage(HttpSession session, ModelMap m) {
+        String token;
+        this.addAttribute(m);
+        token = this.getTokenSession(session, m);
+        if (token == null || Project_Management_Presenter.model.isValidToken(token) == null) {
             return "connection";
         } else {
             return "redirect:welcome";
@@ -128,7 +137,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
     public String interceptPageToUpdate(HttpServletRequest request, ModelMap mm) {
 
         //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession());
+        String token = this.getTokenSession(request.getSession(), mm);
         try {
             if (Project_Management_Presenter.model.isAdmin(token)) {
                 this.fillFormUpTask(request, mm, token);
@@ -157,7 +166,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
     public String interceptPageToupdateUser(HttpServletRequest request, ModelMap mm) {
 
         //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession());
+        String token = this.getTokenSession(request.getSession(), mm);
         try {
             if (Project_Management_Presenter.model.isAdmin(token)) {
                 this.fillFormUpUser(request, mm, token);
@@ -183,9 +192,9 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
      * @return
      */
     @RequestMapping(value = {"/createTask"}, method = {RequestMethod.GET, RequestMethod.POST})
-    public String interceptCreateTask(HttpServletRequest request) {
+    public String interceptCreateTask(HttpServletRequest request, ModelMap m) {
         //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession());
+        String token = this.getTokenSession(request.getSession(), m);
         //Appel méthode interne correspondante
         if (token != null && Project_Management_Presenter.model.getCreateTaskForm()) {
             return null;
@@ -207,7 +216,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         //Récupération du token de la session
         System.err.println("----------------------546465342534--------------------");
 
-        String token = this.getTokenSession(request.getSession());
+        String token = this.getTokenSession(request.getSession(), map);
         System.err.println("-------------------------------------------------------------------");
         //Appel méthode interne correspondante
         if (token != null) {
@@ -225,6 +234,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             String result = this.createNewTask((String) request.getParameter("descriptionTache"), (String) request.getParameter("titreTache"), (String) request.getParameter("projetTache"), (String) request.getParameter("dateDebut") + " 00:00:00", (String) request.getParameter("dateFin") + " 00:00:00", (String) request.getParameter("statutTache"), Float.parseFloat((String) request.getParameter("budget")), Float.parseFloat((String) request.getParameter("consumed")), Float.parseFloat((String) request.getParameter("rae")), members, groups, token);
             //Result == null si il y a eu une erreur, sinon un message de succès est donné avec (s'il y en a) les membres/groupes qui n'ont pas été trouvé dans la BDD
             if (result != null) {
+                this.fillAccordionMenu(token, map);
                 map.addAttribute("errorMessage", result);
                 return "error";
             } else {
@@ -241,7 +251,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         //Récupération du token de la session
         System.err.println("----------------------546465342534--------------------");
 
-        String token = this.getTokenSession(request.getSession());
+        String token = this.getTokenSession(request.getSession(), map);
         System.err.println("-------------------------------------------------------------------");
         //Appel méthode interne correspondante
         if (token != null) {
@@ -265,6 +275,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             //Result == null si il y a eu une erreur, sinon un message de succès est donné avec (s'il y en a) les membres/groupes qui n'ont pas été trouvé dans la BDD
             if (result != null) {
                 map.addAttribute("errorMessage", result);
+                this.fillAccordionMenu(token, map);
                 return "error";
             } else {
                 return "error";
@@ -278,7 +289,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
     @RequestMapping(value = {"supprMessage"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptDeleteMess(HttpServletRequest request, ModelMap m) {
         //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession());
+        String token = this.getTokenSession(request.getSession(), m);
 
         //Récuperation de l'id de la tâche
         String idMess = request.getParameter("idMess").trim();
@@ -293,9 +304,9 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
     }
 
     @RequestMapping(value = {"/deleteTask"}, method = {RequestMethod.GET, RequestMethod.POST})
-    public String interceptDeleteTask(HttpServletRequest request) {
+    public String interceptDeleteTask(HttpServletRequest request, ModelMap m) {
         //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession());
+        String token = this.getTokenSession(request.getSession(), m);
 
         Map<String, String[]> allParams = request.getParameterMap();
         //Récuperation de l'id de la tâche
@@ -313,7 +324,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
     @RequestMapping(value = {"openUsers"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String displayUserToDisplay(HttpServletRequest request, ModelMap mm) {
         //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession());
+        String token = this.getTokenSession(request.getSession(), mm);
         String mmm = "";
         for (Member m : this.getUsers()) {
             mmm += "<input type=\"checkbox\" name=\"" + m.getId_member() + "\" value=\"" + m.getId_member() + "\"> " + m.getId_member() + " - " + m.getFirst_name() + "- " + m.getName() + "<br>";
@@ -329,9 +340,9 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
      * @param request
      */
     @RequestMapping(value = {"/confirmupdateTask.html"}, method = {RequestMethod.GET, RequestMethod.POST})
-    public String interceptPageToConfirmUpdate(HttpServletRequest request) {
+    public String interceptPageToConfirmUpdate(HttpServletRequest request, ModelMap m) {
         //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession());
+        String token = this.getTokenSession(request.getSession(), m);
         //Creation de la liste des attributs & Creation d'une map contenant la valeur associé à un champ
         Map<String, String[]> allParams = request.getParameterMap();
         //Récuperation de l'id de la tâche
@@ -361,11 +372,16 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         try {
             token = this.login((String) request.getParameter("utilisateur"), (String) request.getParameter("pass"));
             this.setTokenSession(request.getSession(), token);
-
         } catch (Exception ex) {
             Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
         }
-        token = this.getTokenSession(request.getSession());
+        token = this.getTokenSession(request.getSession(), model);
+        try {
+            this.fillAccordionMenu(token, model);
+            this.addAttribute(model);
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+        }
         //} else {
         System.out.println("ici1");
         try {
@@ -378,7 +394,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
         }
         if (Project_Management_Presenter.model.isValidToken(token) != null) {
-            this.createTaskConsult(model, token);
+            this.createTaskConsult(model, token, true);
             return null;
         } else {
             return "connection";
@@ -393,20 +409,21 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
     public String interceptMessageToCreate(HttpServletRequest request, ModelMap m) {
         String pageToLoad = null;
         //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession());
+        String token = this.getTokenSession(request.getSession(), m);
         try {
             //IL FAUT RECUPERER LES GROUPES AUSSI !!!!
             String title = request.getParameter("titreMessage");
+            title = title.substring(0, (title.length() > 50 ? 49 : title.length()));
             String message = request.getParameter("saisieMessage");
             String[] cheminsPj = request.getParameterValues("choisirPieceJointe");
             String memberss[] = request.getParameter("saisieUtilisateurDestinataire").split(",");
             String groups[] = request.getParameter("saisieGroupeDestinataire").split(",");
 
-//            System.err.println("interceptMessageToCreate       " + memberss[0] + " - " + memberss[1] + " - " + title + " - " + message + " - " + groups[0]);
             ArrayList<String> members = new ArrayList<String>();
 
             Collections.addAll(members, memberss);
             String idSender = Project_Management_Presenter.model.isValidToken(token);
+            System.err.println("interceptMessageToCreate       " + token + " ---  " + idSender);
 
             ArrayList<String> groupsL = new ArrayList<String>();
             Collections.addAll(groupsL, groups);
@@ -429,6 +446,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                     pageToLoad = "error";
                 }
             }
+            this.fillAccordionMenu(token, m);
             m.addAttribute("errorMessage", "<h1>Message envoyé.</h1>");
             return "error";
         } catch (Exception ex) {
@@ -452,16 +470,41 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         String pageToLoad = null;
 
         //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession());
+        String token = this.getTokenSession(request.getSession(), modelMap);
         //Creation de la liste des attributs & Creation d'une map contenant la valeur associé à un champ
-        Map<String, String[]> allParams = request.getParameterMap();
-        Enumeration allParamsName = request.getParameterNames();
+
         Message m = this.getMessageBody(request.getParameter("idMessage"), token);
+        try {
+            Project_Management_Presenter.model.updateMessageStatus(token, m.getId(), MessageStatus.READ, true);
+        } catch (SQLException ex) {
+            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+        }
         if (m != null) {
+            String groupRcpt = "";
+            String memberRcpt = "";
             modelMap.addAttribute("title", m.getTitle());
             modelMap.addAttribute("sender", m.getSender());
             modelMap.addAttribute("content", m.getContent());
             modelMap.addAttribute("idMess", request.getParameter("idMessage"));
+
+            for (Recipient r : m.getRecipients()) {
+                if (r.getType().equals(RecipientType.USER)) {
+                    memberRcpt += r.getId() + ", ";
+                } else {
+                    if (r.getType().equals(RecipientType.GROUP)) {
+                        groupRcpt += r.getId() + ", ";
+                    }
+                }
+            }
+            /* memberRcpt = memberRcpt.substring(0, memberRcpt.length() - 2);
+             groupRcpt = groupRcpt.substring(0, groupRcpt.length() - 2);
+
+             memberRcpt.trim().replaceAll(",", ", ");
+             groupRcpt.trim().replaceAll(",", ", ");*/
+            System.err.println("--- *** --- *** " + memberRcpt + " -- " + groupRcpt);
+
+            modelMap.addAttribute("recipientsM", memberRcpt);
+            modelMap.addAttribute("recipientsG", groupRcpt);
         } else {
             pageToLoad = "error";
         }
@@ -481,9 +524,20 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         String token;
 
         // on récupère l'id de la session (token) contenu dans le cookie
-        token = getTokenSession(request.getSession());
+        token = getTokenSession(request.getSession(), mm);
         try {
             if (Project_Management_Presenter.model.isAdmin(token)) {
+                try {
+                    Member memb = this.getInfoUser((String) request.getParameter("id"), token);
+                    mm.addAttribute("nom", memb.getName());
+                    mm.addAttribute("prenom", memb.getFirst_name());
+                    mm.addAttribute("mail", memb.getEmail());
+                    mm.addAttribute("ro", "hidden");
+                    mm.addAttribute("id", memb.getId_member());
+
+                } catch (Exception e) {
+                    mm.addAttribute("ro", "password");
+                }
                 return null;
             } else {
                 mm.addAttribute("errorMessage", "Vous ne disposez pas de droits suffisants pour effectuer cette opération.");
@@ -506,13 +560,14 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             String token, user_id;
 
             // on récupère l'id de la session (token) contenu dans le cookie
-            token = getTokenSession(request.getSession());
+            token = getTokenSession(request.getSession(), mm);
 
             if (Project_Management_Presenter.model.isAdmin(token)) {
                 Member new_user = new Member(request.getParameter("id"), request.getParameter("nom"), request.getParameter("prenom"), request.getParameter("mail"));
                 String password = request.getParameter("pass");
                 String id = this.createNewUser(new_user, password);
                 System.err.println("-- " + id + " - " + new_user.getName() + " -- " + new_user.getFirst_name() + " -- " + new_user.getEmail());
+                this.fillAccordionMenu(token, mm);
                 //System.out.println
                 if (id != null) {
                     mm.addAttribute("nom", "request.getParameter(\"nom\")");
@@ -541,7 +596,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             String html_liste;
 
             // on récupère l'id de la session (token) contenu dans le cookie
-            token = getTokenSession(request.getSession());
+            token = getTokenSession(request.getSession(), mm);
 
             if (Project_Management_Presenter.model.isAdmin(token)) {
                 ArrayList<Member> liste_membres = getAvailableMembers();
@@ -575,7 +630,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             String token;
 
             // on récupère l'id de la session (token) contenu dans le cookie
-            token = getTokenSession(request.getSession());
+            token = getTokenSession(request.getSession(), mm);
 
             if (Project_Management_Presenter.model.isAdmin(token)) {
                 String[] membres_select = request.getParameterValues("ListeMembres");
@@ -586,6 +641,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
 
                 if (createGroup(liste_membres, token, request.getParameter("nomGroupe"), request.getParameter("descriptionGroupe"))) {
                     mm.addAttribute("nomGroupe", request.getParameter("nomGroupe"));
+                    this.fillAccordionMenu(token, mm);
                     return null;
                 } else {
                     mm.addAttribute("errorMessage", "Échec de la création du groupe.");
@@ -607,7 +663,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
     @RequestMapping(value = {"/openGroups"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String groupDisplayRequest(HttpServletRequest request, ModelMap mm) {
         //todo : implementation 
-        String token = getTokenSession(request.getSession());
+        String token = getTokenSession(request.getSession(), mm);
         String html_liste;
 
         if (Project_Management_Presenter.model.isValidToken(token) != null) {
@@ -633,66 +689,61 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
      */
     @RequestMapping(value = {"/checkGroup"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptPageAdminCheckGroup(HttpServletRequest request, ModelMap mm) {
-        try {
-            String token = this.getTokenSession(request.getSession());
-            String html_liste, table;
-            Group g;
-            String id_group;
-            if ((Project_Management_Presenter.model.isValidToken(token) != null) && Project_Management_Presenter.model.isAdmin(token)) {
-                if (request.getParameter("ajouter_membre_groupe") != null) {
-                    id_group = request.getParameter("id_groupe");
-                    List<String> membres_a_ajouter;
-                    membres_a_ajouter = Arrays.asList(request.getParameterValues("ListeMembresAjouter"));
-                    if (addMembersGroup(token, membres_a_ajouter, id_group)) {
-                    } else {
-                        mm.addAttribute("errorMessage", "Échec de l'ajout des membres.");
-                        return "error";
-                    }
-                } else if (request.getParameter("supprimer_membre_groupe") != null) {
-                    id_group = request.getParameter("id_groupe");
-                    List<String> membres_a_supprimer;
-                    membres_a_supprimer = Arrays.asList(request.getParameterValues("ListeMembresGroupe"));
 
-                    if (deleteMembersfromGroup(token, membres_a_supprimer, id_group)) {
-                    } else {
-                        mm.addAttribute("errorMessage", "Échec de la suppression des membres.");
-                        return "error";
-                    }
+        String token = this.getTokenSession(request.getSession(), mm);
+        String html_liste, table;
+        Group g;
+        String id_group;
+        if ((Project_Management_Presenter.model.isValidToken(token) != null)) {// && Project_Management_Presenter.model.isAdmin(token)) {
+            if (request.getParameter("ajouter_membre_groupe") != null) {
+                id_group = request.getParameter("id_groupe");
+                List<String> membres_a_ajouter;
+                membres_a_ajouter = Arrays.asList(request.getParameterValues("ListeMembresAjouter"));
+                if (addMembersGroup(token, membres_a_ajouter, id_group)) {
                 } else {
-                    id_group = request.getParameter("idGroup");
+                    mm.addAttribute("errorMessage", "Échec de l'ajout des membres.");
+                    return "error";
                 }
-                g = getGroupInfos(token, id_group);
-                mm.addAttribute("id_groupe", g.getId_group());
-                mm.addAttribute("nom_groupe", g.getGroup_name());
-                mm.addAttribute("desc_groupe", g.getDescr());
-                //mm.addAttribute("chef_groupe", g.getChief().getName() + " " + g.getChief().getFirst_name());
+            } else if (request.getParameter("supprimer_membre_groupe") != null) {
+                id_group = request.getParameter("id_groupe");
+                List<String> membres_a_supprimer;
+                membres_a_supprimer = Arrays.asList(request.getParameterValues("ListeMembresGroupe"));
 
-                ArrayList<Member> liste_membres = g.getMembers();
-                table = "<select id=\"ListeMembresGroupe\" name=\"ListeMembresGroupe\" size=20>";
-                for (int i = 0; i < liste_membres.size(); i++) {
-                    table += "<option value=" + liste_membres.get(i).getId_member() + ">" + liste_membres.get(i).getName() + " " + liste_membres.get(i).getFirst_name() + "</option>";
+                if (deleteMembersfromGroup(token, membres_a_supprimer, id_group)) {
+                } else {
+                    mm.addAttribute("errorMessage", "Échec de la suppression des membres.");
+                    return "error";
                 }
-                table += "</select>";
-                mm.addAttribute("liste_membres_groupe", table);
-
-                ArrayList<Member> liste_utilisateurs = substractUserList(liste_membres, getUsers());
-                html_liste = "<select id=\"ListeMembresAjouter\" name=\"ListeMembresAjouter\" size=20>";
-                for (int i = 0; i < liste_utilisateurs.size(); i++) {
-                    html_liste += "<option value=" + liste_utilisateurs.get(i).getId_member() + ">" + liste_utilisateurs.get(i).getName() + " " + liste_utilisateurs.get(i).getFirst_name() + "</option>";
-                }
-                html_liste += "</select>";
-                mm.addAttribute("liste_membres_ajouter", html_liste);
-
-                return null;
-
-                //deleteMemberInGroup(String idMember, String idGroup)
             } else {
-                mm.addAttribute("errorMessage", "Vous ne disposez pas de droits suffisants pour effectuer cette opération.");
-                return "error";
+                id_group = request.getParameter("idGroup");
             }
-        } catch (SQLException ex) {
-            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
-            mm.addAttribute("errorMessage", "Erreur Base de donnée.");
+            g = getGroupInfos(token, id_group);
+            mm.addAttribute("id_groupe", g.getId_group());
+            mm.addAttribute("nom_groupe", g.getGroup_name());
+            mm.addAttribute("desc_groupe", g.getDescr());
+            //mm.addAttribute("chef_groupe", g.getChief().getName() + " " + g.getChief().getFirst_name());
+
+            ArrayList<Member> liste_membres = g.getMembers();
+            table = "<select id=\"ListeMembresGroupe\" name=\"ListeMembresGroupe\" size=20>";
+            for (int i = 0; i < liste_membres.size(); i++) {
+                table += "<option value=" + liste_membres.get(i).getId_member() + ">" + liste_membres.get(i).getName() + " " + liste_membres.get(i).getFirst_name() + "</option>";
+            }
+            table += "</select>";
+            mm.addAttribute("liste_membres_groupe", table);
+
+            ArrayList<Member> liste_utilisateurs = substractUserList(liste_membres, getUsers());
+            html_liste = "<select id=\"ListeMembresAjouter\" name=\"ListeMembresAjouter\" size=20>";
+            for (int i = 0; i < liste_utilisateurs.size(); i++) {
+                html_liste += "<option value=" + liste_utilisateurs.get(i).getId_member() + ">" + liste_utilisateurs.get(i).getName() + " " + liste_utilisateurs.get(i).getFirst_name() + "</option>";
+            }
+            html_liste += "</select>";
+            mm.addAttribute("liste_membres_ajouter", html_liste);
+
+            return null;
+
+            //deleteMemberInGroup(String idMember, String idGroup)
+        } else {
+            mm.addAttribute("errorMessage", "Vous ne disposez pas de droits suffisants pour effectuer cette opération.");
             return "error";
         }
     }
@@ -709,7 +760,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         String pageToLoad = null;
 
         //Récupération du token de la session
-        String token = this.getTokenSession(session);
+        String token = this.getTokenSession(session, mm);
         System.out.println("Token : " + session);
         if ((Project_Management_Presenter.model.isValidToken(token) != null)) {
             ArrayList<Member> memberList;
@@ -718,7 +769,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             if (memberList != null) {
                 //Creation de la table en html contenant tous les headers de toutes les taches
                 String table =
-                        "<table class='table-bordered'>"
+                        "<table class=\"table table-hover\">"
                         + "<tr id='entete'>"
                         + "<th>Nom</th>"
                         + "<th>Prénom</th>"
@@ -765,12 +816,12 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
     @RequestMapping(value = {"adminListOfGroups"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptPageAdminListOfGroups(HttpServletRequest request, ModelMap mm) {
         //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession());
+        String token = this.getTokenSession(request.getSession(), mm);
         if (Project_Management_Presenter.model.isValidToken(token) != null) {
             ArrayList<GroupHeader> groupList = this.getGroups();
             //Creation de la table en html contenant tous les headers de toutes les taches
             String table =
-                    "<table class='table-bordered'>"
+                    "<table class=\"table table-hover\">"
                     + "<tr id='entete'>"
                     + "<th>Nom du groupe</th>"
                     + "<th>Description du groupe</th>"
@@ -811,10 +862,10 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
      * @param request
      * @param mm
      */
-    @RequestMapping(value = {"adminListOfMessages"}, method = {RequestMethod.GET, RequestMethod.POST})
-    public String interceptPageAdminListOfMessages(HttpServletRequest request, ModelMap mm) {
+    @RequestMapping(value = {"inbox"}, method = {RequestMethod.GET, RequestMethod.POST})
+    public String interceptPageinbox(HttpServletRequest request, ModelMap mm) {
         //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession());
+        String token = this.getTokenSession(request.getSession(), mm);
         String pageToLoad = null;
         if (Project_Management_Presenter.model.isValidToken(token) != null) {
 
@@ -822,16 +873,30 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             if (messageList != null) {
                 //Creation de la table en html contenant tous les headers de toutes les taches
                 String table =
-                        "<table class='table-bordered'>"
+                        "<table class=\"table table-hover\" >"
                         + "<tr id='entete'>"
                         + "<th>Titre du message</th>"
                         + "<th>Auteur</th>"
                         + "<th>Date de création</th>"
                         + "</tr>";
                 for (MessageHeader m : messageList) {
-                    table +=
-                            "<tr id='groupe' onclick='window.open(this.href=\"checkMessage?idMessage=" + m.getId() + "\"); return false;'>"
-                            + "<td>" + m.getTitle() + "</td>"
+                    ArrayList<MessageStatus> mst = m.getStatus();
+                    if (mst != null && !mst.isEmpty()) {
+                        if (mst.get(0).equals(MessageStatus.IMPORTANT)) {
+                            table += "<tr class=\"warning\" id='groupe' onclick='window.open(this.href=\"checkMessage?idMessage=" + m.getId() + "\"); return false;'>";
+                        } else if (mst.get(0).equals(MessageStatus.HAVE_TO_ANSWER)) {
+                            table += "<tr class=\"info\" id='groupe' onclick='window.open(this.href=\"checkMessage?idMessage=" + m.getId() + "\"); return false;'>";
+                        } else if (mst.get(0).equals(MessageStatus.URGENT)) {
+                            table += "<tr class=\"error\" id='groupe' onclick='window.open(this.href=\"checkMessage?idMessage=" + m.getId() + "\"); return false;'>";
+                        } else if (mst.get(0).equals(MessageStatus.FORWARDED)) {
+                            table += "<tr class=\"success\" id='groupe' onclick='window.open(this.href=\"checkMessage?idMessage=" + m.getId() + "\"); return false;'>";
+                        } else {
+                            table += "<tr id='groupe' onclick='window.open(this.href=\"checkMessage?idMessage=" + m.getId() + "\"); return false;'>";
+                        }
+                    } else {
+                        table += "<tr class=\"default\" id='groupe' onclick='window.open(this.href=\"checkMessage?idMessage=" + m.getId() + "\"); return false;'>";
+                    }
+                    table += "<td>" + m.getTitle() + "</td>"
                             + "<td>" + m.getSender() + "</td>"
                             + "<td>" + m.getStringCreationDate() + "</td>"
                             + "</tr>";
@@ -849,9 +914,9 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         return pageToLoad;
     }
 
-    public void createTaskConsult(ModelMap mm, String token) {
+    public void createTaskConsult(ModelMap mm, String token, boolean onlyUserTasks) {
         //Récuperation de toutes les taches
-        ArrayList<TaskHeader> tasksHeader = this.getAllTasks(token);
+        ArrayList<TaskHeader> tasksHeader = this.getAllTasks(token, onlyUserTasks);
         //Creation de la table en html contenant tous les headers de toutes les taches
         String table =
                 "<table class=\"table table-hover\">"
@@ -914,9 +979,9 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
     @RequestMapping(value = {"adminListOfTasks"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptPageAdminListOfTasks(HttpServletRequest request, ModelMap mm) {
         //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession());
+        String token = this.getTokenSession(request.getSession(), mm);
         if (Project_Management_Presenter.model.isValidToken(token) != null) {
-            this.createTaskConsult(mm, token);
+            this.createTaskConsult(mm, token, false);
             return null;
         } else {
             return "connection";
@@ -939,7 +1004,8 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
      * @param session The session on the user
      * @return
      */
-    private String getTokenSession(HttpSession session) {
+    private String getTokenSession(HttpSession session, ModelMap m) {
+        this.addAttribute(m);
         return ((String) session.getAttribute("token"));
     }
 
@@ -1008,7 +1074,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
     @RequestMapping(value = {"importXML"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String intercpetImportXML(HttpServletRequest request, ModelMap mm) {
         try {
-            String token = this.getTokenSession(request.getSession());
+            String token = this.getTokenSession(request.getSession(), mm);
             if (Project_Management_Presenter.model.isValidToken(token) != null && Project_Management_Presenter.model.isAdmin(token)) {
                 return null;
             } else {
@@ -1024,8 +1090,10 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
     }
 
     @RequestMapping(value = {"deconnection"}, method = {RequestMethod.GET, RequestMethod.POST})
-    public String intercpetDeco(HttpSession session) {
-        this.disconnectUser(this.getTokenSession(session));
+    public String intercpetDeco(HttpSession session, ModelMap m) {
+        this.disconnectUser((String) session.getAttribute("token"));
+        session.setAttribute("isAdmin", null);
+        session.setAttribute("token", null);
         return "redirect:connection";
     }
 
@@ -1039,7 +1107,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
     public String interceptXMLImported(HttpServletRequest request, ModelMap mm) {
         try {
             //Récupération du token de la session
-            String token = this.getTokenSession(request.getSession());
+            String token = this.getTokenSession(request.getSession(), mm);
             if (Project_Management_Presenter.model.isValidToken(token) != null && Project_Management_Presenter.model.isAdmin(token)) {
 
                 List<FileItem> items;
@@ -1207,5 +1275,49 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             return false;
         }
         return true;
+    }
+
+    private void fillAccordionMenu(String token, ModelMap m) {
+        if (token != null) {
+            ArrayList<TaskHeader> tHeaders = this.getAllTasks(token, true);
+            ArrayList<MessageHeader> mHeaders = this.getHeaderMessages(token);
+            ArrayList<Member> users = this.getUsers();
+            ArrayList<GroupHeader> groups = this.getGroups();
+
+            Project_Management_Presenter.tasks = "";
+            Project_Management_Presenter.mess = "";
+            Project_Management_Presenter.user = "";
+            Project_Management_Presenter.group = "";
+
+            while (!tHeaders.isEmpty() || !mHeaders.isEmpty() || !users.isEmpty() || !groups.isEmpty()) {
+                if (!tHeaders.isEmpty()) {
+                    Project_Management_Presenter.tasks += "<li><a href=\"checkTask?idTask=" + tHeaders.get(0).getId().trim() + "\">" + tHeaders.get(0).getTitle() + "</a></li>";
+                    tHeaders.remove(0);
+                }
+                if (!mHeaders.isEmpty()) {
+                    Project_Management_Presenter.mess += "<li><a href=\"checkMessage?idMessage=" + mHeaders.get(0).getId().trim() + "\">" + mHeaders.get(0).getTitle() + "</a></li>";
+                    mHeaders.remove(0);
+                }
+                if (!users.isEmpty()) {
+                    Project_Management_Presenter.user += "<li><a href=\"checkUser?idUser=" + users.get(0).getId_member().trim() + "\">" + users.get(0).getId_member() + "</a></li>";
+                    users.remove(0);
+                }
+                if (!groups.isEmpty()) {
+                    Project_Management_Presenter.group += "<li><a href=\"checkGroup?id_groupe=" + groups.get(0).getId_group().trim() + "\">" + groups.get(0).getId_group() + "</a></li>";
+                    groups.remove(0);
+                }
+            }
+
+            System.err.println("********   - " + Project_Management_Presenter.tasks + "\n" + Project_Management_Presenter.user + "\n" + Project_Management_Presenter.group + "\n" + Project_Management_Presenter.mess);
+
+        }
+    }
+
+    private void addAttribute(ModelMap m) {
+        System.err.println("-----  " + Project_Management_Presenter.tasks + "\n" + Project_Management_Presenter.user + "\n" + Project_Management_Presenter.group + "\n" + Project_Management_Presenter.mess);
+        m.addAttribute("myTasks", Project_Management_Presenter.tasks);
+        m.addAttribute("myMessages", Project_Management_Presenter.mess);
+        m.addAttribute("users", Project_Management_Presenter.user);
+        m.addAttribute("groups", Project_Management_Presenter.group);
     }
 }

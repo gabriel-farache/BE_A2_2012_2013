@@ -270,9 +270,10 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
      * @return
      */
     @Override
-    public ArrayList<TaskHeader> getAllTasks(String token) {
-        if (Project_Management_Presenter_Intern_Methods.model.isValidToken(token) != null) {
-            return Project_Management_Presenter_Intern_Methods.model.getTasksHeader();
+    public ArrayList<TaskHeader> getAllTasks(String token, boolean onlyUserTasks) {
+        String id = Project_Management_Presenter_Intern_Methods.model.isValidToken(token);
+        if (id != null) {
+            return Project_Management_Presenter_Intern_Methods.model.getTasksHeader((onlyUserTasks ? id : null));
         } else {
             //Authentication failure
             return null;
@@ -551,7 +552,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
         boolean ok = false;
         System.err.println("saveMessageToMembers");
         if (id != null) {
-                    System.err.println("!!!!!!! saveMessageToMembers");
+                    System.err.println("!!!!!!! saveMessageToMembers  "+idSender);
 
             Message m = Project_Management_Presenter_Intern_Methods.model.createMessage(idSender, members, title, messageBody, ms);
             for (Attachment attachment : attachments) {
@@ -559,7 +560,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
             }
             m.setContent(messageBody);
             try {
-                        System.err.println("........ saveMessageToMembers");
+                        System.err.println("........ saveMessageToMembers  "+m.getSender());
 
                 Project_Management_Presenter_Intern_Methods.model.saveMessage(m);
                 ok = true;

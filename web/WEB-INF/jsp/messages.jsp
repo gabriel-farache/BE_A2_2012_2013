@@ -42,7 +42,7 @@
                         <div class="text">
                             <h2>Messages</h2></br>
                             <article>
-                                <input type="button" class="submit_but" value="Boite de réception" href="adminListOfMessages" />
+                                <input type="button" class="submit_but" value="Boite de réception" href="inbox" />
                                 <input type="button" class="submit_but" value="Nouveau" href="createMessage" />
                             </article>   
                         </div> 

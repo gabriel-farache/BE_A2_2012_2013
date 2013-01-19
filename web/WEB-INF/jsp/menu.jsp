@@ -10,7 +10,7 @@
       <a href="<c:url value="welcome"/>" title="">Accueil</a>
       <a href="<c:url value="adminListOfUsers"/>" title="">Utilisateurs</a>
       <a href="<c:url value="adminListOfGroups"/>" title="">Groupes</a>
-      <a href="<c:url value="adminListOfMessages"/>" title="">Messages</a>
+      <a href="<c:url value="inbox"/>" title="">Messages</a>
       <a href="<c:url value="adminListOfTasks"/>" title="">Tâches</a>
       <a href="<c:url value="importXML"/>" title="">XML</a>
     </div>
