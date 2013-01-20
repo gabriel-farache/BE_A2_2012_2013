@@ -240,7 +240,7 @@
 
                         <% if (session.getAttribute("isAdmin") != null) {%> 
                         <div class="span1 pull-right">
-                            <a href="createNewUser?idUser=${id}"><input class="btn btn-primary" type="submit" value="Modifier" /></a>
+                            <a href="updateUser?idUser=${id}"><input class="btn btn-primary" type="submit" value="Modifier" /></a>
                         </div>
                         <% } %>
                     </div>

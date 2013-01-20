@@ -331,5 +331,8 @@ public interface Presenter_Intern_Methods_Interface {
     @WebMethod(operationName = "saveMessageToGroups")
     public boolean saveMessageToGroups(String idSender, ArrayList<String> groups, ArrayList<String> members, String title, String messageBody, MessageStatus ms, ArrayList<Attachment> attachments, String token);
 
+    @WebMethod(operationName = "updateUser")
+    public boolean updateUser(Member m);
+
 }
 

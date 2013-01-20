@@ -638,4 +638,9 @@ public class Db_Request_Model {
             Db_Request_Model.tokenID.remove(token);
         }
     }
+    
+    public boolean updateUser(Member m)
+    {
+        return (Db_Request_Model.idb.updateMember(m) == 1);
+    }
 }

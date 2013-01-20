@@ -700,4 +700,9 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
         }
     }
 
+    @Override
+    public boolean updateUser(Member m) {
+        return Project_Management_Presenter.model.updateUser(m);
+    }
+
 }

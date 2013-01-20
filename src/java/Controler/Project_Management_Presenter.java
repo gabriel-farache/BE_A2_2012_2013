@@ -162,24 +162,21 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
      * @param request
      * @param mm
      */
-    @RequestMapping(value = {"updateUser", "checkUser"}, method = {RequestMethod.GET, RequestMethod.POST})
+    @RequestMapping(value = {"checkUser"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptPageToupdateUser(HttpServletRequest request, ModelMap mm) {
 
         //Récupération du token de la session
         String token = this.getTokenSession(request.getSession(), mm);
-        try {
-            if (Project_Management_Presenter.model.isAdmin(token)) {
-                this.fillFormUpUser(request, mm, token);
-                return "updateUser";
-
-            } else {
-                this.fillFormUpUser(request, mm, token);
-                return "checkUser";
-
-            }
-        } catch (SQLException ex) {
-            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
-            mm.addAttribute("errorMessage", "Erreur Base de donnée.");
+        if(token != null) {
+            Member memb = this.getInfoUser(request.getParameter("idUser="), token);
+             mm.addAttribute("id", memb.getId_member());
+             mm.addAttribute("nom", memb.getName());
+             mm.addAttribute("prenom", memb.getFirst_name());
+             mm.addAttribute("mail", memb.getEmail());
+            this.fillAccordionMenu(token, mm);
+            return "checkUser";
+        } else  {
+            mm.addAttribute("errorMessage", "Vous n'êtes pas identifé.");
             return "error";
         }
 
@@ -519,7 +516,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
      * @param mm
      * @return
      */
-    @RequestMapping(value = {"createNewUser"}, method = {RequestMethod.GET, RequestMethod.POST})
+    @RequestMapping(value = {"createNewUser", "updateUser"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String userCreationRequest(HttpServletRequest request, ModelMap mm) {
         String token;
 
@@ -570,9 +567,46 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                 this.fillAccordionMenu(token, mm);
                 //System.out.println
                 if (id != null) {
-                    mm.addAttribute("nom", "request.getParameter(\"nom\")");
-                    mm.addAttribute("prenom", "request.getParameter(\"prenom\")");
+                    mm.addAttribute("nom", request.getParameter("nom"));
+                    mm.addAttribute("prenom", request.getParameter("prenom"));
                     mm.addAttribute("errorMessage", "Succès de la création de l'utilisateur. ID : " + id);
+                    return "error";
+                } else {
+                    mm.addAttribute("errorMessage", "Échec de la création de l'utilisateur.");
+                    return "error";
+                }
+            } else {
+                mm.addAttribute("errorMessage", "Vous ne disposez pas de droits suffisants pour effectuer cette opération.");
+                return "error";
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+            mm.addAttribute("errorMessage", "Erreur Base de donnée.");
+            return "error";
+        }
+    }
+    
+    /*
+     * PAGE JSP A FAIRE !!!!!!!!!!!!!!!
+     * 
+     */
+    @RequestMapping(value = {"userUpdated"}, method = {RequestMethod.GET, RequestMethod.POST})
+    public String userUpdateFormSubmitted(HttpServletRequest request, ModelMap mm) {
+        try {
+            String token, user_id;
+
+            // on récupère l'id de la session (token) contenu dans le cookie
+            token = getTokenSession(request.getSession(), mm);
+
+            if (Project_Management_Presenter.model.isAdmin(token)) {
+                Member new_user = new Member(request.getParameter("id"), request.getParameter("nom"), request.getParameter("prenom"), request.getParameter("mail"));
+                System.err.println("-- " + request.getParameter("id") + " - " + new_user.getName() + " -- " + new_user.getFirst_name() + " -- " + new_user.getEmail());
+                this.fillAccordionMenu(token, mm);
+                //System.out.println
+                if (this.updateUser(new_user)) {
+                    mm.addAttribute("nom", request.getParameter("nom"));
+                    mm.addAttribute("prenom", request.getParameter("prenom"));
+                    mm.addAttribute("errorMessage", "Succès de la mise à jour de l'utilisateur. ID : " + request.getParameter("id"));
                     return "error";
                 } else {
                     mm.addAttribute("errorMessage", "Échec de la création de l'utilisateur.");
