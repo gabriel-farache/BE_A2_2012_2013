@@ -9,7 +9,6 @@ import dataObjects.*;
 import interactionsDB.InteractDB;
 import java.math.BigInteger;
 import java.security.SecureRandom;
-import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -124,7 +123,7 @@ public class Db_Request_Model {
             Db_Request_Model.idb.addAffectionGroup(group.getMembers().get(i).getId_member(), group.getId_group(), false);
         }
 
-        return (null);
+        return (true);
     }
 
     /**
@@ -470,7 +469,7 @@ public class Db_Request_Model {
         Integer idMess = Db_Request_Model.idb.addMessage(m.getTitle(), m.getCreationDate().getTime(), m.getContent());
         if (idMess != null) {
             for (Recipient recipient : recipients) {
-                if (recipient.getId()!= null && recipient.getId().trim().compareToIgnoreCase("") != 0) {
+                if (recipient.getId() != null && recipient.getId().trim().compareToIgnoreCase("") != 0) {
                     if (recipient.getType().equals(RecipientType.GROUP)) {
                         Db_Request_Model.idb.addSendMessageToGroup(m.getSender().trim(), recipient.getId(), idMess);
                         ArrayList<String> members = Db_Request_Model.idb.getMembersGroup(recipient.getId());
@@ -608,8 +607,8 @@ public class Db_Request_Model {
     public String generateIdGroup(String nom_group) {
 
         try {
-            String nom_ok = nom_group.toLowerCase().replaceAll(" ", "").substring(0, 9);
-            String id = nom_ok;
+            String nom_ok = nom_group.toLowerCase().replaceAll(" ", "");
+            String id = nom_ok.substring(0, (nom_ok.length() > 9 ? 9 : nom_ok.length()));
             int cpt = 2;
 
             while (idb.checkIDGroupExists(id)) {
@@ -638,9 +637,8 @@ public class Db_Request_Model {
             Db_Request_Model.tokenID.remove(token);
         }
     }
-    
-    public boolean updateUser(Member m)
-    {
+
+    public boolean updateUser(Member m) {
         return (Db_Request_Model.idb.updateMember(m) == 1);
     }
 }

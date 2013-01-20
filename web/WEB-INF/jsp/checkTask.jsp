@@ -251,12 +251,12 @@
                             <label for="budget">${budget}</label>
                         </fieldset>
                         <fieldset>
-                                <legend for="budget" class="rubrique">Consomm&eacute;</legend>
-                                <label type="text" for="budget">${consumed}</label>
+                                <legend for="consumed" class="rubrique">Consomm&eacute;</legend>
+                                <label type="text" for="consumed">${consumed}</label>
                             </fieldset>
                             <fieldset>
-                                <legend for="budget" class="rubrique">RAE</legend>
-                                <label type="text" for="budget">${rae}</label>
+                                <legend for="rae" class="rubrique">RAE</legend>
+                                <label type="text" for="rae">${rae}</label>
                             </fieldset>
 
                         <% if (session.getAttribute("isAdmin") != null) {%> 

@@ -226,7 +226,7 @@
                                 <legend>Destinataire(s)</legend>
                                 <div>
                                     <label>Membre(s)</label> 
-                                    <textarea style="resize: none;" rows="2" class="span14 search-query"type="text" class="input" name="saisieUtilisateurDestinataire" id="saisieUtilisateurDestinataire" >${recipient}, </textarea>
+                                    <textarea style="resize: none;" rows="2" class="span14 search-query"type="text" class="input" name="saisieUtilisateurDestinataire" id="saisieUtilisateurDestinataire" >${recipient}</textarea>
                                     <hr><label>Groupe(s)</label> 
                                     <textarea style="resize: none;" rows="2" class="span14 search-query"type="text" class="input" name="saisieGroupeDestinataire" id="saisieGroupeDestinataire" ></textarea>
                                 </div>

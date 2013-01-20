@@ -1,6 +1,6 @@
 <%-- 
-    Document   : importXML
-    Created on : Jan 20, 2013, 11:17:03 PM
+    Document   : updateGroup
+    Created on : Jan 20, 2013, 11:59:22 PM
     Author     : gabriel
 --%>
 
@@ -111,14 +111,6 @@
                                     <% }%>                                  
                                 </ul>
                             </li>
-                            <% if (session.getAttribute("isAdmin") != null) {%>     
-                            <li class="dropdown">
-                                <a id="drop5" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Import XML <b class="caret"></b></a>
-                                <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                    <li><a tabindex="-1" href="createNewUser">Importer un fichier XML</a></li> 
-                                </ul>
-                            </li>
-                            <% }%> 
                         </ul>
                         <% if (session.getAttribute("token") != null) {%> 
                         <a href="deconnection"><input type="button" class="btn btn-danger pull-right" value="D&eacute;connexion"/></a>
@@ -229,19 +221,37 @@
                 <div class="span9 offset2">
                     <!-- Example row of columns -->
                     <div class="row-fluid"> 
-
-                        <% if (session.getAttribute("isAdmin") != null) {%> 
-                        <form action="<c:url value="miam"/>" method="POST" enctype="multipart/form-data">
+                        <form method="POST"  action="<c:url value="groupUpdated"/>">
                             <fieldset>
-                                <legend for="import" class="rubrique">Importer un fichier XML</legend>
-                                <legend for="import" class="rubrique">${resultImport}</legend>
-                                <input type="file" name="selectFile"/><br/>
-                                <input name="ImporterXML" id="ImporterXML" type="submit" value="Importer" class="btn btn-primary" class="submit_but"/>
+                                <legend>Nom du groupe</legend>
+                                <div>
+                                    <input class="span14 search-query" type="text" name="nom" id="nom" value="${nom_groupe}" required/>
+                                </div>
                             </fieldset>
+                            <fieldset>
+                                <legend>Description</legend>
+                                <div>
+                                    <textarea maxlength="100" style="resize: none;" rows="4" class="span14 search-query"type="text" class="input" name="descr" id="descr" required>${desc_groupe}</textarea>
+                                </div>
+                            </fieldset>
+                            <fieldset>
+                                <legend>Membres</legend>
+                                <div>
+                                    <textarea style="resize: none;" rows="2" class="span14 search-query"type="text" class="input" name="membres" id="membres" required>${liste_membres_groupe}</textarea>
+                                </div>
+                            </fieldset>
+                            <fieldset>
+                                <legend>Chef</legend>
+                                <div>
+                                    <input class="span14 search-query" "type="text" name="chef" id="chef" value="${chef_groupe}" required/>
+                                </div>
+                            </fieldset>
+                            <br>
+                            <div class="span1 pull-right">
+                                <input class="btn btn-primary" type="submit" value="Modifier"/>
+                                <input type="hidden" id="id" value="${idGroup}"/>
+                            </div>
                         </form>
-                        <% } else {%>
-                        <p>Vous n'&ecirc;tes pas administrateur.</p>
-                        <% }%>
                     </div>
                     <hr>
                     <footer>
@@ -270,3 +280,4 @@
         </div>
     </body>
 </html>
+

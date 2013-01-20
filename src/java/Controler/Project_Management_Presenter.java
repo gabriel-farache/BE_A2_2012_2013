@@ -620,7 +620,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         }
     }
 
-    @RequestMapping(value = {"createGroup"}, method = {RequestMethod.GET, RequestMethod.POST})
+    @RequestMapping(value = {"createGroup", "updateGroup"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String groupCreationRequest(HttpServletRequest request, ModelMap mm) {
         try {
             String token;
@@ -638,6 +638,21 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                 }
                 html_liste += "</select>";
                 mm.addAttribute("liste_membres_disponibles", html_liste);
+                try {
+                    Group gp = this.getGroupInfos(token, request.getParameter("idGroup"));
+                    ArrayList<Member> memb =  gp.getMembers();
+                    String membres = "";
+                    for(Member m : memb)
+                    {
+                        membres += m.getId_member()+", ";
+                    }
+                    mm.addAttribute("nom_groupe", gp.getGroup_name());
+                    mm.addAttribute("desc_groupe", gp.getDescr());
+                    mm.addAttribute("liste_membres_groupe", membres);
+                    mm.addAttribute("chef_groupe", gp.getChief().getId_member());
+                    mm.addAttribute("idGroup", gp.getId_group());
+
+                } catch (Exception e) { }
 
                 return null;
             } else {
@@ -664,13 +679,13 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             token = getTokenSession(request.getSession(), mm);
 
             if (Project_Management_Presenter.model.isAdmin(token)) {
-                String[] membres_select = request.getParameterValues("ListeMembres");
+                String [] membres_select = request.getParameter("ListeMembres").split(",");
                 ArrayList<Member> liste_membres = new ArrayList<Member>();
                 for (int i = 0; i < membres_select.length; i++) {
-                    liste_membres.add(Project_Management_Presenter.model.getInfosMember(membres_select[i]));
+                    liste_membres.add(Project_Management_Presenter.model.getInfosMember(membres_select[i].trim()));
                 }
 
-                if (createGroup(liste_membres, token, request.getParameter("nomGroupe"), request.getParameter("descriptionGroupe"))) {
+                if (createGroup(liste_membres, token, request.getParameter("nomGroupe").replace("'", "`"), request.getParameter("descriptionGroupe").replace("'", "`"))) {
                     mm.addAttribute("nomGroupe", request.getParameter("nomGroupe"));
                     this.fillAccordionMenu(token, mm);
                     return null;
@@ -746,7 +761,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                     return "error";
                 }
             } else {
-                id_group = request.getParameter("idGroup");
+                id_group = request.getParameter("id_groupe");
             }
             g = getGroupInfos(token, id_group);
             mm.addAttribute("id_groupe", g.getId_group());
@@ -1007,13 +1022,33 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
      * @param request
      * @param mm
      */
-    @RequestMapping(value = {"adminListOfTasks"}, method = {RequestMethod.GET, RequestMethod.POST})
-    public String interceptPageAdminListOfTasks(HttpServletRequest request, ModelMap mm) {
+    @RequestMapping(value = {"listOfTasks"}, method = {RequestMethod.GET, RequestMethod.POST})
+    public String interceptPageListOfTasks(HttpServletRequest request, ModelMap mm) {
         //Récupération du token de la session
         String token = this.getTokenSession(request.getSession(), mm);
         if (Project_Management_Presenter.model.isValidToken(token) != null) {
             this.createTaskConsult(mm, token, false);
+            mm.addAttribute("typeTask", "Toutes les tâches");
             return null;
+        } else {
+            return "connection";
+        }
+    }
+    
+    /**
+     * Fonction qui load la liste des taches dans un jolie tableau pour l'admin
+     *
+     * @param request
+     * @param mm
+     */
+    @RequestMapping(value = {"myTasks"}, method = {RequestMethod.GET, RequestMethod.POST})
+    public String interceptMyTasks(HttpServletRequest request, ModelMap mm) {
+        //Récupération du token de la session
+        String token = this.getTokenSession(request.getSession(), mm);
+        if (Project_Management_Presenter.model.isValidToken(token) != null) {
+            this.createTaskConsult(mm, token, true);
+            mm.addAttribute("typeTask", "Mes tâches");
+            return "listOfTasks";
         } else {
             return "connection";
         }
