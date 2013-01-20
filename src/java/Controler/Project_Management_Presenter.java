@@ -133,24 +133,16 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
      * @param request
      * @param mm
      */
-    @RequestMapping(value = {"updateTask", "checkTask"}, method = {RequestMethod.GET, RequestMethod.POST})
+    @RequestMapping(value = {"checkTask"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptPageToUpdate(HttpServletRequest request, ModelMap mm) {
 
         //Récupération du token de la session
         String token = this.getTokenSession(request.getSession(), mm);
-        try {
-            if (Project_Management_Presenter.model.isAdmin(token)) {
-                this.fillFormUpTask(request, mm, token);
-                return "updateTask";
-
-            } else {
-                this.fillFormUpTask(request, mm, token);
-                return "checkTask";
-
-            }
-        } catch (SQLException ex) {
-            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
-            mm.addAttribute("errorMessage", "Erreur Base de donnée.");
+        if (token != null) {
+            this.fillFormUpTask(request, mm, token);
+            return null;
+        } else {
+            mm.addAttribute("errorMessage", "Vous n'êtes pas identifié");
             return "error";
         }
 
@@ -167,15 +159,15 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
 
         //Récupération du token de la session
         String token = this.getTokenSession(request.getSession(), mm);
-        if(token != null) {
-            Member memb = this.getInfoUser(request.getParameter("idUser="), token);
-             mm.addAttribute("id", memb.getId_member());
-             mm.addAttribute("nom", memb.getName());
-             mm.addAttribute("prenom", memb.getFirst_name());
-             mm.addAttribute("mail", memb.getEmail());
+        if (token != null) {
+            Member memb = this.getInfoUser(request.getParameter("idUser"), token);
+            mm.addAttribute("id", memb.getId_member());
+            mm.addAttribute("nom", memb.getName());
+            mm.addAttribute("prenom", memb.getFirst_name());
+            mm.addAttribute("mail", memb.getEmail());
             this.fillAccordionMenu(token, mm);
             return "checkUser";
-        } else  {
+        } else {
             mm.addAttribute("errorMessage", "Vous n'êtes pas identifé.");
             return "error";
         }
@@ -188,12 +180,17 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
      * @param request
      * @return
      */
-    @RequestMapping(value = {"/createTask"}, method = {RequestMethod.GET, RequestMethod.POST})
+    @RequestMapping(value = {"updateTask", "createTask"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptCreateTask(HttpServletRequest request, ModelMap m) {
         //Récupération du token de la session
         String token = this.getTokenSession(request.getSession(), m);
         //Appel méthode interne correspondante
         if (token != null && Project_Management_Presenter.model.getCreateTaskForm()) {
+            try {
+                this.fillFormUpTask(request, m, token);
+            } catch (Exception ex) {
+                Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+            }
             return null;
         } else {
             //Retour
@@ -223,7 +220,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             //Collections.addAll(members, allParams.get("selectUtilisateur"));
             ArrayList<String> groups = new ArrayList<String>();
             //Collections.addAll(groups, allParams.get("selectGroupe"));
-            String[] memberss = request.getParameter("choixUtils").trim().split(",");
+            String[] memberss = request.getParameter("choixUtilsM").trim().split(",");
             Collections.addAll(members, memberss);
             System.err.println(" -- " + request.getParameter("titreTache") + ", " + request.getParameter("projetTache") + ", " + request.getParameter("dateDebut") + ", " + request.getParameter("dateFin") + ", " + request.getParameter("statutTache") + ", " + request.getParameter("budget") + ", " + request.getParameter("consumed") + ", " + request.getParameter("rae") + ", " + memberss + ", " + request.getParameter("descriptionTache"));
 
@@ -249,11 +246,11 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         System.err.println("----------------------546465342534--------------------");
 
         String token = this.getTokenSession(request.getSession(), map);
-        System.err.println("-------------------------------------------------------------------");
+        System.err.println("-------------------------------------------------------------------      " + request.getParameter("idTask"));
         //Appel méthode interne correspondante
         if (token != null) {
             try {
-                model.deleteTaskAndNotify(Integer.parseInt(request.getParameter("idTask")));
+                model.deleteTaskAndNotify(Integer.parseInt(request.getParameter("idTask").trim()));
             } catch (SQLException ex) {
                 Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -585,7 +582,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             return "error";
         }
     }
-    
+
     /*
      * PAGE JSP A FAIRE !!!!!!!!!!!!!!!
      * 
@@ -811,7 +808,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                         + "</tr>";
                 for (Member m : memberList) {
                     table +=
-                            "<tr id='utilisateur1' onclick='window.open(this.href=\"checkUser?idUser=" + m.getId_member() + "\"); return false;'>"
+                            "<tr id='utilisateur1' onclick='window.open.href=\"checkUser?idUser=" + m.getId_member() + "\";'>"
                             + "<td>" + m.getName() + "</td>"
                             + "<td>" + m.getFirst_name() + "</td>"
                             + "<td>" + m.getEmail() + "</td>"
@@ -917,20 +914,20 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                     ArrayList<MessageStatus> mst = m.getStatus();
                     if (mst != null && !mst.isEmpty()) {
                         if (mst.get(0).equals(MessageStatus.IMPORTANT)) {
-                            table += "<tr class=\"warning\" id='groupe' onclick='window.open(this.href=\"checkMessage?idMessage=" + m.getId() + "\"); return false;'>";
+                            table += "<tr class=\"warning\" id='groupe' ";
                         } else if (mst.get(0).equals(MessageStatus.HAVE_TO_ANSWER)) {
-                            table += "<tr class=\"info\" id='groupe' onclick='window.open(this.href=\"checkMessage?idMessage=" + m.getId() + "\"); return false;'>";
+                            table += "<tr class=\"info\" id='groupe' ";
                         } else if (mst.get(0).equals(MessageStatus.URGENT)) {
-                            table += "<tr class=\"error\" id='groupe' onclick='window.open(this.href=\"checkMessage?idMessage=" + m.getId() + "\"); return false;'>";
+                            table += "<tr class=\"error\" id='groupe' ";
                         } else if (mst.get(0).equals(MessageStatus.FORWARDED)) {
-                            table += "<tr class=\"success\" id='groupe' onclick='window.open(this.href=\"checkMessage?idMessage=" + m.getId() + "\"); return false;'>";
+                            table += "<tr class=\"success\" id='groupe' ";
                         } else {
-                            table += "<tr id='groupe' onclick='window.open(this.href=\"checkMessage?idMessage=" + m.getId() + "\"); return false;'>";
+                            table += "<tr id='groupe' ";
                         }
                     } else {
                         table += "<tr class=\"default\" id='groupe' onclick='window.open(this.href=\"checkMessage?idMessage=" + m.getId() + "\"); return false;'>";
                     }
-                    table += "<td>" + m.getTitle() + "</td>"
+                    table += "onclick='window.location.href = \"checkMessage?idMessage=" + m.getId() + "\";'>"+"<td>"+"<td>" + m.getTitle() + "</td>"
                             + "<td>" + m.getSender() + "</td>"
                             + "<td>" + m.getStringCreationDate() + "</td>"
                             + "</tr>";
@@ -963,26 +960,26 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                 + "</tr>";
         for (TaskHeader th : tasksHeader) {
             if (th.getStatus().toString().equalsIgnoreCase("URGENT")) {
-                table += "<tr class=\"error\" onclick='window.open(this.href=\"checkTask?idTask=" + th.getId() + "\"); return false;'>";
+                table += "<tr class=\"error\" onclick='window.open.href=\"checkTask?idTask=" + th.getId() + "\";'>";
 
             }
             if (th.getStatus().toString().equalsIgnoreCase("OPEN")) {
                 if (((th.getDueDate().getTimeInMillis() - (new java.util.Date().getTime())) / (1000 * 60 * 60 * 24)) <= 20) {
                     if (((th.getDueDate().getTimeInMillis() - (new java.util.Date().getTime())) / (1000 * 60 * 60 * 24)) <= 10) {
-                        table += "<tr class=\"error\" onclick='window.open(this.href=\"checkTask?idTask=" + th.getId() + "\"); return false;'>";
+                        table += "<tr class=\"error\" ";
                         //Project_Management_Presenter.model.updateTaskStatus(th.getId(), TaskStatus.URGENT);
                     } else {
-                        table += "<tr class=\"warning\" onclick='window.open(this.href=\"checkTask?idTask=" + th.getId() + "\"); return false;'>";
+                        table += "<tr class=\"warning\" ";
                     }
                 } else {
 
-                    table += "<tr class=\"info\" onclick='window.open(this.href=\"checkTask?idTask=" + th.getId() + "\"); return false;'>";
+                    table += "<tr class=\"info\" ";
                 }
             }
             if (th.getStatus().toString().equalsIgnoreCase("CLOSED")) {
-                table += "<tr class=\"success\" onclick='window.open(this.href=\"checkTask?idTask=" + th.getId() + "\"); return false;'>";
+                table += "<tr class=\"success\" ";
             }
-            table += "<td>" + th.getProject_topic() + "</td>"
+            table += "onclick='window.location.href = \"checkTask?idTask=" + th.getId() + "\";'>"+"<td>" + th.getProject_topic() + "</td>"
                     + "<td>" + th.getTitle() + "</td>"
                     + "<td>" + th.getStatus().toString() + "</td>"
                     + "<td>" + th.getStringCreationDate() + "</td>"
@@ -1058,24 +1055,27 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         String utils = "";
         String title = taskToUpdate.getTitle();
         String content = taskToUpdate.getContent();
-        String creationDate = taskToUpdate.getStringCreationDate();
-        String dueDate = taskToUpdate.getStringDueDate();
+        java.util.Date creationDate = taskToUpdate.getCreationDate().getTime();
+        java.util.Date dueDate = taskToUpdate.getDueDate().getTime();
         String budget = Float.toString(taskToUpdate.getBudget());
         //Maintenant je remplis la map
         //modelMap.addAttribute("utilisateursTache", recipients);
-        modelMap.addAttribute("projetTache", projectTopic);
-        modelMap.addAttribute("Titre", title);
-        modelMap.addAttribute("descriptionTache", content);
-        modelMap.addAttribute("dateDebut", creationDate);
-        modelMap.addAttribute("dateFin", dueDate);
+        modelMap.addAttribute("projetTache", projectTopic.trim());
+        modelMap.addAttribute("Titre", title.trim());
+        modelMap.addAttribute("descriptionTache", content.trim());
+        modelMap.addAttribute("dateDebut", creationDate.toString());
+        modelMap.addAttribute("dateFin", dueDate.toString());
         modelMap.addAttribute("budget", budget);
         modelMap.addAttribute("rae", Float.toString(taskToUpdate.getRae()));
         modelMap.addAttribute("consumed", Float.toString(taskToUpdate.getConsumed()));
+        modelMap.addAttribute("rae", Float.toString(taskToUpdate.getRae()));
         for (Recipient taskString : taskToUpdate.getRecipients()) {
             utils += taskString.getId() + ", ";
         }
         modelMap.addAttribute("utils", utils);
         modelMap.addAttribute("idTask", request.getParameter("idTask"));
+        modelMap.addAttribute("statut", taskToUpdate.getStatus());
+
         return null;
     }
 
