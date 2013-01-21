@@ -16,7 +16,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -25,7 +24,6 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import javax.xml.ws.Endpoint;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
@@ -45,9 +43,9 @@ import peopleObjects.*;
 public class Project_Management_Presenter extends Project_Management_Presenter_Intern_Methods {
 
     private static Project_Management_Presenter me = null;
-    private static String group = "";
-    private static String user = "";
-    private static String mess = "";
+    private static String groupes = "";
+    private static String users = "";
+    private static String messages = "";
     private static String tasks = "";
 
     public static Project_Management_Presenter getInstance() {
@@ -92,9 +90,9 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
     public String createMessage(HttpServletRequest request, ModelMap m) {
         String token = this.getTokenSession(request.getSession(), m);
         try {
-            String[] users = request.getParameterValues("selectUsersForm");
+            String[] userss = request.getParameterValues("selectUsersForm");
             String uss = "";
-            for (String u : users) {
+            for (String u : userss) {
                 uss += u + ", ";
             }
             m.addAttribute("user", uss);
@@ -155,16 +153,19 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
      * @param mm
      */
     @RequestMapping(value = {"checkUser"}, method = {RequestMethod.GET, RequestMethod.POST})
-    public String interceptPageToupdateUser(HttpServletRequest request, ModelMap mm) {
+    public String interceptPageToCheckUser(HttpServletRequest request, ModelMap mm) {
 
         //Récupération du token de la session
         String token = this.getTokenSession(request.getSession(), mm);
-        if (token != null) {
+        String id = Project_Management_Presenter.model.isValidToken(token);
+        if (id != null) {
             Member memb = this.getInfoUser(request.getParameter("idUser"), token);
             mm.addAttribute("id", memb.getId_member());
             mm.addAttribute("nom", memb.getName());
             mm.addAttribute("prenom", memb.getFirst_name());
             mm.addAttribute("mail", memb.getEmail());
+            mm.addAttribute("groups", this.getMemberGroups(request.getParameter("idUser")));
+            mm.addAttribute("tasks", this.getMemberTasks(request.getParameter("idUser")));
             this.fillAccordionMenu(token, mm);
             return "checkUser";
         } else {
@@ -215,13 +216,14 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         //Appel méthode interne correspondante
         if (token != null) {
             //Récupération des utilisateurs et des groupes
-            Map<String, String[]> allParams = request.getParameterMap();
             ArrayList<String> members = new ArrayList<String>();
             //Collections.addAll(members, allParams.get("selectUtilisateur"));
             ArrayList<String> groups = new ArrayList<String>();
             //Collections.addAll(groups, allParams.get("selectGroupe"));
-            String[] memberss = request.getParameter("choixUtilsM").trim().split(",");
+            String[] memberss = request.getParameter("choixUtilsM").replaceAll(" ", "").split(",");
+            String[] groupss = request.getParameter("choixUtilsG").replaceAll(" ", "").split(",");
             Collections.addAll(members, memberss);
+            Collections.addAll(groups, groupss);
             System.err.println(" -- " + request.getParameter("titreTache") + ", " + request.getParameter("projetTache") + ", " + request.getParameter("dateDebut") + ", " + request.getParameter("dateFin") + ", " + request.getParameter("statutTache") + ", " + request.getParameter("budget") + ", " + request.getParameter("consumed") + ", " + request.getParameter("rae") + ", " + memberss + ", " + request.getParameter("descriptionTache"));
 
             //On créé la tache
@@ -242,42 +244,78 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
 
     @RequestMapping(value = {"taskUpdated"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptUpdateCreated(HttpServletRequest request, ModelMap map) {
-        //Récupération du token de la session
-        System.err.println("----------------------546465342534--------------------");
+        try {
+            //Récupération du token de la session
+            String alertMess;
+            boolean result;
+            String token = this.getTokenSession(request.getSession(), map);
+            //Appel méthode interne correspondante
+            if (token != null) {
+                try {
+                    String id = Project_Management_Presenter.model.isValidToken(token);
+                    if (id != null && Project_Management_Presenter.model.isAdmin(token)) {
+                        //Récupération des utilisateurs et des groupes
+                        ArrayList<String> members = new ArrayList<String>();
+                        //Collections.addAll(members, allParams.get("selectUtilisateur"));
+                        ArrayList<String> groups = new ArrayList<String>();
+                        //Collections.addAll(groups, allParams.get("selectGroupe"));
+                        String[] memberss = request.getParameter("choixUtilsM").replaceAll(" ", "").split(",");
+                        String[] groupss = request.getParameter("choixUtilsG").replaceAll(" ", "").split(",");
+                        Collections.addAll(members, memberss);
+                        Collections.addAll(groups, groupss);
 
-        String token = this.getTokenSession(request.getSession(), map);
-        System.err.println("-------------------------------------------------------------------      " + request.getParameter("idTask"));
-        //Appel méthode interne correspondante
-        if (token != null) {
-            try {
-                model.deleteTaskAndNotify(Integer.parseInt(request.getParameter("idTask").trim()));
-            } catch (SQLException ex) {
-                Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            //Récupération des utilisateurs et des groupes
-            Map<String, String[]> allParams = request.getParameterMap();
-            ArrayList<String> members = new ArrayList<String>();
-            //Collections.addAll(members, allParams.get("selectUtilisateur"));
-            ArrayList<String> groups = new ArrayList<String>();
-            //Collections.addAll(groups, allParams.get("selectGroupe"));
-            String[] memberss = request.getParameter("choixUtils").trim().split(",");
-            Collections.addAll(members, memberss);
-            System.err.println(" -- " + request.getParameter("titreTache") + ", " + request.getParameter("projetTache") + ", " + request.getParameter("dateDebut") + ", " + request.getParameter("dateFin") + ", " + request.getParameter("statutTache") + ", " + request.getParameter("budget") + ", " + request.getParameter("consumed") + ", " + request.getParameter("rae") + ", " + memberss + ", " + request.getParameter("descriptionTache"));
+                        System.err.println(" -- " + request.getParameter("titreTache") + ", " + request.getParameter("projetTache") + ", " + request.getParameter("dateDebut") + ", " + request.getParameter("dateFin") + ", " + request.getParameter("statutTache") + ", " + request.getParameter("budget") + ", " + request.getParameter("consumed") + ", " + request.getParameter("rae") + ", " + memberss + ", " + request.getParameter("descriptionTache"));
 
-            //On créé la tache
-            String result = this.createNewTask((String) request.getParameter("descriptionTache"), (String) request.getParameter("titreTache"), (String) request.getParameter("projetTache"), (String) request.getParameter("dateDebut") + " 00:00:00", (String) request.getParameter("dateFin") + " 00:00:00", (String) request.getParameter("statutTache"), Float.parseFloat((String) request.getParameter("budget")), Float.parseFloat((String) request.getParameter("consumed")), Float.parseFloat((String) request.getParameter("rae")), members, groups, token);
-            //Result == null si il y a eu une erreur, sinon un message de succès est donné avec (s'il y en a) les membres/groupes qui n'ont pas été trouvé dans la BDD
-            if (result != null) {
-                map.addAttribute("errorMessage", result);
-                this.fillAccordionMenu(token, map);
-                return "error";
+                        //On créé la tache
+                        //public boolean updateTask(Task newTask, int id_task, ArrayList<String> idsNewMembers, ArrayList<String> idsNewGroups, String chief)
+                        Task newTask = new Task(request.getParameter("idTask").trim(), id, (String) request.getParameter("titreTache"), (String) request.getParameter("dateDebut") + " 00:00:00", (String) request.getParameter("descriptionTache"), (String) request.getParameter("dateFin") + " 00:00:00", (String) request.getParameter("projetTache"), Float.parseFloat((String) request.getParameter("budget")), Float.parseFloat((String) request.getParameter("consumed")), Float.parseFloat((String) request.getParameter("rae")), (String) request.getParameter("statutTache"), (String) request.getParameter("chef").split(",")[0]);
+
+                        result = this.updateTask(newTask, Integer.parseInt(request.getParameter("idTask").trim()), members, groups, token);
+
+                        //Result == null si il y a eu une erreur, sinon un message de succès est donné avec (s'il y en a) les membres/groupes qui n'ont pas été trouvé dans la BDD
+                        if (result) {
+                            this.fillAccordionMenu(token, map);
+                            alertMess = "<div class=\"alert alert-success\">"
+                                    + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                                    + "<strong>Mise à jour réussie ! </strong>This is a fatal error."
+                                    + "</div>";
+                            map.addAttribute("alert", alertMess);
+                            return "redirect:checkTask?idTask=" + request.getParameter("idTask").trim() + "";
+                        } else {
+                            alertMess = "<div class=\"alert alert-error\">"
+                                    + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                                    + "<strong>Echec de la mise à jour ! </strong>This is a fatal error."
+                                    + "</div>";
+                            map.addAttribute("alert", alertMess);
+                            return "redirect:checkTask?idTask=" + request.getParameter("idTask").trim() + "";
+                        }
+                    } else {
+                        //Retour
+                        map.addAttribute("errorMessage", "Vous n'êtes pas identifier ou vous ne possèdez pas les droits suffisants.");
+                        return "error";
+                    }
+                } catch (SQLException ex) {
+                    Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+                    map.addAttribute("errorMessage", "Erreur base de données.");
+                    return "error";
+                }
             } else {
+                //Retour
+                map.addAttribute("errorMessage", "Vous n'êtes pas identifier");
                 return "error";
             }
-        } else {
-            //Retour
-            return "error";
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter.class
+                    .getName()).log(Level.SEVERE, null, ex);
+            String alertMess = "<div class=\"alert alert-error\">"
+                    + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                    + "<strong>Echec de la mise à jour ! </strong>This is a fatal error."
+                    + "</div>";
+
+            map.addAttribute("alert", alertMess);
+            return "redirect:checkTask?idTask=" + request.getParameter("idTask").trim() + "";
         }
+
     }
 
     @RequestMapping(value = {"supprMessage"}, method = {RequestMethod.GET, RequestMethod.POST})
@@ -305,7 +343,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         Map<String, String[]> allParams = request.getParameterMap();
         //Récuperation de l'id de la tâche
         String[] id_task_params = allParams.get("id_task");
-        int idTask = Integer.parseInt(id_task_params[0]);
+        int idTask = Integer.parseInt(id_task_params[0].trim());
         //Appel méthode interne correspondante
         if (this.deleteTask(token, idTask)) {
             return null;
@@ -328,35 +366,6 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         //Retour
     }
 
-    /**
-     * Page appellée lorsque l'utilisateur appuit sur le bouton "Valider update"
-     *
-     * @param request
-     */
-    @RequestMapping(value = {"/confirmupdateTask.html"}, method = {RequestMethod.GET, RequestMethod.POST})
-    public String interceptPageToConfirmUpdate(HttpServletRequest request, ModelMap m) {
-        //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession(), m);
-        //Creation de la liste des attributs & Creation d'une map contenant la valeur associé à un champ
-        Map<String, String[]> allParams = request.getParameterMap();
-        //Récuperation de l'id de la tâche
-        String[] id_task_params = allParams.get("id_task");
-        int id_task = Integer.parseInt(id_task_params[0]);
-        //Recuperation de la tâche à modifier
-        Task taskToUpdate = this.getInfosTask(id_task, token);
-        //Modification de la tâche dans un premier temps 
-        taskToUpdate.setProjectTopic(allParams.get("projetTache")[0]);
-        taskToUpdate.setTitle(allParams.get("titreTache")[0]);
-        taskToUpdate.setContent(allParams.get("descriptionTache")[0]);
-        taskToUpdate.setDueDate(allParams.get("dateTache")[0]);
-        taskToUpdate.setStatus(allParams.get("statutTache")[0]);
-        taskToUpdate.setBudget(Integer.parseInt(allParams.get("budgetTache")[0]));
-        //Appel méthode interne correspondante pour modifier la tâche dans la base de données
-        Boolean toReturn = updateTask(token, taskToUpdate);
-        //Retour
-        return (toReturn ? null : "error");
-    }
-
     @RequestMapping(value = {"welcome"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptPageListOfTask(HttpServletRequest request, ModelMap model) {
         //Récupération du token de la session
@@ -366,15 +375,29 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         try {
             token = this.login((String) request.getParameter("utilisateur"), (String) request.getParameter("pass"));
             this.setTokenSession(request.getSession(), token);
+
+
+
+
+
+
         } catch (Exception ex) {
-            Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Project_Management_Presenter_Intern_Methods.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         token = this.getTokenSession(request.getSession(), model);
         try {
             this.fillAccordionMenu(token, model);
             this.addAttribute(model);
+
+
+
+
+
+
         } catch (Exception ex) {
-            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Project_Management_Presenter.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         //} else {
         System.out.println("ici1");
@@ -383,9 +406,16 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             // }
             if (Project_Management_Presenter.model.isAdmin(token)) {
                 request.getSession().setAttribute("isAdmin", true);
+
+
+
+
+
+
             }
         } catch (SQLException ex) {
-            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Project_Management_Presenter.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         if (Project_Management_Presenter.model.isValidToken(token) != null) {
             this.createTaskConsult(model, token, true);
@@ -410,8 +440,8 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             title = title.substring(0, (title.length() > 50 ? 49 : title.length()));
             String message = request.getParameter("saisieMessage");
             String[] cheminsPj = request.getParameterValues("choisirPieceJointe");
-            String memberss[] = request.getParameter("saisieUtilisateurDestinataire").split(",");
-            String groups[] = request.getParameter("saisieGroupeDestinataire").split(",");
+            String memberss[] = request.getParameter("saisieUtilisateurDestinataire").replaceAll(" ", "").split(",");
+            String groups[] = request.getParameter("saisieGroupeDestinataire").replaceAll(" ", "").split(",");
 
             ArrayList<String> members = new ArrayList<String>();
 
@@ -443,9 +473,20 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             this.fillAccordionMenu(token, m);
             m.addAttribute("errorMessage", "<h1>Message envoyé.</h1>");
             return "error";
+
+
+
+
+
+
         } catch (Exception ex) {
-            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
-            m.addAttribute("errorMessage", "<h1>Pb</h1>");
+            Logger.getLogger(Project_Management_Presenter.class
+                    .getName()).log(Level.SEVERE, null, ex);
+            m.addAttribute(
+                    "errorMessage", "<h1>Pb</h1>");
+
+
+
             return "error";
         }
     }
@@ -470,8 +511,15 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         Message m = this.getMessageBody(request.getParameter("idMessage"), token);
         try {
             Project_Management_Presenter.model.updateMessageStatus(token, m.getId(), MessageStatus.READ, true);
+
+
+
+
+
+
         } catch (SQLException ex) {
-            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Project_Management_Presenter.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         if (m != null) {
             String groupRcpt = "";
@@ -522,7 +570,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         try {
             if (Project_Management_Presenter.model.isAdmin(token)) {
                 try {
-                    Member memb = this.getInfoUser((String) request.getParameter("id"), token);
+                    Member memb = this.getInfoUser((String) request.getParameter("idUser"), token);
                     mm.addAttribute("nom", memb.getName());
                     mm.addAttribute("prenom", memb.getFirst_name());
                     mm.addAttribute("mail", memb.getEmail());
@@ -536,10 +584,21 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             } else {
                 mm.addAttribute("errorMessage", "Vous ne disposez pas de droits suffisants pour effectuer cette opération.");
                 return "error";
+
+
+
+
+
+
             }
         } catch (SQLException ex) {
-            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
-            mm.addAttribute("errorMessage", "Erreur Base de donnée.");
+            Logger.getLogger(Project_Management_Presenter.class
+                    .getName()).log(Level.SEVERE, null, ex);
+            mm.addAttribute(
+                    "errorMessage", "Erreur Base de donnée.");
+
+
+
             return "error";
         }
     }
@@ -575,10 +634,21 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             } else {
                 mm.addAttribute("errorMessage", "Vous ne disposez pas de droits suffisants pour effectuer cette opération.");
                 return "error";
+
+
+
+
+
+
             }
         } catch (SQLException ex) {
-            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
-            mm.addAttribute("errorMessage", "Erreur Base de donnée.");
+            Logger.getLogger(Project_Management_Presenter.class
+                    .getName()).log(Level.SEVERE, null, ex);
+            mm.addAttribute(
+                    "errorMessage", "Erreur Base de donnée.");
+
+
+
             return "error";
         }
     }
@@ -612,10 +682,21 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             } else {
                 mm.addAttribute("errorMessage", "Vous ne disposez pas de droits suffisants pour effectuer cette opération.");
                 return "error";
+
+
+
+
+
+
             }
         } catch (SQLException ex) {
-            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
-            mm.addAttribute("errorMessage", "Erreur Base de donnée.");
+            Logger.getLogger(Project_Management_Presenter.class
+                    .getName()).log(Level.SEVERE, null, ex);
+            mm.addAttribute(
+                    "errorMessage", "Erreur Base de donnée.");
+
+
+
             return "error";
         }
     }
@@ -640,11 +721,10 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                 mm.addAttribute("liste_membres_disponibles", html_liste);
                 try {
                     Group gp = this.getGroupInfos(token, request.getParameter("idGroup"));
-                    ArrayList<Member> memb =  gp.getMembers();
+                    ArrayList<Member> memb = gp.getMembers();
                     String membres = "";
-                    for(Member m : memb)
-                    {
-                        membres += m.getId_member()+", ";
+                    for (Member m : memb) {
+                        membres += m.getId_member() + ", ";
                     }
                     mm.addAttribute("nom_groupe", gp.getGroup_name());
                     mm.addAttribute("desc_groupe", gp.getDescr());
@@ -652,16 +732,28 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                     mm.addAttribute("chef_groupe", gp.getChief().getId_member());
                     mm.addAttribute("idGroup", gp.getId_group());
 
-                } catch (Exception e) { }
+                } catch (Exception e) {
+                }
 
                 return null;
             } else {
                 mm.addAttribute("errorMessage", "Vous ne disposez pas de droits suffisants pour effectuer cette opération.");
                 return "error";
+
+
+
+
+
+
             }
         } catch (SQLException ex) {
-            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
-            mm.addAttribute("errorMessage", "Erreur Base de donnée.");
+            Logger.getLogger(Project_Management_Presenter.class
+                    .getName()).log(Level.SEVERE, null, ex);
+            mm.addAttribute(
+                    "errorMessage", "Erreur Base de donnée.");
+
+
+
             return "error";
         }
     }
@@ -679,7 +771,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             token = getTokenSession(request.getSession(), mm);
 
             if (Project_Management_Presenter.model.isAdmin(token)) {
-                String [] membres_select = request.getParameter("ListeMembres").split(",");
+                String[] membres_select = request.getParameter("ListeMembres").replaceAll(" ", "").split(",");
                 ArrayList<Member> liste_membres = new ArrayList<Member>();
                 for (int i = 0; i < membres_select.length; i++) {
                     liste_membres.add(Project_Management_Presenter.model.getInfosMember(membres_select[i].trim()));
@@ -696,10 +788,21 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             } else {
                 mm.addAttribute("errorMessage", "Vous ne disposez pas de droits suffisants pour effectuer cette opération.");
                 return "error";
+
+
+
+
+
+
             }
         } catch (SQLException ex) {
-            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
-            mm.addAttribute("errorMessage", "Erreur Base de donnée.");
+            Logger.getLogger(Project_Management_Presenter.class
+                    .getName()).log(Level.SEVERE, null, ex);
+            mm.addAttribute(
+                    "errorMessage", "Erreur Base de donnée.");
+
+
+
             return "error";
         }
     }
@@ -767,7 +870,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             mm.addAttribute("id_groupe", g.getId_group());
             mm.addAttribute("nom_groupe", g.getGroup_name());
             mm.addAttribute("desc_groupe", g.getDescr());
-            //mm.addAttribute("chef_groupe", g.getChief().getName() + " " + g.getChief().getFirst_name());
+            mm.addAttribute("chef_groupe", g.getChief().getId_member());
 
             ArrayList<Member> liste_membres = g.getMembers();
             table = "<select id=\"ListeMembresGroupe\" name=\"ListeMembresGroupe\" size=20>";
@@ -801,8 +904,8 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
      * @param request
      * @param mm
      */
-    @RequestMapping(value = {"adminListOfUsers"}, method = {RequestMethod.GET, RequestMethod.POST})
-    public String interceptPageAdminListOfUsers(HttpSession session, HttpServletRequest request, ModelMap mm) {
+    @RequestMapping(value = {"listOfUser"}, method = {RequestMethod.GET, RequestMethod.POST})
+    public String interceptPageListOfUsers(HttpSession session, HttpServletRequest request, ModelMap mm) {
         String pageToLoad = null;
 
         //Récupération du token de la session
@@ -823,7 +926,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                         + "</tr>";
                 for (Member m : memberList) {
                     table +=
-                            "<tr id='utilisateur1' onclick='window.open.href=\"checkUser?idUser=" + m.getId_member() + "\";'>"
+                            "<tr id='utilisateur1' onclick='window.location.href=\"checkUser?idUser=" + m.getId_member() + "\";'>"
                             + "<td>" + m.getName() + "</td>"
                             + "<td>" + m.getFirst_name() + "</td>"
                             + "<td>" + m.getEmail() + "</td>"
@@ -843,10 +946,21 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                     mm.addAttribute("display", "submit");
                 } else {
                     mm.addAttribute("display", "hidden");
+
+
+
+
+
+
                 }
             } catch (SQLException ex) {
-                Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
-                mm.addAttribute("errorMessage", "Erreur Base de donnée.");
+                Logger.getLogger(Project_Management_Presenter.class
+                        .getName()).log(Level.SEVERE, null, ex);
+                mm.addAttribute(
+                        "errorMessage", "Erreur Base de donnée.");
+
+
+
                 return "error";
             }
         }
@@ -859,8 +973,8 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
      * @param request
      * @param mm
      */
-    @RequestMapping(value = {"adminListOfGroups"}, method = {RequestMethod.GET, RequestMethod.POST})
-    public String interceptPageAdminListOfGroups(HttpServletRequest request, ModelMap mm) {
+    @RequestMapping(value = {"listOfGroup"}, method = {RequestMethod.GET, RequestMethod.POST})
+    public String interceptPageListOfGroups(HttpServletRequest request, ModelMap mm) {
         //Récupération du token de la session
         String token = this.getTokenSession(request.getSession(), mm);
         if (Project_Management_Presenter.model.isValidToken(token) != null) {
@@ -874,7 +988,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                     + "</tr>";
             for (GroupHeader g : groupList) {
                 table +=
-                        "<tr id='groupe' onclick='window.open(this.href=\"checkGroup?id_groupe=" + g.getId_group() + "\"); return false;'>"
+                        "<tr id='groupe' onclick='window.location.href = \"checkGroup?id_groupe=" + g.getId_group() + "\";'>"
                         + "<td>" + g.getGroup_name() + "</td>"
                         + "<td>" + g.getDescr() + "</td>"
                         + "</tr>";
@@ -890,7 +1004,8 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                     mm.addAttribute("display", "hidden");
                 }
             } catch (SQLException ex) {
-                Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Project_Management_Presenter.class
+                        .getName()).log(Level.SEVERE, null, ex);
                 mm.addAttribute("errorMessage", "Erreur Base de donnée.");
                 return "error";
             }
@@ -940,9 +1055,9 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                             table += "<tr id='groupe' ";
                         }
                     } else {
-                        table += "<tr class=\"default\" id='groupe' onclick='window.open(this.href=\"checkMessage?idMessage=" + m.getId() + "\"); return false;'>";
+                        table += "<tr class=\"default\" ";
                     }
-                    table += "onclick='window.location.href = \"checkMessage?idMessage=" + m.getId() + "\";'>"+"<td>"+"<td>" + m.getTitle() + "</td>"
+                    table += "onclick='window.location.href = \"checkMessage?idMessage=" + m.getId() + "\";'>" + "<td>" + "<td>" + m.getTitle() + "</td>"
                             + "<td>" + m.getSender() + "</td>"
                             + "<td>" + m.getStringCreationDate() + "</td>"
                             + "</tr>";
@@ -975,7 +1090,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                 + "</tr>";
         for (TaskHeader th : tasksHeader) {
             if (th.getStatus().toString().equalsIgnoreCase("URGENT")) {
-                table += "<tr class=\"error\" onclick='window.open.href=\"checkTask?idTask=" + th.getId() + "\";'>";
+                table += "<tr class=\"error\" ";
 
             }
             if (th.getStatus().toString().equalsIgnoreCase("OPEN")) {
@@ -994,7 +1109,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             if (th.getStatus().toString().equalsIgnoreCase("CLOSED")) {
                 table += "<tr class=\"success\" ";
             }
-            table += "onclick='window.location.href = \"checkTask?idTask=" + th.getId() + "\";'>"+"<td>" + th.getProject_topic() + "</td>"
+            table += "onclick='window.location.href = \"checkTask?idTask=" + th.getId() + "\";'>" + "<td>" + th.getProject_topic() + "</td>"
                     + "<td>" + th.getTitle() + "</td>"
                     + "<td>" + th.getStatus().toString() + "</td>"
                     + "<td>" + th.getStringCreationDate() + "</td>"
@@ -1009,10 +1124,18 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                 mm.addAttribute("display", "submit");
             } else {
                 mm.addAttribute("display", "hidden");
+
+
+
+
+
+
             }
         } catch (SQLException ex) {
-            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
-            mm.addAttribute("errorMessage", "Erreur Base de donnée.");
+            Logger.getLogger(Project_Management_Presenter.class
+                    .getName()).log(Level.SEVERE, null, ex);
+            mm.addAttribute(
+                    "errorMessage", "Erreur Base de donnée.");
         }
     }
 
@@ -1034,7 +1157,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             return "connection";
         }
     }
-    
+
     /**
      * Fonction qui load la liste des taches dans un jolie tableau pour l'admin
      *
@@ -1087,7 +1210,8 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         //Il faut faire une autre requete à la base de données pour recuperer les utilisateurs associé une tâche
         //String[] recipients = Arrays.copyOf(taskToUpdate.getRecipients().toArray(), taskToUpdate.getRecipients().toArray().length, String[].class);
         String projectTopic = taskToUpdate.getProjectTopic();
-        String utils = "";
+        String utilsM = "";
+        String utilsG = "";
         String title = taskToUpdate.getTitle();
         String content = taskToUpdate.getContent();
         java.util.Date creationDate = taskToUpdate.getCreationDate().getTime();
@@ -1105,11 +1229,17 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         modelMap.addAttribute("consumed", Float.toString(taskToUpdate.getConsumed()));
         modelMap.addAttribute("rae", Float.toString(taskToUpdate.getRae()));
         for (Recipient taskString : taskToUpdate.getRecipients()) {
-            utils += taskString.getId() + ", ";
+            if (taskString.getType().equals(RecipientType.USER)) {
+                utilsM += taskString.getId() + ", ";
+            } else {
+                utilsG += taskString.getId() + ", ";
+            }
         }
-        modelMap.addAttribute("utils", utils);
+        modelMap.addAttribute("utilsM", utilsM);
+        modelMap.addAttribute("utilsG", utilsG);
         modelMap.addAttribute("idTask", request.getParameter("idTask"));
         modelMap.addAttribute("statut", taskToUpdate.getStatus());
+        modelMap.addAttribute("chief", taskToUpdate.getChief());
 
         return null;
     }
@@ -1151,8 +1281,10 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                 return "error";
             }
         } catch (SQLException ex) {
-            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
-            mm.addAttribute("errorMessage", "Erreur base de donnée.");
+            Logger.getLogger(Project_Management_Presenter.class
+                    .getName()).log(Level.SEVERE, null, ex);
+            mm.addAttribute(
+                    "errorMessage", "Erreur base de donnée.");
             return "error";
         }
 
@@ -1198,28 +1330,54 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                                 }
                             } catch (IOException ex) {
                                 mm.addAttribute("resultImport", "Echec de l'import");
-                                Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+                                Logger
+                                        .getLogger(Project_Management_Presenter.class
+                                        .getName()).log(Level.SEVERE, null, ex);
+
+
+
                                 return "importXML";
                             }
                         }
                     }
                 } catch (FileUploadException ex) {
                     mm.addAttribute("resultImport", "Echec de l'import");
-                    Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger
+                            .getLogger(Project_Management_Presenter.class
+                            .getName()).log(Level.SEVERE, null, ex);
+
+
+
                     return "importXML";
                 } catch (Exception ex) {
                     mm.addAttribute("resultImport", "Echec de l'import");
-                    Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger
+                            .getLogger(Project_Management_Presenter.class
+                            .getName()).log(Level.SEVERE, null, ex);
+
+
+
                     return "importXML";
                 }
                 mm.addAttribute("resultImport", "Succès de l'import");
                 return "importXML";
             } else {
                 return "connection";
+
+
+
+
+
+
             }
         } catch (SQLException ex) {
-            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
-            mm.addAttribute("errorMessage", "Erreur Base de donnée.");
+            Logger.getLogger(Project_Management_Presenter.class
+                    .getName()).log(Level.SEVERE, null, ex);
+            mm.addAttribute(
+                    "errorMessage", "Erreur Base de donnée.");
+
+
+
             return "error";
         }
     }
@@ -1350,43 +1508,43 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         if (token != null) {
             ArrayList<TaskHeader> tHeaders = this.getAllTasks(token, true);
             ArrayList<MessageHeader> mHeaders = this.getHeaderMessages(token);
-            ArrayList<Member> users = this.getUsers();
+            ArrayList<Member> userss = this.getUsers();
             ArrayList<GroupHeader> groups = this.getGroups();
 
             Project_Management_Presenter.tasks = "";
-            Project_Management_Presenter.mess = "";
-            Project_Management_Presenter.user = "";
-            Project_Management_Presenter.group = "";
+            Project_Management_Presenter.messages = "";
+            Project_Management_Presenter.users = "";
+            Project_Management_Presenter.groupes = "";
 
-            while (!tHeaders.isEmpty() || !mHeaders.isEmpty() || !users.isEmpty() || !groups.isEmpty()) {
+            while (!tHeaders.isEmpty() || !mHeaders.isEmpty() || !userss.isEmpty() || !groups.isEmpty()) {
                 if (!tHeaders.isEmpty()) {
                     Project_Management_Presenter.tasks += "<li><a href=\"checkTask?idTask=" + tHeaders.get(0).getId().trim() + "\">" + tHeaders.get(0).getTitle() + "</a></li>";
                     tHeaders.remove(0);
                 }
                 if (!mHeaders.isEmpty()) {
-                    Project_Management_Presenter.mess += "<li><a href=\"checkMessage?idMessage=" + mHeaders.get(0).getId().trim() + "\">" + mHeaders.get(0).getTitle() + "</a></li>";
+                    Project_Management_Presenter.messages += "<li><a href=\"checkMessage?idMessage=" + mHeaders.get(0).getId().trim() + "\">" + mHeaders.get(0).getTitle() + "</a></li>";
                     mHeaders.remove(0);
                 }
-                if (!users.isEmpty()) {
-                    Project_Management_Presenter.user += "<li><a href=\"checkUser?idUser=" + users.get(0).getId_member().trim() + "\">" + users.get(0).getId_member() + "</a></li>";
-                    users.remove(0);
+                if (!userss.isEmpty()) {
+                    Project_Management_Presenter.users += "<li><a href=\"checkUser?idUser=" + userss.get(0).getId_member().trim() + "\">" + userss.get(0).getId_member() + "</a></li>";
+                    userss.remove(0);
                 }
                 if (!groups.isEmpty()) {
-                    Project_Management_Presenter.group += "<li><a href=\"checkGroup?id_groupe=" + groups.get(0).getId_group().trim() + "\">" + groups.get(0).getId_group() + "</a></li>";
+                    Project_Management_Presenter.groupes += "<li><a href=\"checkGroup?id_groupe=" + groups.get(0).getId_group().trim() + "\">" + groups.get(0).getId_group() + "</a></li>";
                     groups.remove(0);
                 }
             }
 
-            System.err.println("********   - " + Project_Management_Presenter.tasks + "\n" + Project_Management_Presenter.user + "\n" + Project_Management_Presenter.group + "\n" + Project_Management_Presenter.mess);
+            System.err.println("********   - " + Project_Management_Presenter.tasks + "\n" + Project_Management_Presenter.users + "\n" + Project_Management_Presenter.groupes + "\n" + Project_Management_Presenter.messages);
 
         }
     }
 
     private void addAttribute(ModelMap m) {
-        System.err.println("-----  " + Project_Management_Presenter.tasks + "\n" + Project_Management_Presenter.user + "\n" + Project_Management_Presenter.group + "\n" + Project_Management_Presenter.mess);
+        System.err.println("-----  " + Project_Management_Presenter.tasks + "\n" + Project_Management_Presenter.users + "\n" + Project_Management_Presenter.groupes + "\n" + Project_Management_Presenter.messages);
         m.addAttribute("myTasks", Project_Management_Presenter.tasks);
-        m.addAttribute("myMessages", Project_Management_Presenter.mess);
-        m.addAttribute("users", Project_Management_Presenter.user);
-        m.addAttribute("groups", Project_Management_Presenter.group);
+        m.addAttribute("myMessages", Project_Management_Presenter.messages);
+        m.addAttribute("users", Project_Management_Presenter.users);
+        m.addAttribute("groups", Project_Management_Presenter.groupes);
     }
 }

@@ -12,6 +12,7 @@ import dataObjects.Message;
 import dataObjects.MessageHeader;
 import dataObjects.MessageStatus;
 import dataObjects.Recipient;
+import dataObjects.RecipientType;
 import dataObjects.Task;
 import dataObjects.TaskHeader;
 import dataObjects.TaskStatus;
@@ -23,6 +24,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -87,7 +89,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
 
         }
     }
-    
+
     /**
      * Deletes members from a group
      *
@@ -151,8 +153,8 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
      * @return
      */
     @Override
-    public String createNewTask(String content, String title, String projectTopic, String creationDate, String dueDate, String statutString, Float budget, Float consumed, Float rae,  ArrayList<String> members, ArrayList<String> groups,  String token) {
-       try {
+    public String createNewTask(String content, String title, String projectTopic, String creationDate, String dueDate, String statutString, Float budget, Float consumed, Float rae, ArrayList<String> members, ArrayList<String> groups, String token) {
+        try {
             String id;
             Task task;
             String sender;
@@ -173,10 +175,13 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
                         return null;
                     }
 
-    //public Task(String id, String sender, String title, String creationDate, String content, String dueDate, String projectTopic, int budget, int consumed, int rae, TaskStatus status) {
+                    //public Task(String id, String sender, String title, String creationDate, String content, String dueDate, String projectTopic, int budget, int consumed, int rae, TaskStatus status) {
 
-                    task = new Task(null, sender, title, creationDate, content, dueDate, projectTopic, budget, consumed, rae, statut);
-                     System.err.println("Error,      "+task.getStringDueDate());
+                    task = new Task(null, sender, title, creationDate, content, dueDate, projectTopic, budget, consumed, rae, statut, sender);
+                    System.err.println("Error,      " + task.getStringDueDate());
+                    if (!members.contains(sender)) {
+                        members.add(sender);
+                    }
                     return model.createNewTaskAndNotify(task, sender, members, groups);
                 }
                 return null;
@@ -186,6 +191,53 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
             Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
             return null;
         }
+    }
+
+    @Override
+    public boolean updateTask(Task newTask, int id_task, ArrayList<String> idsNewMembers, ArrayList<String> idsNewGroups, String chief) {
+        HashMap<Recipient, Boolean[]> rcpts = new HashMap<Recipient, Boolean[]>();
+        Task oldTask = Project_Management_Presenter_Intern_Methods.model.getInfosTask(id_task);
+        Recipient rpt;
+        ArrayList<String> toAvoid = new ArrayList<String>();
+        int i = 0;
+        for (Recipient r : oldTask.getRecipients()) {
+            //membre ou groupe a supprimer
+            System.err.println("''''''''''''    " + r.getId());
+            if (idsNewMembers.contains(r.getId().trim()) || idsNewGroups.contains(r.getId().trim())) {
+                toAvoid.add(r.getId());
+            } else {
+                Boolean[] suppr = {false, false};
+                rcpts.put(r, suppr);
+            }
+        }
+        for (String s : toAvoid) {
+            System.err.println("avoid : " + s);
+        }
+        while (i < idsNewGroups.size()) {
+
+            if (!toAvoid.contains(idsNewGroups.get(i).trim())) {
+                Boolean[] add = {true, false};
+                rpt = new Recipient(RecipientType.GROUP, idsNewGroups.get(i).trim());
+                rcpts.put(rpt, add);
+                System.err.println("------------    " + idsNewGroups.get(i).trim());
+
+            }
+            i++;
+        }
+        i = 0;
+        while (i < idsNewMembers.size()) {
+
+            if (!toAvoid.contains(idsNewMembers.get(i).trim())) {
+                Boolean[] add = {true, idsNewMembers.get(i).compareToIgnoreCase(chief) == 0 ? true : false};
+                rpt = new Recipient(RecipientType.USER, idsNewMembers.get(i).trim());
+                rcpts.put(rpt, add);
+                System.err.println("************    " + idsNewMembers.get(i));
+            }
+
+            i++;
+        }
+
+        return Project_Management_Presenter_Intern_Methods.model.updateTaskAndNotify(newTask, rcpts);
     }
 
     /**
@@ -202,18 +254,18 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
      */
     @Override
     public String createNewUser(Member user, String pswd) {
-       String id = null;
-        if (user.getId_member() == null || user.getId_member().equals("")){
+        String id = null;
+        if (user.getId_member() == null || user.getId_member().equals("")) {
             id = Project_Management_Presenter_Intern_Methods.model.generateIdMember(user.getName(), user.getFirst_name());
             user.setId_member(id);
         }
         String hash = generateMD5FromString(pswd);
         try {
             boolean ok = Project_Management_Presenter_Intern_Methods.model.createNewUser(user, hash);
-            if (ok){
+            if (ok) {
                 SendEmail.welcomeEmail(user);
             }
-        return id;
+            return id;
         } catch (SQLException ex) {
             return null;
         }
@@ -377,7 +429,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
         //return null;
         //}
     }
-    
+
     public Member getInfoUser(String id_User, String token) {
         //if (model.isValidToken(token) != null) {
         return Project_Management_Presenter_Intern_Methods.model.getInfosMember(id_User);
@@ -442,7 +494,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
     public int importXML(String token, InputStream is) {
         ArrayList<Item> iList;
         iList = ItemParser.parse(is);
-        int nbInsert=0;
+        int nbInsert = 0;
 
         if (iList == null) {
             LogErrors.getInstance().appendLogMessage("Failed to parse the XML file.", Level.SEVERE);
@@ -504,7 +556,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
         } catch (SQLException ex) {
             Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         return token;
     }
 
@@ -552,7 +604,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
         boolean ok = false;
         System.err.println("saveMessageToMembers");
         if (id != null) {
-                    System.err.println("!!!!!!! saveMessageToMembers  "+idSender);
+            System.err.println("!!!!!!! saveMessageToMembers  " + idSender);
 
             Message m = Project_Management_Presenter_Intern_Methods.model.createMessage(idSender, members, title, messageBody, ms);
             for (Attachment attachment : attachments) {
@@ -560,7 +612,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
             }
             m.setContent(messageBody);
             try {
-                        System.err.println("........ saveMessageToMembers  "+m.getSender());
+                System.err.println("........ saveMessageToMembers  " + m.getSender());
 
                 Project_Management_Presenter_Intern_Methods.model.saveMessage(m);
                 ok = true;
@@ -568,31 +620,33 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
                 Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-                System.err.println("FIN saveMessageToMembers");
+        System.err.println("FIN saveMessageToMembers");
 
         return (ok);
     }
-    public boolean saveMessageToGroups(String idSender,  ArrayList<String> groups,ArrayList<String> members, String title, String messageBody, MessageStatus ms, ArrayList<Attachment> attachments, String token) {
+
+    public boolean saveMessageToGroups(String idSender, ArrayList<String> groups, ArrayList<String> members, String title, String messageBody, MessageStatus ms, ArrayList<Attachment> attachments, String token) {
         String id = Project_Management_Presenter_Intern_Methods.model.isValidToken(token);
         boolean ok = false;
         if (id != null) {
             for (String group : groups) {
-               ArrayList<Member> membersL;
+                ArrayList<Member> membersL;
                 try {
                     membersL = model.getGroupInfos(group).getMembers();
                     for (Member member : membersL) {
-                        if(!members.contains(member.getId_member()))
-                        members.add(member.getId_member());
-                }
+                        if (!members.contains(member.getId_member())) {
+                            members.add(member.getId_member());
+                        }
+                    }
                 } catch (SQLException ex) {
                     Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
                 }
-               
+
             }
             saveMessageToMembers(idSender, members, title, messageBody, ms, attachments, token);
             return (ok);
         }
-        return(false);
+        return (false);
     }
 
     /**
@@ -608,7 +662,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
         boolean ok = false;
         if (id != null) {
             try {
-                
+
                 Project_Management_Presenter_Intern_Methods.model.saveMessage(message);
                 ok = true;
             } catch (SQLException ex) {
@@ -640,22 +694,6 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
         }
 
         return ok;
-    }
-
-    /**
-     * Update a task.
-     *
-     * @param token The token of the session
-     * @param taskUpdate The task to update with its new values
-     * @return
-     */
-    @Override
-    public Boolean updateTask(String token, Task taskUpdate) {
-        if (model.isValidToken(token) != null) {
-            return model.updateTaskAndNotify(taskUpdate);
-        } else {
-            return (false);
-        }
     }
 
     /**
@@ -705,4 +743,27 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
         return Project_Management_Presenter.model.updateUser(m);
     }
 
+    @Override
+    public String getMemberTasks(String id_member) {
+        String tks = "Error when fetching tasks.";
+        try {
+            tks = Project_Management_Presenter_Intern_Methods.model.getMemberTasks(id_member);
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
+
+        }
+        return tks;
+    }
+
+    @Override
+    public String getMemberGroups(String id_member) {
+        String gps = "Error when fetching groups.";
+        try {
+            gps = Project_Management_Presenter_Intern_Methods.model.getMemberGroups(id_member);
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
+
+        }
+        return gps;
+    }
 }

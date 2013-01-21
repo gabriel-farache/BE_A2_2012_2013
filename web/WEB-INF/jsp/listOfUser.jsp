@@ -1,7 +1,7 @@
 <%-- 
-    Document   : welcom
-    Created on : 19 janv. 2013
-    Author     : Gabriel
+    Document   : ListOfUsers
+    Created on : 13 janv. 2013, 19:52:58
+    Author     : Fangli
 --%>
 
 <!DOCTYPE html>
@@ -10,7 +10,7 @@
 <html lang="fr">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Bienvenue</title>
+        <title>Bootstrap, from Twitter</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="">
         <meta name="author" content="">
@@ -218,45 +218,39 @@
                 </div><!--/span-->
 
                 <div class="span9 offset2">
-                    <div class="hero-unit">
-                        <h1>Mes t&acirc;ches</h1>
-                    </div>
                     <!-- Example row of columns -->
-                    <div class="row-fluid">
-                        <div class="row-fluid">
-                            <form action="<c:url value="checkTask"/>" method="post" ></br>
-                                ${table}
-                            </form>
+                    <div class="row-fluid"> 
+                        ${listOfUsers}
+                        <% if (session.getAttribute("isAdmin") != null) {%> 
+                        <div class="span1 pull-right">
+                            <a href="createNewUser"><input class="btn btn-primary" type="submit" value="Créer" /></a>
                         </div>
+                        <% }%>
                     </div>
-
                     <hr>
-
                     <footer>
                         <p>&copy; PESO 2012</p>
                     </footer>
-
-                </div> <!-- /container -->
-
+                </div>
+                <!-- /container -->
             </div>
+            <!-- Le javascript
+            ================================================== -->
+            <!-- Placed at the end of the document so the pages load faster -->
+            <script src="<c:url value="/resources/js/jquery.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-transition.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-alert.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-modal.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-dropdown.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-scrollspy.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-tab.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-tooltip.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-popover.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-button.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-collapse.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-carousel.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-typeahead.js"/>"></script>
         </div>
-        <!-- Le javascript
-        ================================================== -->
-        <!-- Placed at the end of the document so the pages load faster -->
-        <script src="<c:url value="/resources/js/jquery.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-transition.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-alert.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-modal.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-dropdown.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-scrollspy.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-tab.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-tooltip.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-popover.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-button.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-collapse.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-carousel.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-typeahead.js"/>"></script>
-
     </body>
 </html>

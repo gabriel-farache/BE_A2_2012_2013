@@ -103,7 +103,6 @@
                                 <a id="drop4" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Utilisateurs <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
                                     <li><a tabindex="-1" href="listOfUser">Consulter liste utilisateurs</a></li>
-                                    <li><a tabindex="-1" href="listOfGroup">Consulter liste groupes</a></li>
                                     <li class="divider"></li>
                                     <% if (session.getAttribute("isAdmin") != null) {%>                                                                             
                                     <li><a tabindex="-1" href="createNewUser">Ajouter un nouvel utilisateur</a></li> 

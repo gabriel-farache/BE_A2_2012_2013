@@ -104,7 +104,6 @@
                                 <a id="drop4" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Utilisateurs <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
                                     <li><a tabindex="-1" href="listOfUser">Consulter liste utilisateurs</a></li>
-                                    <li><a tabindex="-1" href="listOfGroup">Consulter liste groupes</a></li>
                                     <li class="divider"></li>
                                     <% if (session.getAttribute("isAdmin") != null) {%>                                                                             
                                     <li><a tabindex="-1" href="createNewUser">Ajouter un nouvel utilisateur</a></li> 
@@ -221,6 +220,19 @@
                 <div class="span9 offset2">
                     <!-- Example row of columns -->
                     <div class="row-fluid"> 
+                        ${alert}
+                        <fieldset>
+                            <legend for="mb" class="rubrique">Membre(s)</legend>
+                             <label for="mb" >${utilsM}</label>
+                        </fieldset>
+                        <fieldset>
+                            <legend for="gp" class="rubrique">Groupe(s)</legend>
+                             <label for="gp" >${utilsG}</label>
+                        </fieldset>
+                        <fieldset>
+                            <legend for="gp" class="rubrique">Chef</legend>
+                             <label for="gp" >${chief}</label>
+                        </fieldset>
                         <fieldset>
                             <legend for="projet" class="rubrique">Projet</legend>
                             <label for="projet">${projetTache}</label>
@@ -251,13 +263,13 @@
                             <label for="budget">${budget}</label>
                         </fieldset>
                         <fieldset>
-                                <legend for="consumed" class="rubrique">Consomm&eacute;</legend>
-                                <label type="text" for="consumed">${consumed}</label>
-                            </fieldset>
-                            <fieldset>
-                                <legend for="rae" class="rubrique">RAE</legend>
-                                <label type="text" for="rae">${rae}</label>
-                            </fieldset>
+                            <legend for="consumed" class="rubrique">Consomm&eacute;</legend>
+                            <label type="text" for="consumed">${consumed}</label>
+                        </fieldset>
+                        <fieldset>
+                            <legend for="rae" class="rubrique">RAE</legend>
+                            <label type="text" for="rae">${rae}</label>
+                        </fieldset>
 
                         <% if (session.getAttribute("isAdmin") != null) {%> 
                         <div class="span1 pull-right">

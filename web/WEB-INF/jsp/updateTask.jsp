@@ -104,7 +104,6 @@
                                 <a id="drop4" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Utilisateurs <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
                                     <li><a tabindex="-1" href="listOfUser">Consulter liste utilisateurs</a></li>
-                                    <li><a tabindex="-1" href="listOfGroup">Consulter liste groupes</a></li>
                                     <li class="divider"></li>
                                     <% if (session.getAttribute("isAdmin") != null) {%>                                                                             
                                     <li><a tabindex="-1" href="createNewUser">Ajouter un nouvel utilisateur</a></li> 
@@ -223,8 +222,16 @@
                     <div class="row-fluid"> 
                         <form method="POST"  action="<c:url value="taskUpdated"/>">
                             <fieldset>
-                                <legend for="projet" class="rubrique">Membres</legend>
-                                <input type="text" id="choixUtils" name ="choixUtils" for="projet" value="${utils}"/>
+                                <legend class="rubrique">Membre(s)</legend>
+                                <input type="text" id="choixUtilsM" name ="choixUtilsM"  value="${utilsM}" />
+                            </fieldset>
+                            <fieldset>
+                                <legend class="rubrique">Groupe(s)</legend>
+                                <input type="text" id="choixUtilsG" name ="choixUtilsG" value="${utilsG}" />
+                            </fieldset>
+                            <fieldset>
+                                <legend for="projet" class="rubrique">Chef</legend>
+                                <input type="text" id="chef" name ="chef" for="projet" value="${chief}"/>
                             </fieldset>
                             <fieldset>
                                 <legend for="projet" class="rubrique">Projet</legend>

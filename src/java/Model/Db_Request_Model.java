@@ -165,7 +165,7 @@ public class Db_Request_Model {
                 for (String name : members) {
                     if (Db_Request_Model.idb.checkIDMemberExists(name)) {
                         try {
-                            Db_Request_Model.idb.addSendTaskToMember(sender, name, sucess, RecipientType.USER);
+                            Db_Request_Model.idb.addSendTaskToMember(sender, name, sucess, RecipientType.USER, (name.compareToIgnoreCase(task.getSender()) == 0 ? true : false));
                         } catch (SQLException ex) {
                             Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
                         }
@@ -179,7 +179,7 @@ public class Db_Request_Model {
                 for (String name : groups) {
                     if (Db_Request_Model.idb.checkIDGroupExists(name)) {
                         try {
-                            Db_Request_Model.idb.addSendTaskToGroup(sender, name, sucess);
+                            Db_Request_Model.idb.addSendTaskToGroupAndAssociateToMembers(sender, name, sucess);
                         } catch (SQLException ex) {
                             Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
                         }
@@ -525,9 +525,9 @@ public class Db_Request_Model {
      * @param taskUpdate
      * @return
      */
-    public Boolean updateTaskAndNotify(Task taskUpdate) {
+    public Boolean updateTaskAndNotify(Task taskUpdate, HashMap<Recipient, Boolean[]> rcpts) {
         try {
-            if (Db_Request_Model.idb.updateTask(taskUpdate) == 1) {
+            if (Db_Request_Model.idb.updateTask(taskUpdate) == 1 && Db_Request_Model.idb.updateRecipientsTask(rcpts, taskUpdate.getId().trim(), taskUpdate.getSender().trim()) == 1) {
                 return true;
             } else {
                 return false;
@@ -640,5 +640,23 @@ public class Db_Request_Model {
 
     public boolean updateUser(Member m) {
         return (Db_Request_Model.idb.updateMember(m) == 1);
+    }
+
+    public String getMemberTasks(String id_member) {
+        try {
+            return Db_Request_Model.idb.getTasksMember(id_member);
+        } catch (SQLException ex) {
+            Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
+            return "";
+        }
+    }
+
+    public String getMemberGroups(String id_member) {
+        try {
+            return Db_Request_Model.idb.getMemberGroups(id_member);
+        } catch (SQLException ex) {
+            Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
+            return "";
+        }
     }
 }

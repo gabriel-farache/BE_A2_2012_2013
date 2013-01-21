@@ -296,7 +296,7 @@ public interface Presenter_Intern_Methods_Interface {
      * @return
      */
     @WebMethod(operationName = "updateTask")
-    public Boolean updateTask(@WebParam(name = "token") String token, @WebParam(name = "taskUpdate") Task taskUpdate);
+     public boolean updateTask(Task newTask, int id_task, ArrayList<String> idsNewMembers, ArrayList<String> idsNewGroups, String chief);
 
     /**
      * Checks if the member associates with the token is an Admin
@@ -334,5 +334,8 @@ public interface Presenter_Intern_Methods_Interface {
     @WebMethod(operationName = "updateUser")
     public boolean updateUser(Member m);
 
+    public String getMemberTasks(String id_member);
+    
+    public String getMemberGroups(String id_member);
 }
 
