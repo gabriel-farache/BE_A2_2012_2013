@@ -219,6 +219,9 @@
 
                 <div class="span9 offset2">
                     <!-- Example row of columns -->
+                    <div class="hero-unit">
+                        <h1>Cr&eacute;ation d'un nouvel utilisateur</h1>
+                    </div>
                     <div class="row-fluid"> 
                         <form method="POST"  action="<c:url value="userCreated"/>">
                             <fieldset>

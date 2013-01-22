@@ -218,6 +218,7 @@
                 </div><!--/span-->
 
                 <div class="span9 offset2">
+                    ${alert}
                     <div class="hero-unit">
                         <h1>${typeTask}</h1>
                     </div>

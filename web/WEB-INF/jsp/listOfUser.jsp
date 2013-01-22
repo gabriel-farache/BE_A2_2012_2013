@@ -218,6 +218,9 @@
                 </div><!--/span-->
 
                 <div class="span9 offset2">
+                    <div class="hero-unit">
+                        <h1>Liste des utilisateurs</h1>
+                    </div>
                     <!-- Example row of columns -->
                     <div class="row-fluid"> 
                         ${listOfUsers}

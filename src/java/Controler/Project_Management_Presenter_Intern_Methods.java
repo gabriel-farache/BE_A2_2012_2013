@@ -48,7 +48,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
     public static Project_Management_Presenter_Intern_Methods getInstance() {
         if (Project_Management_Presenter_Intern_Methods.me == null) {
             Project_Management_Presenter_Intern_Methods.me = new Project_Management_Presenter_Intern_Methods();
-            Project_Management_Presenter_Intern_Methods.model = Db_Request_Model.getInstance();
+            Project_Management_Presenter_Intern_Methods.model = Db_Request_Model.getInstance(Project_Management_Presenter_Intern_Methods.me);
         }
         return Project_Management_Presenter_Intern_Methods.me;
     }
@@ -236,8 +236,11 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
 
             i++;
         }
-
-        return Project_Management_Presenter_Intern_Methods.model.updateTaskAndNotify(newTask, rcpts);
+        if (!rcpts.isEmpty()) {
+            return Project_Management_Presenter_Intern_Methods.model.updateTaskAndNotify(newTask, rcpts);
+        } else {
+            return true;
+        }
     }
 
     /**
@@ -403,10 +406,10 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
      * @return
      */
     @Override
-    public ArrayList<MessageHeader> getHeaderMessages(String token) {
+    public ArrayList<MessageHeader> getHeaderMessages(String token, boolean received) {
         ArrayList<MessageHeader> messageHeader = null;
         try {
-            messageHeader = (Project_Management_Presenter_Intern_Methods.model.getHeaderMessages(token));
+            messageHeader = (Project_Management_Presenter_Intern_Methods.model.getHeaderMessages(token, received));
         } catch (SQLException ex) {
             Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -447,10 +450,10 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
      * @return
      */
     @Override
-    public Message getMessageBody(String idMessage, String token) {
+    public Message getMessageBody(String idMessage, String token, boolean received) {
         Message message = null;
         try {
-            message = (Project_Management_Presenter_Intern_Methods.model.getMessageBody(idMessage, token));
+            message = (Project_Management_Presenter_Intern_Methods.model.getMessageBody(idMessage, token, received));
         } catch (SQLException ex) {
             Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -549,7 +552,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
      */
     @Override
     public String login(String login, String password) {
-        Project_Management_Presenter_Intern_Methods.model = Db_Request_Model.getInstance();
+        Project_Management_Presenter_Intern_Methods.model = Db_Request_Model.getInstance(Project_Management_Presenter_Intern_Methods.me);
         String token = null;
         try {
             token = (Project_Management_Presenter_Intern_Methods.model.authenticate(login, generateMD5FromString(password)));
@@ -625,6 +628,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
         return (ok);
     }
 
+    @Override
     public boolean saveMessageToGroups(String idSender, ArrayList<String> groups, ArrayList<String> members, String title, String messageBody, MessageStatus ms, ArrayList<Attachment> attachments, String token) {
         String id = Project_Management_Presenter_Intern_Methods.model.isValidToken(token);
         boolean ok = false;

@@ -217,6 +217,9 @@
                 </div><!--/span-->
 
                 <div class="span9 offset2">
+                    <div class="hero-unit">
+                        <h1>Cr&eacute;ation d'une nouvelle t&acirc;che</h1>
+                    </div>
                     <!-- Example row of columns -->
                     <div class="row-fluid"> 
                         <form method="POST"  action="<c:url value="taskCreated"/>">

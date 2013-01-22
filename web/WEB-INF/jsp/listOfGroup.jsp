@@ -219,6 +219,9 @@
 
                 <div class="span9 offset2">
                     <!-- Example row of columns -->
+                    <div class="hero-unit">
+                        <h1>Liste des groupes</h1>
+                    </div>
                     <div class="row-fluid"> 
                         ${groupList}
                         <% if (session.getAttribute("isAdmin") != null) {%> 

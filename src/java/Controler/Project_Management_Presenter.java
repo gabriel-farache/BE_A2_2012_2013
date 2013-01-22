@@ -99,7 +99,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         } catch (Exception e) {
         }
         try {
-            Message mess = this.getMessageBody((String) request.getParameter("idMess"), token);
+            Message mess = this.getMessageBody((String) request.getParameter("idMess"), token, (((String) request.getParameter("fromInbox")).compareToIgnoreCase("yes") == 0 ? true : false));
             m.addAttribute("recipient", mess.getSender());
             m.addAttribute("title", "Réponse au message : " + mess.getTitle());
             m.addAttribute("message", "\n\n------- Message original envoyé le " + mess.getStringCreationDate() + " -------\n" + mess.getContent());
@@ -115,12 +115,15 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
 
     @RequestMapping(value = {"connection", "index", "/"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String displayConnexionPage(HttpSession session, ModelMap m) {
+        Project_Management_Presenter_Intern_Methods.getInstance();
         String token;
         this.addAttribute(m);
         token = this.getTokenSession(session, m);
-        if (token == null || Project_Management_Presenter.model.isValidToken(token) == null) {
+        String id = Project_Management_Presenter.model.isValidToken(token);
+        if (token == null || id == null) {
             return "connection";
         } else {
+
             return "redirect:welcome";
         }
     }
@@ -273,22 +276,20 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                         result = this.updateTask(newTask, Integer.parseInt(request.getParameter("idTask").trim()), members, groups, token);
 
                         //Result == null si il y a eu une erreur, sinon un message de succès est donné avec (s'il y en a) les membres/groupes qui n'ont pas été trouvé dans la BDD
+                        this.createTaskConsult(map, token, true);
                         if (result) {
                             this.fillAccordionMenu(token, map);
                             alertMess = "<div class=\"alert alert-success\">"
                                     + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
-                                    + "<strong>Mise à jour réussie ! </strong>This is a fatal error."
-                                    + "</div>";
-                            map.addAttribute("alert", alertMess);
-                            return "redirect:checkTask?idTask=" + request.getParameter("idTask").trim() + "";
+                                    + "<strong>Mise à jour de la tâche \"" + request.getParameter("titreTache").trim() + "\" (" + request.getParameter("idTask").trim() + ") réussie ! </strong></div>";
                         } else {
                             alertMess = "<div class=\"alert alert-error\">"
                                     + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
-                                    + "<strong>Echec de la mise à jour ! </strong>This is a fatal error."
-                                    + "</div>";
-                            map.addAttribute("alert", alertMess);
-                            return "redirect:checkTask?idTask=" + request.getParameter("idTask").trim() + "";
+                                    + "<strong>Echec de la mise à jour de la tâche \"" + request.getParameter("titreTache").trim() + "\" (" + request.getParameter("idTask").trim() + ") réussie ! </strong></div>";
                         }
+                        map.addAttribute("alert", alertMess);
+                        map.addAttribute("typeTask", "Mes tâches");
+                        return "listOfTasks";
                     } else {
                         //Retour
                         map.addAttribute("errorMessage", "Vous n'êtes pas identifier ou vous ne possèdez pas les droits suffisants.");
@@ -375,12 +376,11 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         try {
             token = this.login((String) request.getParameter("utilisateur"), (String) request.getParameter("pass"));
             this.setTokenSession(request.getSession(), token);
-
-
-
-
-
-
+            try {
+                Member memb = this.getInfoUser(Project_Management_Presenter.model.isValidToken(token), token);
+                model.addAttribute("welcomeMessage", "<div class=\"alert alert-info\"> <a class=\"close\" data-dismiss=\"alert\">×</a> Bienvenue " + memb.getFirst_name() + " " + memb.getName() + " (" + memb.getId_member() + ") !</div> ");
+            } catch (Exception ex) {
+            }
         } catch (Exception ex) {
             Logger.getLogger(Project_Management_Presenter_Intern_Methods.class
                     .getName()).log(Level.SEVERE, null, ex);
@@ -389,11 +389,6 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         try {
             this.fillAccordionMenu(token, model);
             this.addAttribute(model);
-
-
-
-
-
 
         } catch (Exception ex) {
             Logger.getLogger(Project_Management_Presenter.class
@@ -407,11 +402,6 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             if (Project_Management_Presenter.model.isAdmin(token)) {
                 request.getSession().setAttribute("isAdmin", true);
 
-
-
-
-
-
             }
         } catch (SQLException ex) {
             Logger.getLogger(Project_Management_Presenter.class
@@ -421,7 +411,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             this.createTaskConsult(model, token, true);
             return null;
         } else {
-            return "connection";
+            return "redirect:connection";
         }
 
     }
@@ -508,15 +498,9 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         String token = this.getTokenSession(request.getSession(), modelMap);
         //Creation de la liste des attributs & Creation d'une map contenant la valeur associé à un champ
 
-        Message m = this.getMessageBody(request.getParameter("idMessage"), token);
+        Message m = this.getMessageBody(request.getParameter("idMessage"), token, (((String) request.getParameter("fromInbox")).compareToIgnoreCase("yes") == 0 ? true : false));
         try {
             Project_Management_Presenter.model.updateMessageStatus(token, m.getId(), MessageStatus.READ, true);
-
-
-
-
-
-
         } catch (SQLException ex) {
             Logger.getLogger(Project_Management_Presenter.class
                     .getName()).log(Level.SEVERE, null, ex);
@@ -528,7 +512,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             modelMap.addAttribute("sender", m.getSender());
             modelMap.addAttribute("content", m.getContent());
             modelMap.addAttribute("idMess", request.getParameter("idMessage"));
-
+            modelMap.addAttribute("fromInbox", request.getParameter("fromInbox"));
             for (Recipient r : m.getRecipients()) {
                 if (r.getType().equals(RecipientType.USER)) {
                     memberRcpt += r.getId() + ", ";
@@ -777,7 +761,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                     liste_membres.add(Project_Management_Presenter.model.getInfosMember(membres_select[i].trim()));
                 }
 
-                if (createGroup(liste_membres, token, request.getParameter("nomGroupe").replace("'", "`"), request.getParameter("descriptionGroupe").replace("'", "`"))) {
+                if (this.createGroup(liste_membres, token, request.getParameter("nomGroupe").replace("'", "`"), request.getParameter("descriptionGroupe").replace("'", "`"))) {
                     mm.addAttribute("nomGroupe", request.getParameter("nomGroupe"));
                     this.fillAccordionMenu(token, mm);
                     return null;
@@ -1030,7 +1014,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         String pageToLoad = null;
         if (Project_Management_Presenter.model.isValidToken(token) != null) {
 
-            ArrayList<MessageHeader> messageList = this.getHeaderMessages(token);
+            ArrayList<MessageHeader> messageList = this.getHeaderMessages(token, true);
             if (messageList != null) {
                 //Creation de la table en html contenant tous les headers de toutes les taches
                 String table =
@@ -1057,7 +1041,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                     } else {
                         table += "<tr class=\"default\" ";
                     }
-                    table += "onclick='window.location.href = \"checkMessage?idMessage=" + m.getId() + "\";'>" + "<td>" + "<td>" + m.getTitle() + "</td>"
+                    table += "onclick='window.location.href = \"checkMessage?idMessage=" + m.getId() + "&fromInbox=yes\";'>" + "<td>" + "<td>" + m.getTitle() + "</td>"
                             + "<td>" + m.getSender() + "</td>"
                             + "<td>" + m.getStringCreationDate() + "</td>"
                             + "</tr>";
@@ -1095,12 +1079,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             }
             if (th.getStatus().toString().equalsIgnoreCase("OPEN")) {
                 if (((th.getDueDate().getTimeInMillis() - (new java.util.Date().getTime())) / (1000 * 60 * 60 * 24)) <= 20) {
-                    if (((th.getDueDate().getTimeInMillis() - (new java.util.Date().getTime())) / (1000 * 60 * 60 * 24)) <= 10) {
-                        table += "<tr class=\"error\" ";
-                        //Project_Management_Presenter.model.updateTaskStatus(th.getId(), TaskStatus.URGENT);
-                    } else {
-                        table += "<tr class=\"warning\" ";
-                    }
+                    table += "<tr class=\"warning\" ";
                 } else {
 
                     table += "<tr class=\"info\" ";
@@ -1507,7 +1486,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
     private void fillAccordionMenu(String token, ModelMap m) {
         if (token != null) {
             ArrayList<TaskHeader> tHeaders = this.getAllTasks(token, true);
-            ArrayList<MessageHeader> mHeaders = this.getHeaderMessages(token);
+            ArrayList<MessageHeader> mHeaders = this.getHeaderMessages(token, true);
             ArrayList<Member> userss = this.getUsers();
             ArrayList<GroupHeader> groups = this.getGroups();
 
@@ -1522,7 +1501,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                     tHeaders.remove(0);
                 }
                 if (!mHeaders.isEmpty()) {
-                    Project_Management_Presenter.messages += "<li><a href=\"checkMessage?idMessage=" + mHeaders.get(0).getId().trim() + "\">" + mHeaders.get(0).getTitle() + "</a></li>";
+                    Project_Management_Presenter.messages += "<li><a href=\"checkMessage?idMessage=" + mHeaders.get(0).getId().trim() + "&fromInbox=yes\">" + mHeaders.get(0).getTitle() + "</a></li>";
                     mHeaders.remove(0);
                 }
                 if (!userss.isEmpty()) {

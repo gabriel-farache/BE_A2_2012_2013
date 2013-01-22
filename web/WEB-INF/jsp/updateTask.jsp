@@ -218,6 +218,9 @@
                 </div><!--/span-->
 
                 <div class="span9 offset2">
+                    <div class="hero-unit">
+                        <h1>Modifier une t&acirc;che</h1>
+                    </div>
                     <!-- Example row of columns -->
                     <div class="row-fluid"> 
                         <form method="POST"  action="<c:url value="taskUpdated"/>">

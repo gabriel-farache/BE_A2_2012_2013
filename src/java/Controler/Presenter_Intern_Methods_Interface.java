@@ -173,7 +173,7 @@ public interface Presenter_Intern_Methods_Interface {
      * @return
      */
     @WebMethod(operationName = "getHeaderMessages")
-    public ArrayList<MessageHeader> getHeaderMessages(@WebParam(name = "token") String token);
+    public ArrayList<MessageHeader> getHeaderMessages(@WebParam(name = "token") String token, boolean received);
 
     /**
      * Gets the informations of a task
@@ -193,7 +193,7 @@ public interface Presenter_Intern_Methods_Interface {
      * @return
      */
     @WebMethod(operationName = "getMessageBody")
-    public Message getMessageBody(@WebParam(name = "idMessage") String idMessage, @WebParam(name = "token") String token);
+    public Message getMessageBody(@WebParam(name = "idMessage") String idMessage, @WebParam(name = "token") String token, boolean received);
 
     /**
      * Load the form page and check if the user is connected

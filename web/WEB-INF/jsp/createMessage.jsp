@@ -218,6 +218,9 @@
                 </div><!--/span-->
 
                 <div class="span9 offset2">
+                    <div class="hero-unit">
+                        <h1>Envoyer un message</h1>
+                    </div>
                     <!-- Example row of columns -->
                     <div class="row-fluid"> 
                         <form method="POST" name="saisieNouveauMessage" id="saisieNouveauMessage" action="<c:url value="messageCreated"/>">

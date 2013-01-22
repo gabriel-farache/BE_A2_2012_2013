@@ -219,6 +219,9 @@
 
                 <div class="span9 offset2">
                     <!-- Example row of columns -->
+                    <div class="hero-unit">
+                        <h1>Modifier un groupe</h1>
+                    </div>
                     <div class="row-fluid"> 
                         <form method="POST"  action="<c:url value="groupUpdated"/>">
                             <fieldset>

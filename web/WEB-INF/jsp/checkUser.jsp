@@ -218,6 +218,9 @@
                 </div><!--/span-->
 
                 <div class="span9 offset2">
+                    <div class="hero-unit">
+                        <h1>Consulter le profil d'un membre</h1>
+                    </div>
                     <!-- Example row of columns -->
                     <div class="row-fluid"> 
                         <fieldset>

@@ -219,6 +219,9 @@
 
                 <div class="span9 offset2">
                     <!-- Example row of columns -->
+                    <div class="hero-unit">
+                        <h1>Cr&eacute;ation d'un nouveau groupe</h1>
+                    </div>
                     <div class="row-fluid"> 
                         <form method="POST"  action="<c:url value="groupCreated"/>">
                             <fieldset>
@@ -236,7 +239,7 @@
                             <fieldset>
                                 <legend>Description</legend>
                                 <div>
-                                    <textarea maxlength="100" style="resize: none;" rows="16" class="span14  search-query" type="text" class="input"  id="descriptionGroupe" name="descriptionGroupe" required>${descriptionGroupe}</textarea>                               
+                                    <textarea maxlength="500" style="resize: none;" rows="16" class="span14  search-query" type="text" class="input"  id="descriptionGroupe" name="descriptionGroupe" required>${descriptionGroupe}</textarea>                               
                                 </div>
                             </fieldset>
                             <div class="span1 pull-right">

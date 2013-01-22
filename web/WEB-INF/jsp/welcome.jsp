@@ -218,6 +218,7 @@
                 </div><!--/span-->
 
                 <div class="span9 offset2">
+                    ${welcomeMessage} 
                     <div class="hero-unit">
                         <h1>Mes t&acirc;ches</h1>
                     </div>

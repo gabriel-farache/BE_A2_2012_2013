@@ -5,6 +5,7 @@
 package Model;
 
 import Controler.Project_Management_Presenter;
+import Controler.Project_Management_Presenter_Intern_Methods;
 import dataObjects.*;
 import interactionsDB.InteractDB;
 import java.math.BigInteger;
@@ -26,19 +27,19 @@ import peopleObjects.*;
 public class Db_Request_Model {
 
     private static HashMap<String, String> tokenID;
-    private static Project_Management_Presenter presenter;
+    private static Project_Management_Presenter_Intern_Methods presenter;
     private static InteractDB idb;
     private static Db_Request_Model me = null;
 
-    public static Db_Request_Model getInstance() {
+    public static Db_Request_Model getInstance(Project_Management_Presenter_Intern_Methods p) {
         if (Db_Request_Model.me == null) {
-            Db_Request_Model.me = new Db_Request_Model();
+            Db_Request_Model.me = new Db_Request_Model(p);
         }
         return Db_Request_Model.me;
     }
 
-    private Db_Request_Model() {
-        Db_Request_Model.presenter = Project_Management_Presenter.getInstance();
+    private Db_Request_Model(Project_Management_Presenter_Intern_Methods p) {
+        Db_Request_Model.presenter = p;
         Db_Request_Model.tokenID = new HashMap<String, String>();
     }
 
@@ -308,9 +309,15 @@ public class Db_Request_Model {
      *
      * @return
      */
-    public ArrayList<MessageHeader> getHeaderMessages(String token) throws SQLException {
+    public ArrayList<MessageHeader> getHeaderMessages(String token, boolean received) throws SQLException {
         String id = isValidToken(token);
-        return (Db_Request_Model.idb.getMessagesHeader(id));
+        if (received) {
+            return (Db_Request_Model.idb.getReceivedMessagesHeader(id));
+        } else {
+            return (Db_Request_Model.idb.getSendMessagesHeader(id));
+        }
+
+
     }
 
     /**
@@ -320,10 +327,15 @@ public class Db_Request_Model {
      * @param idMess The ID of the message to get in the DB
      * @return
      */
-    public Message getMessageBody(String idMessage, String token) throws SQLException {
+    public Message getMessageBody(String idMessage, String token, boolean received) throws SQLException {
         String id = isValidToken(token);
         if (id != null) {
-            return (Db_Request_Model.idb.getMessage(Integer.parseInt(idMessage), id));
+            if (received) {
+                return (Db_Request_Model.idb.getReceivedMessage(Integer.parseInt(idMessage), id));
+            } else {
+                return (Db_Request_Model.idb.getSendMessage(Integer.parseInt(idMessage), id));
+            }
+
         }
         return (null);
     }
