@@ -4,7 +4,6 @@
  */
 package Model;
 
-import Controler.Project_Management_Presenter;
 import Controler.Project_Management_Presenter_Intern_Methods;
 import dataObjects.*;
 import interactionsDB.InteractDB;
@@ -25,19 +24,19 @@ import peopleObjects.*;
  * @author gabriel
  */
 public class Db_Request_Model {
-
+    
     private static HashMap<String, String> tokenID;
     private static Project_Management_Presenter_Intern_Methods presenter;
     private static InteractDB idb;
     private static Db_Request_Model me = null;
-
+    
     public static Db_Request_Model getInstance(Project_Management_Presenter_Intern_Methods p) {
         if (Db_Request_Model.me == null) {
             Db_Request_Model.me = new Db_Request_Model(p);
         }
         return Db_Request_Model.me;
     }
-
+    
     private Db_Request_Model(Project_Management_Presenter_Intern_Methods p) {
         Db_Request_Model.presenter = p;
         Db_Request_Model.tokenID = new HashMap<String, String>();
@@ -53,7 +52,7 @@ public class Db_Request_Model {
     public String authenticate(String login, String hash) throws SQLException {
         String token = null;
         Db_Request_Model.idb = InteractDB.getInstance();
-
+        
         boolean userExists;
         //Select motDePasse From T_Membre Where login = @login;
         userExists = Db_Request_Model.idb.authenticate(login, hash);
@@ -123,7 +122,7 @@ public class Db_Request_Model {
         for (int i = 0; i < group.getMembers().size(); i++) {
             Db_Request_Model.idb.addAffectionGroup(group.getMembers().get(i).getId_member(), group.getId_group(), false);
         }
-
+        
         return (true);
     }
 
@@ -190,15 +189,20 @@ public class Db_Request_Model {
                 }
             }
             //Sending a message to all task's members
-            Message m = new Message(task.getId(), task.getSender(), "The new task " + task.getTitle() + " was created"/*TODO : check message*/, task.getStringCreationDate(), task.getContent());
-            Member tmp = null;
+            Member m = null;
             for (Recipient r : task.getRecipients()) {
                 try {
-                    tmp = idb.getMemberInfos(r.getId());
+                    m = idb.getMemberInfos(r.getId());
                 } catch (SQLException ex) {
                     Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                SendEmail.sendEmail(tmp.getEmail(), m);
+                try {
+                    SendEmail.sendEmail(m, "Nouvelle tâche.", "Bonjour " + m.getFirst_name() + " " + m.getName()
+                            + "La tâche " + task.getTitle() + " a été rajouté au projet.\n");
+                } catch (Exception ex) {
+                    Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                
             }
             if (unfoundMembers.compareTo("") == 0 && unfoundGroups.compareTo("") == 0) {
                 return "Task created";
@@ -237,7 +241,7 @@ public class Db_Request_Model {
      */
     public Boolean deleteTaskAndNotify(int id_Task) throws SQLException {
         Task task = Db_Request_Model.idb.getTask(id_Task);
-
+        
         if (Db_Request_Model.idb.deleteTask(id_Task)) {
             Message message = new Message("", "", "Task " + id_Task + " deleted.", null, "The Task " + id_Task + " has been deleted from the project.");
             ArrayList<Recipient> rcpts = task.getRecipients();
@@ -246,15 +250,20 @@ public class Db_Request_Model {
                 if (r.getType().compareTo(RecipientType.GROUP) != 0 && r.getType().compareTo(RecipientType.ALL) != 0) {
                     m = Db_Request_Model.idb.getMemberInfos(r.getId());
                     //ENVOYER UN MAIL 
-                    SendEmail.sendEmail(m.getEmail(), message);
+                    try {
+                        SendEmail.sendEmail(m, "Tâche supprimé.", "Bonjour " + m.getFirst_name() + " " + m.getName()
+                                + "La tâche " + id_Task + " a été supprimé du projet.\n");
+                    } catch (Exception ex) {
+                        Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
             }
-
+            
             return true;
         } else {
             return false;
         }
-
+        
     }
 
     /**
@@ -279,7 +288,7 @@ public class Db_Request_Model {
             Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
             return null;
         }
-
+        
     }
 
     /**
@@ -316,8 +325,8 @@ public class Db_Request_Model {
         } else {
             return (Db_Request_Model.idb.getSendMessagesHeader(id));
         }
-
-
+        
+        
     }
 
     /**
@@ -335,7 +344,7 @@ public class Db_Request_Model {
             } else {
                 return (Db_Request_Model.idb.getSendMessage(Integer.parseInt(idMessage), id));
             }
-
+            
         }
         return (null);
     }
@@ -365,12 +374,12 @@ public class Db_Request_Model {
     public Member getInfosMember(String id_member) {
         try {
             Db_Request_Model.idb = InteractDB.getInstance();
-
+            
             return Db_Request_Model.idb.getMemberInfos(id_member);
         } catch (SQLException ex) {
             Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
         }
-
+        
         return null;
     }
 
@@ -441,7 +450,7 @@ public class Db_Request_Model {
      */
     public Boolean isAdmin(String token) throws SQLException {
         String id_member = this.isValidToken(token);
-
+        
         return (id_member != null && idb.isAdmin(id_member));
     }
 
@@ -453,7 +462,7 @@ public class Db_Request_Model {
      */
     public Boolean isAdmin(String token, String id_tache) throws SQLException {
         String id_member = this.isValidToken(token);
-
+        
         return id_member != null && idb.isAdmin(id_member);
     }
 
@@ -477,7 +486,7 @@ public class Db_Request_Model {
     public void saveMessage(Message m) throws SQLException {
         ArrayList<Recipient> recipients = m.getRecipients();
         System.err.println("-----------------------------------------------------------------------------------------------   " + m.getCreationDate().getTime());
-
+        
         Integer idMess = Db_Request_Model.idb.addMessage(m.getTitle(), m.getCreationDate().getTime(), m.getContent());
         if (idMess != null) {
             for (Recipient recipient : recipients) {
@@ -495,10 +504,10 @@ public class Db_Request_Model {
                         for (Member member : members) {
                             Db_Request_Model.idb.addSendMessageToMember(m.getSender().trim(), member.getId_member(), idMess, RecipientType.USER);
                         }
-
+                        
                     } else {
                         Db_Request_Model.idb.addSendMessageToMember(m.getSender().trim(), recipient.getId(), idMess, RecipientType.USER);
-                        // NON FONCITONNEl notifyNewMessage(recipient.getId(), m);
+                        notifyNewMessage(recipient.getId(), m);
                     }
                 }
             }
@@ -525,8 +534,12 @@ public class Db_Request_Model {
      */
     public void updateMessageStatus(String token, String idMessage, MessageStatus ms, boolean addStatus) throws SQLException {
         String id = isValidToken(token);
-        if (id != null) {
-            Db_Request_Model.idb.addMessageStatus(Integer.parseInt(idMessage), ms, id);
+        if (id != null && ms != null) {
+            if (addStatus) {
+                Db_Request_Model.idb.addMessageStatus(Integer.parseInt(idMessage.trim()), ms, id);
+            } else {
+                Db_Request_Model.idb.delMessageStatus(Integer.parseInt(idMessage.trim()), ms, id);
+            }
         }
     }
 
@@ -564,7 +577,7 @@ public class Db_Request_Model {
         Db_Request_Model.tokenID.put(token, id);
         return token;
     }
-
+    
     public Message createMessage(String idSender, ArrayList<String> members, String title, String message, MessageStatus ms) {
         MessageHeader mH = new MessageHeader("");
         Message m = new Message(mH);
@@ -578,63 +591,68 @@ public class Db_Request_Model {
         m.setContent(message);
         return (m);
     }
-
+    
     public void deleteMessage(String token, String idMessage) throws SQLException {
         String id = isValidToken(token);
         Db_Request_Model.idb.delMessage(Integer.parseInt(idMessage), id);
     }
-
+    
     private void notifyNewMessage(String id, Message m) throws SQLException {
-        String to = Db_Request_Model.idb.getMemberInfos(id).getEmail();
-        SendEmail.sendEmail(to, m);
+        Member user = Db_Request_Model.idb.getMemberInfos(id);
+        try {
+            SendEmail.sendEmail(user, "Nouveau message sur votre messagerie interne.", "Bonjour " + user.getFirst_name() + " " + user.getName()
+                    + ".\nVous avez reçu un nouveau message de " + m.getSender() + " ayant pour sujet : " + m.getTitle() + " dans votre messagerie interne.\n");
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
-
+    
     public String generateIdMember(String nom, String prenom) {
         try {
             String nom_ok = nom.toLowerCase().replaceAll(" ", "");
             String prenom_ok = prenom.toLowerCase().replaceAll(" ", "");
             String id = nom_ok;
             int index = 0, cpt = 0;
-
+            
             while (Db_Request_Model.idb.checkIDMemberExists(id) && index < prenom_ok.length()) {
                 id = prenom_ok.substring(0, index) + nom_ok;
                 index++;
             }
             if (index == prenom.length()) {
-
+                
                 while (Db_Request_Model.idb.checkIDMemberExists(id)) {
                     id = prenom_ok + nom_ok + cpt;
                     cpt++;
                 }
             }
-
+            
             return id;
         } catch (Exception ex) {
             Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
         }
-
+        
         return null;
     }
-
+    
     public String generateIdGroup(String nom_group) {
-
+        
         try {
             String nom_ok = nom_group.toLowerCase().replaceAll(" ", "");
             String id = nom_ok.substring(0, (nom_ok.length() > 9 ? 9 : nom_ok.length()));
             int cpt = 2;
-
+            
             while (idb.checkIDGroupExists(id)) {
                 id = nom_ok + cpt;
                 cpt++;
             }
-
+            
             return id;
         } catch (Exception ex) {
             Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }
-
+    
     public ArrayList<GroupHeader> getExistingGroups() throws SQLException {
         return Db_Request_Model.idb.getGroupsHeaderData();
     }
@@ -649,11 +667,11 @@ public class Db_Request_Model {
             Db_Request_Model.tokenID.remove(token);
         }
     }
-
+    
     public boolean updateUser(Member m) {
         return (Db_Request_Model.idb.updateMember(m) == 1);
     }
-
+    
     public String getMemberTasks(String id_member) {
         try {
             return Db_Request_Model.idb.getTasksMember(id_member);
@@ -662,13 +680,27 @@ public class Db_Request_Model {
             return "";
         }
     }
-
+    
     public String getMemberGroups(String id_member) {
         try {
             return Db_Request_Model.idb.getMemberGroups(id_member);
         } catch (SQLException ex) {
             Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
             return "";
+        }
+    }
+    
+    public int getNbMessagesForStatus(String id_membre, MessageStatus mst) {
+        return Db_Request_Model.idb.getNbMessagesForStatus(id_membre, mst);
+    }
+    
+    public boolean messageHasStatusAssociatedWithAMember(String id_membre, int id_message, MessageStatus status) 
+    {
+        try {
+            return Db_Request_Model.idb.messageHasStatusAssociatedWithAMember(id_membre, id_message, status);
+        } catch (SQLException ex) {
+            Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
         }
     }
 }

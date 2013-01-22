@@ -86,7 +86,7 @@
                             <li class="dropdown">
                                 <a id="drop2" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Messagerie <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                    <li><a tabindex="-1" href="inbox">Bo&icirc;te de r&eacute;c&eacute;ption</a></li>
+                                    <li><a tabindex="-1" href="inbox">Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess">${nbNewMessages}</b></span></a></li>
                                     <li><a tabindex="-1" href="createMessage">Envoyer un message</a></li>
                                 </ul>
                             </li>
@@ -218,13 +218,121 @@
                 </div><!--/span-->
 
                 <div class="span9 offset2">
+                    ${alert}
                     <div class="hero-unit">
-                        <h1>Mes messages</h1>
+                        <h1>Mes messages <span class="badge badge-info">${nbNewMessages}</span></h1>
                     </div>
                     <!-- Example row of columns -->
                     <div class="row-fluid">
                         <div class="row-fluid">
-                            ${messageList}
+                            <div class="accordion" id="accordionMsgs">
+                                <div class="accordion-group">
+                                    <div class="accordion-heading">
+                                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordionMsgs" href="#msgRcpts">
+                                            Boite de r&eacute;ception
+                                        </a>
+                                    </div>
+                                    <div id="msgRcpts" class="accordion-body  collapse" style="height: 0px; ">
+                                        <div class="accordion" id="accordionMsgsRcvs">
+                                            <div class="accordion-group">
+                                                <div class="accordion-heading">
+                                                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordionMsgsRcvs" href="#messUnRead">
+                                                        Messages non lus
+                                                    </a>
+                                                </div>
+                                                <div id="messUnRead" class="accordion-body  collapse" style="height: 0px; ">
+                                                    <div class="accordion-inner">
+                                                        ${messUnRead}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="accordion-group">
+                                                <div class="accordion-heading">
+                                                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordionMsgsRcvs" href="#messRead">
+                                                        Messages lus
+                                                    </a>
+                                                </div>
+                                                <div id="messRead" class="accordion-body  collapse" style="height: 0px; ">
+                                                    <div class="accordion-inner">
+                                                        ${messRead}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="accordion-group">
+                                                <div class="accordion-heading">
+                                                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordionMsgsRcvs" href="#messUrg">
+                                                        Messages urgents
+                                                    </a>
+                                                </div>
+                                                <div id="messUrg" class="accordion-body  collapse" style="height: 0px; ">
+                                                    <div class="accordion-inner">
+                                                        <ul>
+                                                            ${messUrg}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="accordion-group">
+                                                <div class="accordion-heading">
+                                                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordionMsgsRcvs" href="#messImp">
+                                                        Messages importants
+                                                    </a>
+                                                </div>
+                                                <div id="messImp" class="accordion-body  collapse" style="height: 0px; ">
+                                                    <div class="accordion-inner">
+                                                        <ul>
+                                                            ${messImp}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="accordion-group">
+                                                <div class="accordion-heading">
+                                                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordionMsgsRcvs" href="#messToAnsw">
+                                                        Messages auxquels r&eacute;pondres
+                                                    </a>
+                                                </div>
+                                                <div id="messToAnsw" class="accordion-body  collapse" style="height: 0px; ">
+                                                    <div class="accordion-inner">
+                                                        <ul>
+                                                            ${messToAnsw}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="accordion-group">
+                                                <div class="accordion-heading">
+                                                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordionMsgsRcvs" href="#messFwd">
+                                                        Messages transf&eacute;f&eacute;s
+                                                    </a>
+                                                </div>
+                                                <div id="messFwd" class="accordion-body  collapse" style="height: 0px; ">
+                                                    <div class="accordion-inner">
+                                                        <ul>
+                                                            ${messFwd}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-group">
+                                    <div class="accordion-heading">
+                                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordionMsgs" href="#msgSend">
+                                            Boite d'envoi
+                                        </a>
+                                    </div>
+                                    <div id="msgSend" class="accordion-body  collapse" style="height: 0px; ">
+                                        <div class="accordion-inner">
+                                            <ul>
+                                                ${messOutbox}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 

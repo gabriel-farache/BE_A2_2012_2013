@@ -56,9 +56,186 @@
         <link rel="apple-touch-icon-precomposed" sizes="72x72" href="ico/apple-touch-icon-72-precomposed.png">
         <link rel="apple-touch-icon-precomposed" href="ico/apple-touch-icon-57-precomposed.png">
         <link rel="shortcut icon" href="ico/favicon.png">
+        <script type='text/javascript' src='/BE_A2_2012_2013/dwr/engine.js'></script>
+        <script type='text/javascript' src='/BE_A2_2012_2013/dwr/interface/Project_Management_Presenter_Intern_Methods.js'></script>
+        <script type='text/javascript' src='/BE_A2_2012_2013/dwr/util.js'></script>
+        <script language="javascript"> 
+            var lu = true;
+            var fwd = true;
+            var impo = true;
+            var urg = true;
+            var toAnw = true;
+            
+            function initLabels()
+            {
+                Project_Management_Presenter_Intern_Methods.messageHasStatusAssociatedWithAMember('<%=session.getAttribute("token")%>', '<%=session.getAttribute("idMessStatus")%>', 'READ', affectLu);
+                Project_Management_Presenter_Intern_Methods.messageHasStatusAssociatedWithAMember('<%=session.getAttribute("token")%>', '<%=session.getAttribute("idMessStatus")%>', 'FORWARD', affectFwd);
+                Project_Management_Presenter_Intern_Methods.messageHasStatusAssociatedWithAMember('<%=session.getAttribute("token")%>', '<%=session.getAttribute("idMessStatus")%>', 'IMPORTANT', affectImpo);
+                Project_Management_Presenter_Intern_Methods.messageHasStatusAssociatedWithAMember('<%=session.getAttribute("token")%>', '<%=session.getAttribute("idMessStatus")%>', 'URGENT', affectUrg);
+                Project_Management_Presenter_Intern_Methods.messageHasStatusAssociatedWithAMember('<%=session.getAttribute("token")%>', '<%=session.getAttribute("idMessStatus")%>', 'HAVE_TO_ANSWER', affectToAnw);
+                checkNewMess();
+            }
+            
+            function fillNbMess(data)
+            {
+                document.getElementById('nbNewMess').innerHTML = data;
+            }
+            
+            function checkNewMess()
+            {
+                Project_Management_Presenter_Intern_Methods.getNbMessagesForStatus('<%=session.getAttribute("token")%>', '', fillNbMess);
+            }
+            function change_class(id) { 
+                var btn = document.getElementById(id);
+                if(id == "lu")
+                {
+                    if(!lu)
+                    {
+                        btn.className= "label label-inverse";
+                    }
+                    else
+                    {
+                        btn.className= "label";
+                    }
+                    lu = !lu;
+                    Project_Management_Presenter_Intern_Methods.updateMessageStatusString('<%=session.getAttribute("token")%>', '<%=session.getAttribute("idMessStatus")%>', 'READ', lu, ok);
+                    
+                }
+                else if(id == "forward")
+                {
+                    if(!fwd)
+                    {
+                        btn.className= "label label-success";
+                    }
+                    else
+                    {
+                        btn.className= "label";
+                    }
+                    fwd = !fwd;
+                    Project_Management_Presenter_Intern_Methods.updateMessageStatusString('<%=session.getAttribute("token")%>', '<%=session.getAttribute("idMessStatus")%>', 'FORWARD', fwd, ok);
+                    
+                }
+                else if(id == "important")
+                {
+                    if(!impo)
+                    {
+                        btn.className= "label label-warning";
+                    }
+                    else
+                    {
+                        btn.className= "label";
+                    }
+                    impo = !impo;
+                    Project_Management_Presenter_Intern_Methods.updateMessageStatusString('<%=session.getAttribute("token")%>', '<%=session.getAttribute("idMessStatus")%>', 'IMPORTANT', impo, ok);
+                    
+                }
+                else if(id == "urgent")
+                {
+                    if(!urg)
+                    {
+                        btn.className= "label label-important";
+                    }
+                    else
+                    {
+                        btn.className= "label";
+                    }
+                    urg = !urg;
+                    Project_Management_Presenter_Intern_Methods.updateMessageStatusString('<%=session.getAttribute("token")%>', '<%=session.getAttribute("idMessStatus")%>', 'URGENT', urg, ok);
+                    
+                }
+                else if(id == "toAnswer")
+                {
+                    if(!toAnw)
+                    {
+                        btn.className= "label label-info";
+                    }
+                    else
+                    {
+                        btn.className= "label";
+                    }
+                    toAnw = !toAnw;
+                    Project_Management_Presenter_Intern_Methods.updateMessageStatusString('<%=session.getAttribute("token")%>', '<%=session.getAttribute("idMessStatus")%>', 'HAVE_TO_ANSWER', toAnw, ok);
+                    
+                }
+                else {
+                    alert(id);
+                }
+            } 
+            function ok (data) { }
+            
+            function affectLu(data)
+            {
+                var btn = document.getElementById('lu');
+                lu = data;
+                if(lu)
+                {
+                    btn.className= "label label-inverse";
+                }
+                else
+                {
+                    btn.className= "label";
+                }
+            }
+            function affectFwd(data)
+            {
+                var btn = document.getElementById('forward');
+                fwd = data;
+                if(fwd)
+                {
+                    btn.className= "label label-success";
+                }
+                else
+                {
+                    btn.className= "label";
+                }
+            }
+            function affectImpo(data)
+            {
+                var btn = document.getElementById('important');
+                impo = data;
+                if(impo)
+                {
+                    btn.className= "label label-warning";
+                }
+                else
+                {
+                    btn.className= "label";
+                }
+            }
+            function affectUrg(data)
+            {
+                var btn = document.getElementById('urgent');
+                urg = data;
+                if(urg)
+                {
+                    btn.className= "label label-important";
+                }
+                else
+                {
+                    btn.className= "label";
+                }
+            }
+            function affectToAnw(data)
+            {
+                var btn = document.getElementById('toAnswer');
+                toAnw = data;
+                if(toAnw)
+                {
+                    btn.className= "label label-info";
+                }
+                else
+                {
+                    btn.className= "label";
+                }
+            }
+            
+            
+            
+        </script>
+        <!---->
     </head>
 
-    <body>
+    <body onload="initLabels();">
 
         <div class="navbar navbar-inverse navbar-fixed-top">
             <div class="navbar-inner">
@@ -84,9 +261,9 @@
                                 </ul>
                             </li>
                             <li class="dropdown">
-                                <a id="drop2" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Messagerie <b class="caret"></b></a>
+                                <a id="drop2" href="#" role="button" class="dropdown-toggle" onclick="checkNewMess();" data-toggle="dropdown">Messagerie <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                    <li><a tabindex="-1" href="inbox">Bo&icirc;te de r&eacute;c&eacute;ption</a></li>
+                                    <li><a tabindex="-1" href="inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess">${nbNewMessages}</b></span></a></li>
                                     <li><a tabindex="-1" href="createMessage">Envoyer un message</a></li>
                                 </ul>
                             </li>
@@ -220,6 +397,7 @@
                 <div class="span9 offset2">
                     <!-- Example row of columns -->
                     <div class="row-fluid"> 
+
                         <fieldset>
                             <legend>Auteur(s)</legend>
                             <div>
@@ -236,9 +414,18 @@
                             </div>
                         </fieldset>
                         <fieldset>
+
                             <legend>Objet</legend>
                             <div>
                                 <p>${title}</p>
+                            </div>
+                            <hr>
+                            <div class="row-fluid">
+                                <span id="lu" class="label" onclick="change_class('lu');">Lu</span>
+                                <span id="forward" class="label" onclick="change_class('forward');">Transf&eacute;r&eacute;</span>
+                                <span id="important" class="label" onclick="change_class('important');">Important</span>
+                                <span id="urgent" class="label" onclick="change_class('urgent');">Urgent</span>
+                                <span id="toAnswer" class="label" onclick="change_class('toAnswer');">A r&eacute;pondre</span>
                             </div>
                             <legend>Message</legend>
                             <div>
@@ -254,6 +441,7 @@
                         <div class="span1 pull-right">
                             <a href="<c:url value="createMessage?idMess=${idMess}&fromInbox=${fromInbox}"/>" class="btn  btn-success" type="submit"/>R&eacute;pondre</a>
                         </div>
+                        <input type="hidden" id="idMessStatus" value="${idMess}"/>
                     </div>
                     <hr>
 
@@ -281,6 +469,7 @@
             <script src="<c:url value="/resources/js/bootstrap-collapse.js"/>"></script>
             <script src="<c:url value="/resources/js/bootstrap-carousel.js"/>"></script>
             <script src="<c:url value="/resources/js/bootstrap-typeahead.js"/>"></script>
+
         </div>
     </body>
 </html>

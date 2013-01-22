@@ -266,7 +266,12 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
         try {
             boolean ok = Project_Management_Presenter_Intern_Methods.model.createNewUser(user, hash);
             if (ok) {
-                SendEmail.welcomeEmail(user);
+                try {
+                    SendEmail.sendEmail(user, "Votre compte a été crée.", "Bonjour " + user.getFirst_name() + " " + user.getName()
+                            + ".\nUn nouveau compte vient de vous être créé.\nIdentifiant : " + user.getId_member() + "\nMot de passe : " + pswd + "\n");
+                } catch (Exception ex) {
+                    Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
             return id;
         } catch (SQLException ex) {
@@ -700,6 +705,12 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
         return ok;
     }
 
+    public boolean updateMessageStatusString(String token, String idMessage, String mst, boolean addStatus) {
+        System.err.println("............+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" + token + " -- " + idMessage + " -- " + addStatus + " -- " + mst);
+
+        return this.updateMessageStatus(token, idMessage, this.parseMessageStatus(mst), addStatus);
+    }
+
     /**
      * Checks if the member associates with the token is an Admin
      *
@@ -769,5 +780,47 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
 
         }
         return gps;
+    }
+
+    @Override
+    public int getNbMessagesForStatus(String token, MessageStatus mst) {
+        String id = Project_Management_Presenter_Intern_Methods.model.isValidToken(token);
+        if (id != null) {
+            return Project_Management_Presenter_Intern_Methods.model.getNbMessagesForStatus(id, mst);
+        } else {
+            return 0;
+        }
+    }
+    
+    public int getNbMessagesForStatus(String token, String mst) {
+        String id = Project_Management_Presenter_Intern_Methods.model.isValidToken(token);
+        if (id != null) {
+            return Project_Management_Presenter_Intern_Methods.model.getNbMessagesForStatus(id, this.parseMessageStatus(mst));
+        } else {
+            return 0;
+        }
+    }
+
+    public MessageStatus parseMessageStatus(String mst) {
+        MessageStatus msts;
+        if (mst.equals("IMPORTANT")) {
+            msts = MessageStatus.IMPORTANT;
+        } else if (mst.equals("HAVE_TO_ANSWER")) {
+            msts = MessageStatus.HAVE_TO_ANSWER;
+        } else if (mst.equals("URGENT")) {
+            msts = MessageStatus.URGENT;
+        } else if (mst.equals("FORWARDED")) {
+            msts = MessageStatus.FORWARDED;
+        } else if (mst.equals("READ")) {
+            msts = MessageStatus.READ;
+        } else {
+            msts = null;
+        }
+        return msts;
+    }
+
+    public boolean messageHasStatusAssociatedWithAMember(String token, int id_message, String status) {
+        String id = Project_Management_Presenter_Intern_Methods.model.isValidToken(token);
+        return (id != null && Project_Management_Presenter_Intern_Methods.model.messageHasStatusAssociatedWithAMember(id, id_message, this.parseMessageStatus(status)));
     }
 }

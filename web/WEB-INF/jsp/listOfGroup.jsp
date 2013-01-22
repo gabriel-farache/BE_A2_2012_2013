@@ -219,6 +219,7 @@
 
                 <div class="span9 offset2">
                     <!-- Example row of columns -->
+                    ${alert}
                     <div class="hero-unit">
                         <h1>Liste des groupes</h1>
                     </div>

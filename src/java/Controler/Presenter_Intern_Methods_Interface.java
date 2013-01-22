@@ -337,5 +337,7 @@ public interface Presenter_Intern_Methods_Interface {
     public String getMemberTasks(String id_member);
     
     public String getMemberGroups(String id_member);
+    
+    public int getNbMessagesForStatus(String id_membre, MessageStatus mst);
 }
 

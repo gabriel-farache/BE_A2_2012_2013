@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:p="http://www.springframework.org/schema/p"
        xmlns:aop="http://www.springframework.org/schema/aop"
+        xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
        xmlns:tx="http://www.springframework.org/schema/tx"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
-       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd">
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
+       http://www.directwebremoting.org/schema/spring-dwr
+       http://www.directwebremoting.org/schema/spring-dwr-3.0.xsd">
 
     <!--bean id="propertyConfigurer"
           class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"
@@ -21,4 +23,15 @@
 
     <!-- ADD PERSISTENCE SUPPORT HERE (jpa, hibernate, etc) -->
 
+    <dwr:configuration />
+    <dwr:controller id="dwrController" debug="true" />
+    
+ 
+    <bean id="Project_Management_Presenter_Intern_Methods" class="Controler.Project_Management_Presenter_Intern_Methods">
+        <dwr:remote javascript="Project_Management_Presenter_Intern_Methods">
+            <dwr:include method="updateMessageStatusString" />
+            <dwr:include method="messageHasStatusAssociatedWithAMember" />
+            <dwr:include method="getNbMessagesForStatus" />
+        </dwr:remote>
+    </bean>  
 </beans>

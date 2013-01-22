@@ -421,9 +421,11 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
      */
     @RequestMapping(value = {"messageCreated"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptMessageToCreate(HttpServletRequest request, ModelMap m) {
-        String pageToLoad = null;
         //Récupération du token de la session
         String token = this.getTokenSession(request.getSession(), m);
+        String alertMess = "<div class=\"alert alert-success\">"
+                + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                + "<strong>Erreur fatale ! </strong></div>";
         try {
             //IL FAUT RECUPERER LES GROUPES AUSSI !!!!
             String title = request.getParameter("titreMessage");
@@ -449,36 +451,32 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                     pj.add(new Attachment(cheminsPj[i], cheminsPj[i]));//pj stockée sous ce nom a cette adresse
                 }
             }
-            String err = "";
             if (!this.saveMessageToMembers(idSender, members, title, message, null, pj, token)) {
-                err = "<h1>Pb Membre ?</h1><br>";
-                pageToLoad = "error";
-            }
-            if (groups.length > 0 && groups[0].trim().compareToIgnoreCase("") != 0 && groups[0].trim().compareToIgnoreCase(" ") != 0) {
+                alertMess = "<div class=\"alert alert-error\">"
+                        + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                        + "<strong>Envoi du message \"" + title + " échoué au niveau de l'envoi au(x) destinataire(s) membre ! </strong></div>";
+            } else if (groups.length > 0 && groups[0].trim().compareToIgnoreCase("") != 0 && groups[0].trim().compareToIgnoreCase(" ") != 0) {
                 if (!this.saveMessageToGroups(idSender, groupsL, members, title, message, null, pj, token)) {
-                    err += "<h1>Pb groupe ?</h1>";
-                    pageToLoad = "error";
+                    alertMess = "<div class=\"alert alert-error\">"
+                            + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                            + "<strong>Envoi du message \"" + title + " échoué au niveau de l'envoi au(x) destinataire(s) groupes ! </strong></div>";
                 }
+            } else {
+                this.fillAccordionMenu(token, m);
+                alertMess = "<div class=\"alert alert-success\">"
+                        + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                        + "<strong>Envoi du message \"" + title + "\" terminé ! </strong></div>";
             }
-            this.fillAccordionMenu(token, m);
-            m.addAttribute("errorMessage", "<h1>Message envoyé.</h1>");
-            return "error";
-
-
-
-
 
 
         } catch (Exception ex) {
             Logger.getLogger(Project_Management_Presenter.class
                     .getName()).log(Level.SEVERE, null, ex);
-            m.addAttribute(
-                    "errorMessage", "<h1>Pb</h1>");
 
-
-
-            return "error";
         }
+        this.generateAndAddMessagesInbox(m, token);
+        m.addAttribute("alert", alertMess);
+        return "inbox";
     }
 
     /*
@@ -512,6 +510,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             modelMap.addAttribute("sender", m.getSender());
             modelMap.addAttribute("content", m.getContent());
             modelMap.addAttribute("idMess", request.getParameter("idMessage"));
+            request.getSession().setAttribute("idMessStatus", request.getParameter("idMessage"));
             modelMap.addAttribute("fromInbox", request.getParameter("fromInbox"));
             for (Recipient r : m.getRecipients()) {
                 if (r.getType().equals(RecipientType.USER)) {
@@ -593,6 +592,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
      */
     @RequestMapping(value = {"userCreated"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String userCreationFormSubmitted(HttpServletRequest request, ModelMap mm) {
+        String alertMess;
         try {
             String token, user_id;
 
@@ -607,34 +607,31 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                 this.fillAccordionMenu(token, mm);
                 //System.out.println
                 if (id != null) {
-                    mm.addAttribute("nom", request.getParameter("nom"));
-                    mm.addAttribute("prenom", request.getParameter("prenom"));
-                    mm.addAttribute("errorMessage", "Succès de la création de l'utilisateur. ID : " + id);
-                    return "error";
+                    alertMess = "<div class=\"alert alert-success\">"
+                            + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                            + "<strong>Succès de la création de l'utilisateur " + request.getParameter("nom") + " " + request.getParameter("prenom") + " (" + id + ")</strong></div>";
+
                 } else {
-                    mm.addAttribute("errorMessage", "Échec de la création de l'utilisateur.");
-                    return "error";
+                    alertMess = "<div class=\"alert alert-error\">"
+                            + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                            + "<strong>Échec de la création de l'utilisateur " + request.getParameter("nom") + " " + request.getParameter("prenom") + "</strong></div>";
                 }
+
             } else {
                 mm.addAttribute("errorMessage", "Vous ne disposez pas de droits suffisants pour effectuer cette opération.");
-                return "error";
-
-
-
-
-
-
+                alertMess = "<div class=\"alert alert-error\">"
+                        + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                        + "<strong>Vous ne disposez pas de droits suffisants pour effectuer cette opération.</strong></div>";
             }
         } catch (SQLException ex) {
             Logger.getLogger(Project_Management_Presenter.class
                     .getName()).log(Level.SEVERE, null, ex);
-            mm.addAttribute(
-                    "errorMessage", "Erreur Base de donnée.");
-
-
-
-            return "error";
+            alertMess = "<div class=\"alert alert-error\">"
+                    + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                    + "<strong>Erreur Base de donnée.</strong></div>";
         }
+        mm.addAttribute("alert", alertMess);
+        return "listOfUser";
     }
 
     /*
@@ -748,6 +745,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
      */
     @RequestMapping(value = {"groupCreated"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String groupCreationFormSubmitted(HttpServletRequest request, ModelMap mm) {
+        String alertMess;
         try {
             String token;
 
@@ -764,31 +762,29 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                 if (this.createGroup(liste_membres, token, request.getParameter("nomGroupe").replace("'", "`"), request.getParameter("descriptionGroupe").replace("'", "`"))) {
                     mm.addAttribute("nomGroupe", request.getParameter("nomGroupe"));
                     this.fillAccordionMenu(token, mm);
-                    return null;
+                    alertMess = "<div class=\"alert alert-success\">"
+                            + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                            + "<strong>Succès de la création du groupe " + request.getParameter("nomGroupe") + "</strong></div>";
                 } else {
-                    mm.addAttribute("errorMessage", "Échec de la création du groupe.");
-                    return "error";
+                    alertMess = "<div class=\"alert alert-error\">"
+                            + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                            + "<strong>Echec lors de la création du groupe " + request.getParameter("nomGroupe") + "</strong></div>";
                 }
             } else {
-                mm.addAttribute("errorMessage", "Vous ne disposez pas de droits suffisants pour effectuer cette opération.");
-                return "error";
-
-
-
-
-
-
+                alertMess = "<div class=\"alert alert-error\">"
+                        + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                        + "<strong>Vous ne disposez pas de droits suffisants pour effectuer cette opération.</strong></div>";
             }
         } catch (SQLException ex) {
             Logger.getLogger(Project_Management_Presenter.class
                     .getName()).log(Level.SEVERE, null, ex);
-            mm.addAttribute(
-                    "errorMessage", "Erreur Base de donnée.");
 
-
-
-            return "error";
+            alertMess = "<div class=\"alert alert-error\">"
+                    + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                    + "<strong>\"Erreur Base de donnée.\"</strong></div>";
         }
+        mm.addAttribute("alert", alertMess);
+        return "listOfGroup";
     }
 
     /* Affiche la page qui présente la liste des groupes à sélectionner
@@ -1012,47 +1008,12 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         //Récupération du token de la session
         String token = this.getTokenSession(request.getSession(), mm);
         String pageToLoad = null;
-        if (Project_Management_Presenter.model.isValidToken(token) != null) {
+        String id = Project_Management_Presenter.model.isValidToken(token);
+        if (id != null) {
+            this.generateAndAddMessagesInbox(mm, token);
+            this.generateAndAddMessagesOutbox(mm, token);
+            mm.addAttribute("nbNewMessages", this.getNbMessagesForStatus(token, ""));
 
-            ArrayList<MessageHeader> messageList = this.getHeaderMessages(token, true);
-            if (messageList != null) {
-                //Creation de la table en html contenant tous les headers de toutes les taches
-                String table =
-                        "<table class=\"table table-hover\" >"
-                        + "<tr id='entete'>"
-                        + "<th>Titre du message</th>"
-                        + "<th>Auteur</th>"
-                        + "<th>Date de création</th>"
-                        + "</tr>";
-                for (MessageHeader m : messageList) {
-                    ArrayList<MessageStatus> mst = m.getStatus();
-                    if (mst != null && !mst.isEmpty()) {
-                        if (mst.get(0).equals(MessageStatus.IMPORTANT)) {
-                            table += "<tr class=\"warning\" id='groupe' ";
-                        } else if (mst.get(0).equals(MessageStatus.HAVE_TO_ANSWER)) {
-                            table += "<tr class=\"info\" id='groupe' ";
-                        } else if (mst.get(0).equals(MessageStatus.URGENT)) {
-                            table += "<tr class=\"error\" id='groupe' ";
-                        } else if (mst.get(0).equals(MessageStatus.FORWARDED)) {
-                            table += "<tr class=\"success\" id='groupe' ";
-                        } else {
-                            table += "<tr id='groupe' ";
-                        }
-                    } else {
-                        table += "<tr class=\"default\" ";
-                    }
-                    table += "onclick='window.location.href = \"checkMessage?idMessage=" + m.getId() + "&fromInbox=yes\";'>" + "<td>" + "<td>" + m.getTitle() + "</td>"
-                            + "<td>" + m.getSender() + "</td>"
-                            + "<td>" + m.getStringCreationDate() + "</td>"
-                            + "</tr>";
-                }
-                table += "</table>";
-                //Mise en place de la table 
-                mm.addAttribute("messageList", table);
-            } else {
-                mm.addAttribute("errorMessage", "Pas de messages.");
-                pageToLoad = "error";
-            }
         } else {
             pageToLoad = "connection";
         }
@@ -1525,5 +1486,129 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         m.addAttribute("myMessages", Project_Management_Presenter.messages);
         m.addAttribute("users", Project_Management_Presenter.users);
         m.addAttribute("groups", Project_Management_Presenter.groupes);
+    }
+
+    /**
+     *
+     * @param token
+     * @param messageList
+     * @return Array : [0] : Important, [1] : Have to answer, [2] : Urgent, [3]
+     * : Forwarded, [4] : Read, [5] unread
+     */
+    private String[] fillInboxMessages(String token, ArrayList<MessageHeader> messageList) {
+        String[] table = {null, null, null, null, null, null};
+        int[] hasMsgs = {0, 0, 0, 0, 0, 0};
+        try {
+            if (messageList != null) {
+                //Creation de la table en html contenant tous les headers de toutes les taches
+                for (int i = 0; i < 6; i++) {
+                    table[i] =
+                            "<table class=\"table table-hover\" >"
+                            + "<tr id='entete'>"
+                            + "<th>Titre du message</th>"
+                            + "<th>Auteur</th>"
+                            + "<th>Date de création</th>"
+                            + "</tr>";
+                }
+                for (MessageHeader m : messageList) {
+                    int[] hasLine = {0, 0, 0, 0, 0, 0};
+                    ArrayList<MessageStatus> mst = m.getStatus();
+                    if (mst != null && !mst.isEmpty()) {
+                        if (mst.get(0).equals(MessageStatus.IMPORTANT)) {
+                            table[0] += "<tr class=\"warning\" id='groupe' ";
+                            hasMsgs[0]++;
+                            hasLine[0]++;
+                        } else if (mst.get(0).equals(MessageStatus.HAVE_TO_ANSWER)) {
+                            table[1] += "<tr class=\"info\" id='groupe' ";
+                            hasMsgs[1]++;
+                            hasLine[1]++;
+                        } else if (mst.get(0).equals(MessageStatus.URGENT)) {
+                            table[2] += "<tr class=\"error\" id='groupe' ";
+                            hasMsgs[2]++;
+                            hasLine[2]++;
+                        } else if (mst.get(0).equals(MessageStatus.FORWARDED)) {
+                            table[3] += "<tr class=\"success\" id='groupe' ";
+                            hasMsgs[3]++;
+                            hasLine[3]++;
+                        } else {
+                            table[4] += "<tr id='groupe' ";
+                            hasMsgs[4]++;
+                            hasLine[4]++;
+                        }
+                    } else {
+                        table[5] += "<tr id='groupe' class=\"default\" ";
+                        hasMsgs[5]++;
+                        hasLine[5]++;
+                    }
+                    for (int i = 0; i < 6; i++) {
+                        table[i] += hasLine[i] > 0 ? "onclick='window.location.href = \"checkMessage?idMessage=" + m.getId() + "&fromInbox=yes\";'>" + "<td>" + m.getTitle() + "</td>"
+                                + "<td>" + m.getSender() + "</td>"
+                                + "<td>" + m.getStringCreationDate() + "</td>"
+                                + "</tr>" : "";
+                    }
+                }
+                for (int i = 0; i < 6; i++) {
+                    table[i] = hasMsgs[i] > 0 ? table[i] + "</table>" : null;
+                }
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return table;
+    }
+
+    private void generateAndAddMessagesInbox(ModelMap mm, String token) {
+        ArrayList<MessageHeader> mh = this.getHeaderMessages(token, true);
+        //[0] : Important, [1] : Have to answer, [2] : Urgent, [3] : Forwarded, [4] : Read, [5] unread
+        String[] messInbox = this.fillInboxMessages(token, mh);
+        String messRead = (messInbox == null ? null : messInbox[4]);
+        String messUnRead = (messInbox == null ? null : messInbox[5]);
+        String messUrg = (messInbox == null ? null : messInbox[2]);
+        String messImp = (messInbox == null ? null : messInbox[0]);
+        String messToAnsw = (messInbox == null ? null : messInbox[1]);
+        String messFwd = (messInbox == null ? null : messInbox[3]);
+        //Mise en place de la table 
+        mm.addAttribute("messRead", messRead == null ? "Pas de messages." : messRead);
+        mm.addAttribute("messUnRead", messRead == null ? "Pas de messages." : messUnRead);
+        mm.addAttribute("messUrg", messUrg == null ? "Pas de messages." : messUrg);
+        mm.addAttribute("messImp", messImp == null ? "Pas de messages." : messImp);
+        mm.addAttribute("messToAnsw", messToAnsw == null ? "Pas de messages." : messToAnsw);
+        mm.addAttribute("messFwd", messFwd == null ? "Pas de messages." : messFwd);
+    }
+
+    private String fillOutboxMessages(String token, ArrayList<MessageHeader> messageList) {
+        String table = null;
+
+        try {
+            if (messageList != null) {
+                //Creation de la table en html contenant tous les headers de toutes les taches
+
+                table =
+                        "<table class=\"table table-hover\" >"
+                        + "<tr id='entete'>"
+                        + "<th>Titre du message</th>"
+                        + "<th>Auteur</th>"
+                        + "<th>Date de création</th>"
+                        + "</tr>";
+
+                for (MessageHeader m : messageList) {
+                    table += "<tr id='groupe' onclick='window.location.href = \"checkMessage?idMessage=" + m.getId() + "&fromInbox=no\";'>" + "<td>" + m.getTitle() + "</td>"
+                            + "<td>" + m.getSender() + "</td>"
+                            + "<td>" + m.getStringCreationDate() + "</td>"
+                            + "</tr>";
+                }
+                table += "</table>";
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return table;
+    }
+
+    private void generateAndAddMessagesOutbox(ModelMap mm, String token) {
+        ArrayList<MessageHeader> mh = this.getHeaderMessages(token, false);
+        //[0] : Important, [1] : Have to answer, [2] : Urgent, [3] : Forwarded, [4] : Read, [5] unread
+        String messOutbox = this.fillOutboxMessages(token, mh);
+        mm.addAttribute("messOutbox", messOutbox == null ? "Pas de messages." : messOutbox);
     }
 }
