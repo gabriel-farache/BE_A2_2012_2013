@@ -88,7 +88,7 @@ public interface Presenter_Intern_Methods_Interface {
      * true si tout s'est bien passé
      */
     @WebMethod(operationName = "createNewUser")
-    public String createNewUser(@WebParam(name = "user") Member user, @WebParam(name = "pswd") String pswd);
+    public String createNewUser(@WebParam(name = "user") Member user);
 
     /**
      * Deletes a task
@@ -261,7 +261,7 @@ public interface Presenter_Intern_Methods_Interface {
      * @return
      */
     @WebMethod(operationName = "saveMessageToMembers")
-    public boolean saveMessageToMembers(@WebParam(name = "idSender") String idSender, @WebParam(name = "members") ArrayList<String> members, @WebParam(name = "title") String title, @WebParam(name = "messageBody") String messageBody, @WebParam(name = "ms") MessageStatus ms, @WebParam(name = "attachments") ArrayList<Attachment> attachments, @WebParam(name = "token") String token);
+    public boolean saveMessageToMembers(@WebParam(name = "idSender") String idSender, @WebParam(name = "members") ArrayList<Recipient> rcpts, @WebParam(name = "title") String title, @WebParam(name = "messageBody") String messageBody, @WebParam(name = "ms") MessageStatus ms, @WebParam(name = "attachments") ArrayList<Attachment> attachments, @WebParam(name = "token") String token);
 
     /**
      * Save the message in the DB
@@ -328,8 +328,8 @@ public interface Presenter_Intern_Methods_Interface {
      * @param token The token of the session
      * @return
      */
-    @WebMethod(operationName = "saveMessageToGroups")
-    public boolean saveMessageToGroups(String idSender, ArrayList<String> groups, ArrayList<String> members, String title, String messageBody, MessageStatus ms, ArrayList<Attachment> attachments, String token);
+    @WebMethod(operationName = "saveMessage")
+    public boolean saveMessage(String idSender, ArrayList<String> groups, ArrayList<String> members, String title, String messageBody, MessageStatus ms, ArrayList<Attachment> attachments, String token);
 
     @WebMethod(operationName = "updateUser")
     public boolean updateUser(Member m);
@@ -339,5 +339,8 @@ public interface Presenter_Intern_Methods_Interface {
     public String getMemberGroups(String id_member);
     
     public int getNbMessagesForStatus(String id_membre, MessageStatus mst);
+    
+    public boolean updateUserProfile(Member m, String mdp);
+    public boolean updateGroup(String idGroup, String nomG, String descrG, String [] membersG, String chefG);
 }
 

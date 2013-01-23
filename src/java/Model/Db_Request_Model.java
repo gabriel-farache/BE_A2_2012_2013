@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
@@ -24,19 +25,19 @@ import peopleObjects.*;
  * @author gabriel
  */
 public class Db_Request_Model {
-    
+
     private static HashMap<String, String> tokenID;
     private static Project_Management_Presenter_Intern_Methods presenter;
     private static InteractDB idb;
     private static Db_Request_Model me = null;
-    
+
     public static Db_Request_Model getInstance(Project_Management_Presenter_Intern_Methods p) {
         if (Db_Request_Model.me == null) {
             Db_Request_Model.me = new Db_Request_Model(p);
         }
         return Db_Request_Model.me;
     }
-    
+
     private Db_Request_Model(Project_Management_Presenter_Intern_Methods p) {
         Db_Request_Model.presenter = p;
         Db_Request_Model.tokenID = new HashMap<String, String>();
@@ -52,7 +53,7 @@ public class Db_Request_Model {
     public String authenticate(String login, String hash) throws SQLException {
         String token = null;
         Db_Request_Model.idb = InteractDB.getInstance();
-        
+
         boolean userExists;
         //Select motDePasse From T_Membre Where login = @login;
         userExists = Db_Request_Model.idb.authenticate(login, hash);
@@ -122,7 +123,7 @@ public class Db_Request_Model {
         for (int i = 0; i < group.getMembers().size(); i++) {
             Db_Request_Model.idb.addAffectionGroup(group.getMembers().get(i).getId_member(), group.getId_group(), false);
         }
-        
+
         return (true);
     }
 
@@ -202,7 +203,7 @@ public class Db_Request_Model {
                 } catch (Exception ex) {
                     Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                
+
             }
             if (unfoundMembers.compareTo("") == 0 && unfoundGroups.compareTo("") == 0) {
                 return "Task created";
@@ -241,7 +242,7 @@ public class Db_Request_Model {
      */
     public Boolean deleteTaskAndNotify(int id_Task) throws SQLException {
         Task task = Db_Request_Model.idb.getTask(id_Task);
-        
+
         if (Db_Request_Model.idb.deleteTask(id_Task)) {
             Message message = new Message("", "", "Task " + id_Task + " deleted.", null, "The Task " + id_Task + " has been deleted from the project.");
             ArrayList<Recipient> rcpts = task.getRecipients();
@@ -258,12 +259,12 @@ public class Db_Request_Model {
                     }
                 }
             }
-            
+
             return true;
         } else {
             return false;
         }
-        
+
     }
 
     /**
@@ -288,7 +289,7 @@ public class Db_Request_Model {
             Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
             return null;
         }
-        
+
     }
 
     /**
@@ -325,8 +326,8 @@ public class Db_Request_Model {
         } else {
             return (Db_Request_Model.idb.getSendMessagesHeader(id));
         }
-        
-        
+
+
     }
 
     /**
@@ -344,7 +345,7 @@ public class Db_Request_Model {
             } else {
                 return (Db_Request_Model.idb.getSendMessage(Integer.parseInt(idMessage), id));
             }
-            
+
         }
         return (null);
     }
@@ -358,6 +359,7 @@ public class Db_Request_Model {
     public Task getInfosTask(int id_task) {
         try {
             Db_Request_Model.idb = InteractDB.getInstance();
+            System.err.println("..................................................................................................................................................");
             return Db_Request_Model.idb.getTask(id_task);
         } catch (SQLException ex) {
             Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
@@ -374,12 +376,12 @@ public class Db_Request_Model {
     public Member getInfosMember(String id_member) {
         try {
             Db_Request_Model.idb = InteractDB.getInstance();
-            
+
             return Db_Request_Model.idb.getMemberInfos(id_member);
         } catch (SQLException ex) {
             Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         return null;
     }
 
@@ -450,7 +452,7 @@ public class Db_Request_Model {
      */
     public Boolean isAdmin(String token) throws SQLException {
         String id_member = this.isValidToken(token);
-        
+
         return (id_member != null && idb.isAdmin(id_member));
     }
 
@@ -462,7 +464,7 @@ public class Db_Request_Model {
      */
     public Boolean isAdmin(String token, String id_tache) throws SQLException {
         String id_member = this.isValidToken(token);
-        
+
         return id_member != null && idb.isAdmin(id_member);
     }
 
@@ -486,25 +488,23 @@ public class Db_Request_Model {
     public void saveMessage(Message m) throws SQLException {
         ArrayList<Recipient> recipients = m.getRecipients();
         System.err.println("-----------------------------------------------------------------------------------------------   " + m.getCreationDate().getTime());
-        
+        ArrayList<String> gpMemb;
         Integer idMess = Db_Request_Model.idb.addMessage(m.getTitle(), m.getCreationDate().getTime(), m.getContent());
         if (idMess != null) {
             for (Recipient recipient : recipients) {
                 if (recipient.getId() != null && recipient.getId().trim().compareToIgnoreCase("") != 0) {
                     if (recipient.getType().equals(RecipientType.GROUP)) {
-                        Db_Request_Model.idb.addSendMessageToGroup(m.getSender().trim(), recipient.getId(), idMess);
-                        ArrayList<String> members = Db_Request_Model.idb.getMembersGroup(recipient.getId());
-                        for (String member : members) {
-                            if (!Db_Request_Model.idb.messageIsAssociatedWithMember(idMess, member)) {
-                                Db_Request_Model.idb.addSendMessageToMember(m.getSender().trim(), member, idMess, RecipientType.USER_IN_GROUP);
-                            }
+                        Db_Request_Model.idb.addSendMessageToGroupAndAssociateToMembers(m.getSender().trim(), recipient.getId(), idMess);
+                        gpMemb = Db_Request_Model.idb.getMembersGroup(recipient.getId());
+                        for (String mem : gpMemb) {
+                            notifyNewMessage(mem, m);
                         }
                     } else if (recipient.getType().equals(RecipientType.ALL)) {
                         ArrayList<Member> members = Db_Request_Model.idb.getAllMembers();
                         for (Member member : members) {
                             Db_Request_Model.idb.addSendMessageToMember(m.getSender().trim(), member.getId_member(), idMess, RecipientType.USER);
                         }
-                        
+
                     } else {
                         Db_Request_Model.idb.addSendMessageToMember(m.getSender().trim(), recipient.getId(), idMess, RecipientType.USER);
                         notifyNewMessage(recipient.getId(), m);
@@ -552,8 +552,17 @@ public class Db_Request_Model {
      */
     public Boolean updateTaskAndNotify(Task taskUpdate, HashMap<Recipient, Boolean[]> rcpts) {
         try {
-            if (Db_Request_Model.idb.updateTask(taskUpdate) == 1 && Db_Request_Model.idb.updateRecipientsTask(rcpts, taskUpdate.getId().trim(), taskUpdate.getSender().trim()) == 1) {
-                return true;
+            System.err.println(".........     " + taskUpdate.getStringCreationDate() + "  --  " + taskUpdate.getStringDueDate());
+            if (Db_Request_Model.idb.updateTask(taskUpdate) == 1) {
+                if (rcpts != null && !rcpts.isEmpty()) {
+                    if (Db_Request_Model.idb.updateRecipientsTask(rcpts, taskUpdate.getId().trim(), taskUpdate.getSender().trim()) == 1) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return true;
+                }
             } else {
                 return false;
             }
@@ -577,26 +586,26 @@ public class Db_Request_Model {
         Db_Request_Model.tokenID.put(token, id);
         return token;
     }
-    
-    public Message createMessage(String idSender, ArrayList<String> members, String title, String message, MessageStatus ms) {
+
+    public Message createMessage(String idSender, ArrayList<Recipient> members, String title, String message, MessageStatus ms) {
         MessageHeader mH = new MessageHeader("");
         Message m = new Message(mH);
         m.setCreationDate(Calendar.getInstance().getTime().toString());
         m.setTitle(title);
         m.setSender(idSender);
-        for (String member : members) {
-            m.addRecipient(new MessageRecipient(RecipientType.USER, member.trim(), ms));
+        for (Recipient member : members) {
+            m.addRecipient(new MessageRecipient(member.getType(), member.getId().trim(), ms));
         }
         System.err.println("createMessage   " + idSender + " --- " + mH.getSender() + " --- " + m.getSender());
         m.setContent(message);
         return (m);
     }
-    
+
     public void deleteMessage(String token, String idMessage) throws SQLException {
         String id = isValidToken(token);
         Db_Request_Model.idb.delMessage(Integer.parseInt(idMessage), id);
     }
-    
+
     private void notifyNewMessage(String id, Message m) throws SQLException {
         Member user = Db_Request_Model.idb.getMemberInfos(id);
         try {
@@ -606,53 +615,53 @@ public class Db_Request_Model {
             Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     public String generateIdMember(String nom, String prenom) {
         try {
             String nom_ok = nom.toLowerCase().replaceAll(" ", "");
             String prenom_ok = prenom.toLowerCase().replaceAll(" ", "");
             String id = nom_ok;
             int index = 0, cpt = 0;
-            
+
             while (Db_Request_Model.idb.checkIDMemberExists(id) && index < prenom_ok.length()) {
                 id = prenom_ok.substring(0, index) + nom_ok;
                 index++;
             }
             if (index == prenom.length()) {
-                
+
                 while (Db_Request_Model.idb.checkIDMemberExists(id)) {
                     id = prenom_ok + nom_ok + cpt;
                     cpt++;
                 }
             }
-            
+
             return id;
         } catch (Exception ex) {
             Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         return null;
     }
-    
+
     public String generateIdGroup(String nom_group) {
-        
+
         try {
             String nom_ok = nom_group.toLowerCase().replaceAll(" ", "");
             String id = nom_ok.substring(0, (nom_ok.length() > 9 ? 9 : nom_ok.length()));
             int cpt = 2;
-            
+
             while (idb.checkIDGroupExists(id)) {
                 id = nom_ok + cpt;
                 cpt++;
             }
-            
+
             return id;
         } catch (Exception ex) {
             Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }
-    
+
     public ArrayList<GroupHeader> getExistingGroups() throws SQLException {
         return Db_Request_Model.idb.getGroupsHeaderData();
     }
@@ -667,11 +676,24 @@ public class Db_Request_Model {
             Db_Request_Model.tokenID.remove(token);
         }
     }
-    
+
     public boolean updateUser(Member m) {
         return (Db_Request_Model.idb.updateMember(m) == 1);
     }
-    
+
+    public boolean updateUserPswd(Member m, String mdpClair, String hash) {
+        if (Db_Request_Model.idb.updateMemberPswd(m.getId_member(), hash) == 1) {
+            try {
+                SendEmail.sendEmail(m, "Changement de votre mot de passe résussi.", "Bonjour " + m.getFirst_name() + " " + m.getName() + ", \nVotre mot de passe a bien été mit à jour.\n\nIdentifiant : " + m.getId_member() + "\nMot de passe : " + mdpClair + "\n");
+            } catch (Exception ex) {
+                Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public String getMemberTasks(String id_member) {
         try {
             return Db_Request_Model.idb.getTasksMember(id_member);
@@ -680,7 +702,7 @@ public class Db_Request_Model {
             return "";
         }
     }
-    
+
     public String getMemberGroups(String id_member) {
         try {
             return Db_Request_Model.idb.getMemberGroups(id_member);
@@ -689,18 +711,88 @@ public class Db_Request_Model {
             return "";
         }
     }
-    
+
     public int getNbMessagesForStatus(String id_membre, MessageStatus mst) {
         return Db_Request_Model.idb.getNbMessagesForStatus(id_membre, mst);
     }
-    
-    public boolean messageHasStatusAssociatedWithAMember(String id_membre, int id_message, MessageStatus status) 
-    {
+
+    public boolean messageHasStatusAssociatedWithAMember(String id_membre, int id_message, MessageStatus status) {
         try {
             return Db_Request_Model.idb.messageHasStatusAssociatedWithAMember(id_membre, id_message, status);
         } catch (SQLException ex) {
             Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
             return false;
         }
+    }
+
+    /**
+     * Créer un passowrd
+     *
+     * @param longueur la longueur du passwor
+     * @return le password
+     */
+    public String generatePswd(int longueur) {
+        SecureRandom random = new SecureRandom();
+        //créer le token
+        String pwd = new BigInteger(130, random).toString(32).substring(0, longueur);
+        //associé le token avec l'id
+        return pwd;
+    }
+
+    public boolean updateGroup(String idGroup, String nomG, String descrG, String[] membersG, String chefG) {
+        ArrayList<String> members = new ArrayList<String>();
+        HashMap<String, Boolean> memToAddDel = new HashMap<String, Boolean>();
+        
+        System.err.println("111111 --------- **** //// ---- id : "+idGroup+" - nom : "+nomG+" - "+descrG+" - "+ membersG+" "+chefG);
+        boolean ok;
+        try {
+            Group oldG = Db_Request_Model.idb.getGroupInfos(idGroup);
+            ArrayList<Member> oldMembers = oldG.getMembers(); 
+            ArrayList<String> oldMembersString = new ArrayList<String>();
+            for(Member mm : oldMembers)
+            {
+                oldMembersString.add(mm.getId_member().trim());
+            }
+            for(String mmmm : membersG)
+            {
+                members.add(mmmm.trim());
+            }
+            for(String newMs : members)
+            {
+                if(!oldMembersString.contains(newMs.trim()))
+                {
+                    memToAddDel.put(newMs.trim(), true);
+                }
+            }
+            for(String oldMs : oldMembersString)
+            {
+                if(!members.contains(oldMs.trim()))
+                {
+                    memToAddDel.put(oldMs.trim(), false);
+                }
+            }
+            int i =0;
+            while( i < oldMembersString.size() || i <members.size())
+            {
+                if(i < oldMembersString.size())
+                {
+                    System.err.println("Old : "+oldMembersString.get(i));
+                }
+                if(i <members.size())
+                {
+                    System.err.println("New : "+members.get(i));
+                }
+                i++;
+            }
+            Group g = new Group(idGroup, nomG, null, null, descrG);
+                    System.err.println("22222 --------- **** //// ---- "+idGroup+" / "+g.getId_group()+" - "+nomG+" - "+descrG+" - "+ membersG+" "+chefG);
+
+            ok = Db_Request_Model.idb.updateGroup(g,memToAddDel,chefG) != -1;
+        } catch (SQLException ex) {
+            Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
+            ok = false;
+        }
+        return ok;
+        
     }
 }

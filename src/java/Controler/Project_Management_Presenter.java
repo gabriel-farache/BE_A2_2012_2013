@@ -178,6 +178,27 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
 
     }
 
+    @RequestMapping(value = {"updateProfileInfos"}, method = {RequestMethod.GET, RequestMethod.POST})
+    public String interceptPageToUpdateProfileInfos(HttpServletRequest request, ModelMap mm) {
+
+        //Récupération du token de la session
+        String token = this.getTokenSession(request.getSession(), mm);
+        String id = Project_Management_Presenter.model.isValidToken(token);
+        if (id != null) {
+            Member memb = this.getInfoUser(id, token);
+            mm.addAttribute("id", memb.getId_member());
+            mm.addAttribute("nom", memb.getName());
+            mm.addAttribute("prenom", memb.getFirst_name());
+            mm.addAttribute("mail", memb.getEmail());
+            this.fillAccordionMenu(token, mm);
+            return "updateProfileInfos";
+        } else {
+            mm.addAttribute("errorMessage", "Vous n'êtes pas identifé.");
+            return "error";
+        }
+
+    }
+
     /**
      * Intercept the request load the create task page
      *
@@ -267,11 +288,12 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                         Collections.addAll(members, memberss);
                         Collections.addAll(groups, groupss);
 
-                        System.err.println(" -- " + request.getParameter("titreTache") + ", " + request.getParameter("projetTache") + ", " + request.getParameter("dateDebut") + ", " + request.getParameter("dateFin") + ", " + request.getParameter("statutTache") + ", " + request.getParameter("budget") + ", " + request.getParameter("consumed") + ", " + request.getParameter("rae") + ", " + memberss + ", " + request.getParameter("descriptionTache"));
+                        System.err.println(" -*- " + request.getParameter("titreTache") + ", " + request.getParameter("projetTache") + ", " + request.getParameter("dateDebut") + ", " + request.getParameter("dateFin") + ", " + request.getParameter("statutTache") + ", " + request.getParameter("budget") + ", " + request.getParameter("consumed") + ", " + request.getParameter("rae") + ", " + memberss + ", " + request.getParameter("descriptionTache"));
 
                         //On créé la tache
                         //public boolean updateTask(Task newTask, int id_task, ArrayList<String> idsNewMembers, ArrayList<String> idsNewGroups, String chief)
                         Task newTask = new Task(request.getParameter("idTask").trim(), id, (String) request.getParameter("titreTache"), (String) request.getParameter("dateDebut") + " 00:00:00", (String) request.getParameter("descriptionTache"), (String) request.getParameter("dateFin") + " 00:00:00", (String) request.getParameter("projetTache"), Float.parseFloat((String) request.getParameter("budget")), Float.parseFloat((String) request.getParameter("consumed")), Float.parseFloat((String) request.getParameter("rae")), (String) request.getParameter("statutTache"), (String) request.getParameter("chef").split(",")[0]);
+                        System.err.println(" *-*" + newTask.getStringCreationDate() + " --- " + newTask.getStringDueDate());
 
                         result = this.updateTask(newTask, Integer.parseInt(request.getParameter("idTask").trim()), members, groups, token);
 
@@ -285,7 +307,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                         } else {
                             alertMess = "<div class=\"alert alert-error\">"
                                     + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
-                                    + "<strong>Echec de la mise à jour de la tâche \"" + request.getParameter("titreTache").trim() + "\" (" + request.getParameter("idTask").trim() + ") réussie ! </strong></div>";
+                                    + "<strong>Echec de la mise à jour de la tâche \"" + request.getParameter("titreTache").trim() + "\" (" + request.getParameter("idTask").trim() + ") ! </strong></div>";
                         }
                         map.addAttribute("alert", alertMess);
                         map.addAttribute("typeTask", "Mes tâches");
@@ -310,7 +332,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                     .getName()).log(Level.SEVERE, null, ex);
             String alertMess = "<div class=\"alert alert-error\">"
                     + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
-                    + "<strong>Echec de la mise à jour ! </strong>This is a fatal error."
+                    + "<strong>Echec de la mise à jour ! </strong>"
                     + "</div>";
 
             map.addAttribute("alert", alertMess);
@@ -323,16 +345,38 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
     public String interceptDeleteMess(HttpServletRequest request, ModelMap m) {
         //Récupération du token de la session
         String token = this.getTokenSession(request.getSession(), m);
-
+        boolean fromInbox = request.getParameter("fromInbox").compareToIgnoreCase("yes") == 0;
+        String alertMess = "<div class=\"alert alert-error\">"
+                + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                + "<strong>Vous ne pouvez pas supprimer un message que vous avez envoyé ! </strong>"
+                + "</div>";
         //Récuperation de l'id de la tâche
         String idMess = request.getParameter("idMess").trim();
         //Appel méthode interne correspondante
-        if (this.deleteMessage(token, idMess)) {
-            m.addAttribute("errorMessage", "Suppression terminé avec succès.");
+        if (Project_Management_Presenter.model.isValidToken(token) != null) {
+            if (fromInbox) {
+                if (this.deleteMessage(token, idMess)) {
+                    m.addAttribute("errorMessage", "");
+                    alertMess = "<div class=\"alert alert-success\">"
+                            + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                            + "<strong>Suppression terminé avec succès.</strong>"
+                            + "</div>";
+                } else {
+                    m.addAttribute("errorMessage", "Erreur lors de la suppression du message.");
+                    alertMess = "<div class=\"alert alert-error\">"
+                            + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                            + "<strong>\"Erreur lors de la suppression du message.\"</strong>"
+                            + "</div>";
+                }
+            }
         } else {
-            m.addAttribute("errorMessage", "Erreur lors de la suppression du message.");
+            alertMess = "<div class=\"alert alert-error\">"
+                    + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                    + "<strong>Vous n'êtes pas identifié ! </strong>"
+                    + "</div>";
         }
-        return "error";
+        m.addAttribute("alert", alertMess);
+        return "inbox";
         //Retour
     }
 
@@ -451,16 +495,11 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                     pj.add(new Attachment(cheminsPj[i], cheminsPj[i]));//pj stockée sous ce nom a cette adresse
                 }
             }
-            if (!this.saveMessageToMembers(idSender, members, title, message, null, pj, token)) {
+            if (!this.saveMessage(idSender, groupsL, members, title, message, null, pj, token)) {
                 alertMess = "<div class=\"alert alert-error\">"
                         + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
-                        + "<strong>Envoi du message \"" + title + " échoué au niveau de l'envoi au(x) destinataire(s) membre ! </strong></div>";
-            } else if (groups.length > 0 && groups[0].trim().compareToIgnoreCase("") != 0 && groups[0].trim().compareToIgnoreCase(" ") != 0) {
-                if (!this.saveMessageToGroups(idSender, groupsL, members, title, message, null, pj, token)) {
-                    alertMess = "<div class=\"alert alert-error\">"
-                            + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
-                            + "<strong>Envoi du message \"" + title + " échoué au niveau de l'envoi au(x) destinataire(s) groupes ! </strong></div>";
-                }
+                        + "<strong>Envoi du message \"" + title + " échoué au niveau de l'envoi au(x) destinataire(s) groupes ! </strong></div>";
+
             } else {
                 this.fillAccordionMenu(token, m);
                 alertMess = "<div class=\"alert alert-success\">"
@@ -601,8 +640,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
 
             if (Project_Management_Presenter.model.isAdmin(token)) {
                 Member new_user = new Member(request.getParameter("id"), request.getParameter("nom"), request.getParameter("prenom"), request.getParameter("mail"));
-                String password = request.getParameter("pass");
-                String id = this.createNewUser(new_user, password);
+                String id = this.createNewUser(new_user);
                 System.err.println("-- " + id + " - " + new_user.getName() + " -- " + new_user.getFirst_name() + " -- " + new_user.getEmail());
                 this.fillAccordionMenu(token, mm);
                 //System.out.println
@@ -640,46 +678,83 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
      */
     @RequestMapping(value = {"userUpdated"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String userUpdateFormSubmitted(HttpServletRequest request, ModelMap mm) {
+        String alertMess;
         try {
             String token, user_id;
-
             // on récupère l'id de la session (token) contenu dans le cookie
             token = getTokenSession(request.getSession(), mm);
-
-            if (Project_Management_Presenter.model.isAdmin(token)) {
-                Member new_user = new Member(request.getParameter("id"), request.getParameter("nom"), request.getParameter("prenom"), request.getParameter("mail"));
-                System.err.println("-- " + request.getParameter("id") + " - " + new_user.getName() + " -- " + new_user.getFirst_name() + " -- " + new_user.getEmail());
+            user_id = Project_Management_Presenter.model.isValidToken(token);
+            if (user_id != null && Project_Management_Presenter.model.isAdmin(token)) {
+                Member new_user = new Member(request.getParameter("idUser"), request.getParameter("nom"), request.getParameter("prenom"), request.getParameter("mail"));
+                System.err.println("------------------------------------------------   " + request.getParameter("idUser") + " - " + new_user.getName() + " -- " + new_user.getFirst_name() + " -- " + new_user.getEmail());
                 this.fillAccordionMenu(token, mm);
                 //System.out.println
                 if (this.updateUser(new_user)) {
-                    mm.addAttribute("nom", request.getParameter("nom"));
-                    mm.addAttribute("prenom", request.getParameter("prenom"));
-                    mm.addAttribute("errorMessage", "Succès de la mise à jour de l'utilisateur. ID : " + request.getParameter("id"));
-                    return "error";
+                    alertMess = "<div class=\"alert alert-success\">"
+                            + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                            + "<strong>Succès de la création de l'utilisateur " + request.getParameter("nom") + " " + request.getParameter("prenom") + " (" + request.getParameter("idUser") + ")</strong></div>";
+
                 } else {
-                    mm.addAttribute("errorMessage", "Échec de la création de l'utilisateur.");
-                    return "error";
+                    alertMess = "<div class=\"alert alert-error\">"
+                            + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                            + "<strong>Échec de la création de l'utilisateur " + request.getParameter("nom") + " " + request.getParameter("prenom") + "</strong></div>";
                 }
             } else {
                 mm.addAttribute("errorMessage", "Vous ne disposez pas de droits suffisants pour effectuer cette opération.");
-                return "error";
-
-
-
-
-
-
+                alertMess = "<div class=\"alert alert-error\">"
+                        + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                        + "<strong>Vous ne disposez pas de droits suffisants pour effectuer cette opération.</strong></div>";
             }
         } catch (SQLException ex) {
             Logger.getLogger(Project_Management_Presenter.class
                     .getName()).log(Level.SEVERE, null, ex);
-            mm.addAttribute(
-                    "errorMessage", "Erreur Base de donnée.");
-
-
-
-            return "error";
+            alertMess = "<div class=\"alert alert-error\">"
+                    + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                    + "<strong>Erreur Base de donnée.</strong></div>";
         }
+        mm.addAttribute("alert", alertMess);
+        return "listOfUser";
+    }
+
+    @RequestMapping(value = {"profileInfosUpdated"}, method = {RequestMethod.GET, RequestMethod.POST})
+    public String updatedProfileInfosIntercept(HttpServletRequest request, ModelMap mm) {
+        String alertMess;
+        try {
+            String token;
+
+            // on récupère l'id de la session (token) contenu dans le cookie
+            token = getTokenSession(request.getSession(), mm);
+            String user_id = Project_Management_Presenter.model.isValidToken(token);
+            if (user_id != null) {
+                Member new_user = new Member(user_id, request.getParameter("nom"), request.getParameter("prenom"), request.getParameter("mail"));
+                System.err.println("-- " + user_id + " - " + new_user.getName() + " -- " + new_user.getFirst_name() + " -- " + new_user.getEmail());
+                this.fillAccordionMenu(token, mm);
+                //System.out.println
+                if (this.updateUserProfile(new_user, request.getParameter("pswd"))) {
+                    alertMess = "<div class=\"alert alert-success\">"
+                            + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                            + "<strong>Succès de la mise à jour de votre profile ! " + request.getParameter("nom") + " " + request.getParameter("prenom") + " (" + user_id + ")</strong></div>";
+
+                } else {
+                    alertMess = "<div class=\"alert alert-error\">"
+                            + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                            + "<strong>Échec de la mise à jour de votre profile ! " + request.getParameter("nom") + " " + request.getParameter("prenom") + "</strong></div>";
+                }
+            } else {
+                mm.addAttribute("errorMessage", "Vous ne disposez pas de droits suffisants pour effectuer cette opération.");
+                alertMess = "<div class=\"alert alert-error\">"
+                        + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                        + "<strong>Vous ne disposez pas de droits suffisants pour effectuer cette opération.</strong></div>";
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter.class
+                    .getName()).log(Level.SEVERE, null, ex);
+            alertMess = "<div class=\"alert alert-error\">"
+                    + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                    + "<strong>Erreur fatale.</strong></div>";
+        }
+        mm.addAttribute("alert", alertMess);
+        return "listOfUser";
     }
 
     @RequestMapping(value = {"createGroup", "updateGroup"}, method = {RequestMethod.GET, RequestMethod.POST})
@@ -710,10 +785,13 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                     mm.addAttribute("nom_groupe", gp.getGroup_name());
                     mm.addAttribute("desc_groupe", gp.getDescr());
                     mm.addAttribute("liste_membres_groupe", membres);
-                    mm.addAttribute("chef_groupe", gp.getChief().getId_member());
-                    mm.addAttribute("idGroup", gp.getId_group());
+                    mm.addAttribute("idGroup", request.getParameter("idGroup"));
+                    mm.addAttribute("chef_groupe", gp.getChief() != null ? gp.getChief().getId_member() : "");
+                    
 
-                } catch (Exception e) {
+                } catch (Exception ex) {
+                    Logger.getLogger(Project_Management_Presenter.class
+                    .getName()).log(Level.SEVERE, null, ex);
                 }
 
                 return null;
@@ -721,19 +799,11 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                 mm.addAttribute("errorMessage", "Vous ne disposez pas de droits suffisants pour effectuer cette opération.");
                 return "error";
 
-
-
-
-
-
             }
         } catch (SQLException ex) {
             Logger.getLogger(Project_Management_Presenter.class
                     .getName()).log(Level.SEVERE, null, ex);
-            mm.addAttribute(
-                    "errorMessage", "Erreur Base de donnée.");
-
-
+            mm.addAttribute("errorMessage", "Erreur Base de donnée.");
 
             return "error";
         }
@@ -751,7 +821,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
 
             // on récupère l'id de la session (token) contenu dans le cookie
             token = getTokenSession(request.getSession(), mm);
-
+            this.fillAccordionMenu(token, mm);
             if (Project_Management_Presenter.model.isAdmin(token)) {
                 String[] membres_select = request.getParameter("ListeMembres").replaceAll(" ", "").split(",");
                 ArrayList<Member> liste_membres = new ArrayList<Member>();
@@ -784,6 +854,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                     + "<strong>\"Erreur Base de donnée.\"</strong></div>";
         }
         mm.addAttribute("alert", alertMess);
+
         return "listOfGroup";
     }
 
@@ -850,7 +921,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             mm.addAttribute("id_groupe", g.getId_group());
             mm.addAttribute("nom_groupe", g.getGroup_name());
             mm.addAttribute("desc_groupe", g.getDescr());
-            mm.addAttribute("chef_groupe", g.getChief().getId_member());
+            mm.addAttribute("chef_groupe", g.getChief() != null ? g.getChief().getId_member() : "");
 
             ArrayList<Member> liste_membres = g.getMembers();
             table = "<select id=\"ListeMembresGroupe\" name=\"ListeMembresGroupe\" size=20>";
@@ -989,7 +1060,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                 mm.addAttribute("errorMessage", "Erreur Base de donnée.");
                 return "error";
             }
-            return null;
+            return "listOfGroup";
         } else {
             mm.addAttribute("errorMessage", "Erreur Base de donnée.");
             return "error";
@@ -1154,20 +1225,24 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         String utilsG = "";
         String title = taskToUpdate.getTitle();
         String content = taskToUpdate.getContent();
-        java.util.Date creationDate = taskToUpdate.getCreationDate().getTime();
-        java.util.Date dueDate = taskToUpdate.getDueDate().getTime();
+        String creationDate = taskToUpdate.getStringCreationDate();
+        String dueDate = taskToUpdate.getStringDueDate();
         String budget = Float.toString(taskToUpdate.getBudget());
+        String credate = creationDate.replaceAll("/", "-").split(" ")[0];
+        String ddate = dueDate.replaceAll("/", "-").split(" ")[0];
+        System.err.println("****  **** *** *** " + credate + "  --  " + ddate);
         //Maintenant je remplis la map
         //modelMap.addAttribute("utilisateursTache", recipients);
         modelMap.addAttribute("projetTache", projectTopic.trim());
         modelMap.addAttribute("Titre", title.trim());
         modelMap.addAttribute("descriptionTache", content.trim());
-        modelMap.addAttribute("dateDebut", creationDate.toString());
-        modelMap.addAttribute("dateFin", dueDate.toString());
+        modelMap.addAttribute("dateDebut", credate);
+        modelMap.addAttribute("dateFin", ddate);
         modelMap.addAttribute("budget", budget);
         modelMap.addAttribute("rae", Float.toString(taskToUpdate.getRae()));
         modelMap.addAttribute("consumed", Float.toString(taskToUpdate.getConsumed()));
         modelMap.addAttribute("rae", Float.toString(taskToUpdate.getRae()));
+
         for (Recipient taskString : taskToUpdate.getRecipients()) {
             if (taskString.getType().equals(RecipientType.USER)) {
                 utilsM += taskString.getId() + ", ";
@@ -1228,6 +1303,42 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             return "error";
         }
 
+    }
+
+    @RequestMapping(value = {"groupUpdated"}, method = {RequestMethod.GET, RequestMethod.POST})
+    public String intercpetGroupUpdated(HttpSession session, ModelMap mm, HttpServletRequest request) {
+        String token = this.getTokenSession(session, mm);
+        String id = Project_Management_Presenter.model.isValidToken(token);
+        String alertMess = "<div class=\"alert alert-error\">"
+                + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                + "<strong>\"Vous n'avez pas les droits suffisants.\"</strong></div>";
+        try {
+            if (id != null && Project_Management_Presenter.model.isAdmin(token)) {
+                String idG = request.getParameter("idGroup").trim();
+                String nom = request.getParameter("nom").trim();
+                String descr = request.getParameter("descr").trim();
+                String[] members = request.getParameter("membres").trim().replaceAll(" ,", ",").split(",");
+                String chef = request.getParameter("chef").split(",")[0].trim();
+                System.err.println("--------- **** //// ---- "+idG+" - "+nom+" - "+descr+" - "+ members+" "+chef);
+                if (this.updateGroup(idG, nom, descr, members, chef)) {
+                    alertMess = "<div class=\"alert alert-success\">"
+                            + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                            + "<strong>\"Mise à jour du groupe réussi.\"</strong></div>";
+                } else {
+                    alertMess = "<div class=\"alert alert-error\">"
+                            + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                            + "<strong>\"Echec de la mise à jour du groupe.\"</strong></div>";
+                }
+            }
+
+        } catch (SQLException ex) {
+            alertMess = "<div class=\"alert alert-error\">"
+                    + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                    + "<strong>\"Erreur base de données.\"</strong></div>";
+            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        mm.addAttribute("alert", alertMess);
+        return this.interceptPageListOfGroups(request, mm);
     }
 
     @RequestMapping(value = {"deconnection"}, method = {RequestMethod.GET, RequestMethod.POST})

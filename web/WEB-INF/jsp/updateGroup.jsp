@@ -10,7 +10,7 @@
 <html lang="fr">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Bootstrap, from Twitter</title>
+        <title>Mettre &agrave; jour un groupe</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="">
         <meta name="author" content="">
@@ -56,6 +56,20 @@
         <link rel="apple-touch-icon-precomposed" sizes="72x72" href="ico/apple-touch-icon-72-precomposed.png">
         <link rel="apple-touch-icon-precomposed" href="ico/apple-touch-icon-57-precomposed.png">
         <link rel="shortcut icon" href="ico/favicon.png">
+        <script type='text/javascript' src='/BE_A2_2012_2013/dwr/engine.js'></script>
+        <script type='text/javascript' src='/BE_A2_2012_2013/dwr/interface/Project_Management_Presenter_Intern_Methods.js'></script>
+        <script type='text/javascript' src='/BE_A2_2012_2013/dwr/util.js'></script>
+        <script language="javascript">          
+            function fillNbMess(data)
+            {
+                document.getElementById('nbNewMess').innerHTML = data;
+            }
+            
+            function checkNewMess()
+            {
+                Project_Management_Presenter_Intern_Methods.getNbMessagesForStatus('<%=session.getAttribute("token")%>', '', fillNbMess);
+            }
+        </script>
     </head>
 
     <body>
@@ -84,9 +98,9 @@
                                 </ul>
                             </li>
                             <li class="dropdown">
-                                <a id="drop2" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Messagerie <b class="caret"></b></a>
+                                <a id="drop2" href="#" role="button" class="dropdown-toggle" onclick="checkNewMess();" data-toggle="dropdown">Messagerie <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                    <li><a tabindex="-1" href="inbox">Bo&icirc;te de r&eacute;c&eacute;ption</a></li>
+                                     <li><a tabindex="-1" href="inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess"></b></span></a></li> 
                                     <li><a tabindex="-1" href="createMessage">Envoyer un message</a></li>
                                 </ul>
                             </li>
@@ -105,6 +119,7 @@
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
                                     <li><a tabindex="-1" href="listOfUser">Consulter liste utilisateurs</a></li>
                                     <li class="divider"></li>
+                                    <li><a tabindex="-1" href="updateProfileInfos">Mettre &agrave; jour mon profil</a></li>
                                     <% if (session.getAttribute("isAdmin") != null) {%>                                                                             
                                     <li><a tabindex="-1" href="createNewUser">Ajouter un nouvel utilisateur</a></li> 
                                     <% }%>                                  
@@ -245,13 +260,13 @@
                             <fieldset>
                                 <legend>Chef</legend>
                                 <div>
-                                    <input class="span14 search-query" "type="text" name="chef" id="chef" value="${chef_groupe}" required/>
+                                    <input class="span14 search-query" type="text" name="chef" id="chef" value="${chef_groupe}" required/>
                                 </div>
                             </fieldset>
                             <br>
                             <div class="span1 pull-right">
                                 <input class="btn btn-primary" type="submit" value="Modifier"/>
-                                <input type="hidden" id="id" value="${idGroup}"/>
+                                <input type="hidden" id="idGroup" name="idGroup" value="${idGroup}"/>
                             </div>
                         </form>
                     </div>

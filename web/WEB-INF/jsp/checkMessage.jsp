@@ -10,7 +10,7 @@
 <html lang="fr">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Bootstrap, from Twitter</title>
+        <title>Consulter un message</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="">
         <meta name="author" content="">
@@ -282,6 +282,7 @@
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
                                     <li><a tabindex="-1" href="listOfUser">Consulter liste utilisateurs</a></li>
                                     <li class="divider"></li>
+                                    <li><a tabindex="-1" href="updateProfileInfos">Mettre &agrave; jour mon profil</a></li>
                                     <% if (session.getAttribute("isAdmin") != null) {%>                                                                             
                                     <li><a tabindex="-1" href="createNewUser">Ajouter un nouvel utilisateur</a></li> 
                                     <% }%>                                  
@@ -436,7 +437,7 @@
                     <hr>
                     <div class="row">
                         <div class="span1 pull-left">
-                            <a href="<c:url value="supprMessage?idMess=${idMess}"/>" class="btn  btn-danger" type="submit"/>Supprimer</a>
+                            <a href="<c:url value="supprMessage?idMess=${idMess}&fromInbox=${fromInbox}"/>" class="btn  btn-danger" type="submit"/>Supprimer</a>
                         </div>
                         <div class="span1 pull-right">
                             <a href="<c:url value="createMessage?idMess=${idMess}&fromInbox=${fromInbox}"/>" class="btn  btn-success" type="submit"/>R&eacute;pondre</a>

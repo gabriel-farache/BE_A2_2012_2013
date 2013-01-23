@@ -3,7 +3,7 @@
 <html lang="fr">
     <head>
         <meta charset="utf-8">
-        <title>Sign in &middot; Twitter Bootstrap</title>
+        <title>Page de d'identification</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="">
         <meta name="author" content="">
@@ -102,7 +102,7 @@
                             <li class="dropdown">
                                 <a id="drop2" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Messagerie <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                    <li><a tabindex="-1" href="inbox">Bo&icirc;te de r&eacute;c&eacute;ption</a></li>
+                                     <li><a tabindex="-1" href="inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess"></b></span></a></li> 
                                     <li><a tabindex="-1" href="createMessage">Envoyer un message</a></li>
                                 </ul>
                             </li>
@@ -157,10 +157,10 @@
         <div class="container">
 
             <form class="form-signin" action="welcome" method="POST">
-                <h2 class="form-signin-heading">Please sign in</h2>
+                <h2 class="form-signin-heading">Identification</h2>
                 <input type="text" class="input-block-level" placeholder="Username" id="utilisateur" name ="utilisateur">
                 <input type="password" class="input-block-level" placeholder="Password" id="pass" name="pass">
-                <button class="btn btn-large btn-primary" type="submit">Sign in</button>
+                <button class="btn btn-large btn-primary" type="submit">Se connecter</button>
             </form>
 
         </div> <!-- /container -->

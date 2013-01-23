@@ -1,6 +1,6 @@
 <%-- 
-    Document   : createMessage
-    Created on : Jan 19, 2013, 9:34:26 PM
+    Document   : updateProfileInfos
+    Created on : Jan 22, 2013, 6:22:15 PM
     Author     : gabriel
 --%>
 
@@ -10,7 +10,7 @@
 <html lang="fr">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Envoyer un nouveau message</title>
+        <title>Mettre &agrave; jour vos informations</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="">
         <meta name="author" content="">
@@ -69,6 +69,20 @@
             {
                 Project_Management_Presenter_Intern_Methods.getNbMessagesForStatus('<%=session.getAttribute("token")%>', '', fillNbMess);
             }
+            
+            function checkPswd()
+            {
+               
+                if ((document.getElementById('pswdConf').value != document.getElementById('pswd').value))
+                {
+                    //Update the sending status.
+                    alert("Les mots de passes ne concordent pas.");
+                    return false;
+                } else {
+                    //Update the sending status.
+                    document.getElementById('formModif').submit();
+                }
+            }
         </script>
     </head>
 
@@ -100,7 +114,7 @@
                             <li class="dropdown">
                                 <a id="drop2" href="#" role="button" class="dropdown-toggle" onclick="checkNewMess();" data-toggle="dropdown">Messagerie <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                     <li><a tabindex="-1" href="inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess"></b></span></a></li> 
+                                    <li><a tabindex="-1" href="inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess"></b></span></a></li> 
                                     <li><a tabindex="-1" href="createMessage">Envoyer un message</a></li>
                                 </ul>
                             </li>
@@ -234,33 +248,42 @@
 
                 <div class="span9 offset2">
                     <div class="hero-unit">
-                        <h1>Envoyer un message</h1>
+                        <h1>Modifier un utilisateur</h1>
                     </div>
                     <!-- Example row of columns -->
                     <div class="row-fluid"> 
-                        <form method="POST" name="saisieNouveauMessage" id="saisieNouveauMessage" action="<c:url value="messageCreated"/>">
+                        <form method="POST" id="formModif" action="<c:url value="profileInfosUpdated"/>">
                             <fieldset>
-                                <legend>Destinataire(s)</legend>
+                                <legend>Nom(s)</legend>
                                 <div>
-                                    <label>Membre(s)</label> 
-                                    <textarea style="resize: none;" rows="2" class="span14 search-query"type="text" class="input" name="saisieUtilisateurDestinataire" id="saisieUtilisateurDestinataire" >${recipient}</textarea>
-                                    <hr><label>Groupe(s)</label> 
-                                    <textarea style="resize: none;" rows="2" class="span14 search-query"type="text" class="input" name="saisieGroupeDestinataire" id="saisieGroupeDestinataire" ></textarea>
+                                    <input type="text" name="nom" id="nom" placeholder="Nom" value="${nom}" required/>
                                 </div>
-
                             </fieldset>
                             <fieldset>
-                                <legend>Objet</legend>
+                                <legend>Prénom</legend>
                                 <div>
-                                    <textarea style="resize: none;" rows="2" class="span14 search-query"type="text" class="input" name="titreMessage" id="titreMessage"  required>${title}</textarea>
+                                    <input type="text" name="prenom" id="prenom" placeholder="Prénom" value="${prenom}" required/>                                
                                 </div>
-                                <legend>Message</legend>
+                            </fieldset>
+                            <fieldset>
+                                <legend>Adresse mail</legend>
                                 <div>
-                                    <textarea style="resize: none;" rows="16" class="span14  search-query" type="text" class="input" name="saisieMessage" id="saisieMessage" placeholder="message" >${message}</textarea>
+                                    <input type="email" name="mail" id="mail" placeholder="Email" value="${mail}" required/>                               
+                                </div>
+                            </fieldset>
+                            <fieldset>
+                                <legend>Mot de passe</legend>
+                                <div>
+                                    <input type="password" name="pswd" id="pswd" />                               
+                                </div>
+                                <legend>Confirmez</legend>
+                                <div>
+                                    <input type="password" name="pswdConf" id="pswdConf" />                               
                                 </div>
                             </fieldset>
                             <div class="span1 pull-right">
-                                <input class="btn btn-primary" type="submit" value="Envoyer"/>
+                                <input class="btn btn-primary" type="button" onclick="checkPswd();" value="Enregistrer"/>
+                                <input type="hidden" id="id" value="${id}"/>
                             </div>
                         </form>
                     </div>
@@ -291,3 +314,4 @@
         </div>
     </body>
 </html>
+
