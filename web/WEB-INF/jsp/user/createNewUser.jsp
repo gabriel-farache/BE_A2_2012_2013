@@ -1,7 +1,7 @@
 <%-- 
-    Document   : error
-    Created on : 17 janv. 2013, 11:20:40
-    Author     : Thomas
+    Document   : createNewUser
+    Created on : Jan 20, 2013, 12:12:42 AM
+    Author     : gabriel
 --%>
 
 <!DOCTYPE html>
@@ -10,7 +10,7 @@
 <html lang="fr">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Erreur...</title>
+        <title>Cr&eacute;er un nouvel utilisateur</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="">
         <meta name="author" content="">
@@ -85,7 +85,7 @@
                     <a class="brand pull-left" href="#">PESO</a>
                     <div class="nav-collapse collapse">
                         <ul class="nav">
-                            <li class="active"><a href="/BE_A2_2012_2013/welcome">Acceuil</a></li>
+                            <li><a href="/BE_A2_2012_2013/welcome">Acceuil</a></li>
                             <li class="dropdown">
                                 <a id="drop1" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">T&acirc;ches <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
@@ -114,7 +114,7 @@
                                     <% }%>                           
                                 </ul>
                             </li>
-                            <li class="dropdown">
+                            <li class="dropdown active">
                                 <a id="drop4" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Utilisateurs <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/user/listOfUser">Consulter liste utilisateurs</a></li>
@@ -125,14 +125,6 @@
                                     <% }%>                                  
                                 </ul>
                             </li>
-                            <% if (session.getAttribute("isAdmin") != null) {%>     
-                            <li class="dropdown">
-                                <a id="drop5" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Import XML <b class="caret"></b></a>
-                                <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/user/createNewUser">Importer un fichier XML</a></li> 
-                                </ul>
-                            </li>
-                            <% }%> 
                         </ul>
                         <% if (session.getAttribute("token") != null) {%> 
                         <a href="/BE_A2_2012_2013/deconnection"><input type="button" class="btn btn-danger pull-right" value="D&eacute;connexion"/></a>
@@ -242,8 +234,34 @@
 
                 <div class="span9 offset2">
                     <!-- Example row of columns -->
+                    <div class="hero-unit">
+                        <h1>Cr&eacute;ation d'un nouvel utilisateur</h1>
+                    </div>
                     <div class="row-fluid"> 
-                        <p>${errorMessage}</p>
+                        <form method="POST"  action="<c:url value="userCreated"/>">
+                            <fieldset>
+                                <legend>Nom(s)</legend>
+                                <div>
+                                    <input type="text" name="nom" id="nom" placeholder="Nom" value="${nom}" required/>
+                                </div>
+                            </fieldset>
+                            <fieldset>
+                                <legend>Prénom</legend>
+                                <div>
+                                    <input type="text" name="prenom" id="prenom" placeholder="Prénom" value="${prenom}" required/>                                
+                                </div>
+                            </fieldset>
+                            <fieldset>
+                                <legend>Adresse mail</legend>
+                                <div>
+                                    <input type="email" name="mail" id="mail" placeholder="Email" value="${mail}" required/>                               
+                                </div>
+                            </fieldset>
+                            <div class="span1 pull-right">
+                                <input class="btn btn-primary" type="submit" value="Créer"/>
+                                <input type="hidden" id="id" value="${id}"/>
+                            </div>
+                        </form>
                     </div>
                     <hr>
                     <footer>

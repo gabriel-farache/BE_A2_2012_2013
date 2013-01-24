@@ -27,7 +27,7 @@
     <dwr:controller id="dwrController" debug="true" />
     
  
-    <bean id="Project_Management_Presenter_Intern_Methods" class="Controler.Project_Management_Presenter_Intern_Methods">
+    <bean id="Project_Management_Presenter_Intern_Methods" class="presenter.Project_Management_Presenter_Intern_Methods">
         <dwr:remote javascript="Project_Management_Presenter_Intern_Methods">
             <dwr:include method="updateMessageStatusString" />
             <dwr:include method="messageHasStatusAssociatedWithAMember" />

@@ -1,7 +1,7 @@
 <%-- 
-    Document   : error
-    Created on : 17 janv. 2013, 11:20:40
-    Author     : Thomas
+    Document   : updateTask
+    Created on : Jan 20, 2013, 1:56:45 AM
+    Author     : gabriel
 --%>
 
 <!DOCTYPE html>
@@ -10,7 +10,7 @@
 <html lang="fr">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Erreur...</title>
+        <title>Mettre &agrave; jour une t&acirc;che</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="">
         <meta name="author" content="">
@@ -85,8 +85,8 @@
                     <a class="brand pull-left" href="#">PESO</a>
                     <div class="nav-collapse collapse">
                         <ul class="nav">
-                            <li class="active"><a href="/BE_A2_2012_2013/welcome">Acceuil</a></li>
-                            <li class="dropdown">
+                            <li><a href="/BE_A2_2012_2013/welcome">Acceuil</a></li>
+                            <li class="dropdown active">
                                 <a id="drop1" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">T&acirc;ches <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/task/myTasks">Mes t&acirc;ches</a></li>
@@ -121,18 +121,10 @@
                                     <li class="divider"></li>
                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/user/updateProfileInfos">Mettre &agrave; jour mon profil</a></li>
                                     <% if (session.getAttribute("isAdmin") != null) {%>                                                                             
-                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/user/createNewUser">Ajouter un nouvel utilisateur</a></li> 
+                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/createNewUser">Ajouter un nouvel utilisateur</a></li> 
                                     <% }%>                                  
                                 </ul>
                             </li>
-                            <% if (session.getAttribute("isAdmin") != null) {%>     
-                            <li class="dropdown">
-                                <a id="drop5" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Import XML <b class="caret"></b></a>
-                                <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/user/createNewUser">Importer un fichier XML</a></li> 
-                                </ul>
-                            </li>
-                            <% }%> 
                         </ul>
                         <% if (session.getAttribute("token") != null) {%> 
                         <a href="/BE_A2_2012_2013/deconnection"><input type="button" class="btn btn-danger pull-right" value="D&eacute;connexion"/></a>
@@ -241,9 +233,70 @@
                 </div><!--/span-->
 
                 <div class="span9 offset2">
+                    <div class="hero-unit">
+                        <h1>Modifier une t&acirc;che</h1>
+                    </div>
                     <!-- Example row of columns -->
                     <div class="row-fluid"> 
-                        <p>${errorMessage}</p>
+                        <form method="POST"  action="<c:url value="taskUpdated"/>">
+                            <fieldset>
+                                <legend class="rubrique">Membre(s)</legend>
+                                <input type="text" id="choixUtilsM" name ="choixUtilsM"  value="${utilsM}" />
+                            </fieldset>
+                            <fieldset>
+                                <legend class="rubrique">Groupe(s)</legend>
+                                <input type="text" id="choixUtilsG" name ="choixUtilsG" value="${utilsG}" />
+                            </fieldset>
+                            <fieldset>
+                                <legend for="projet" class="rubrique">Chef</legend>
+                                <input type="text" id="chef" name ="chef" for="projet" value="${chief}"/>
+                            </fieldset>
+                            <fieldset>
+                                <legend for="projet" class="rubrique">Projet</legend>
+                                <input type="text" id="titreTache" name="titreTache" for="projet" value="${projetTache}"/>
+                            </fieldset>
+                            <fieldset>
+                                <legend for="titre" class="rubrique">Titre</legend>
+                                <input type="text" id="projetTache" name="projetTache" for="titre" value="${Titre}"/>
+                            </fieldset>
+                            <fieldset>
+                                <legend id="description" class="rubrique">Description</legend>
+                                <input type="text" id="descriptionTache" name="descriptionTache" for="descr" value="${descriptionTache}"/>
+                            </fieldset>
+                            <fieldset>
+                                <legend for="dateDebut" class="rubrique">Date de Début</legend>
+                                <input type="date" id="dateDebut" name="dateDebut" for="dateDebut" value="${dateDebut}"/>
+                            </fieldset>
+                            <fieldset>
+                                <legend for="dateFin" class="rubrique">Date de Fin</legend>
+                                <input type="date" id="dateFin" name="dateFin" for="dateFin" value="${dateFin}"/>
+                                </br>
+                            </fieldset>
+                            <fieldset>
+                                <label for="statut" class="rubrique">Statut</label>
+                                <select name="statutTache" id="statutTache">
+                                    <option value="OPEN">OPEN</option>
+                                    <option  value="URGENT">URGENT</option>
+                                    <option  value="CLOSED">CLOSED</option>
+                                </select>
+                            </fieldset>
+                            <fieldset>
+                                <legend for="budget" class="rubrique">Budget</legend>
+                                <input type="number" id="budget" name="budget" for="budget" value="${budget}"/>
+                            </fieldset>
+                            <fieldset>
+                                <legend for="budget" class="rubrique">Consomm&eacute;</legend>
+                                <input type="number" id="consumed" name="consumed" for="budget" value="${consumed}"/>
+                            </fieldset>
+                            <fieldset>
+                                <legend for="budget" class="rubrique">RAE</legend>
+                                <input type="number" id="rae" name="rae" for="budget" value="${rae}"/>
+                            </fieldset>
+                            <div class="span1 pull-right">
+                                <input type="hidden" id="idTask" name="idTask" value="${idTask}"/>
+                                <input class="btn btn-primary" type="submit" value="Modifier"/>
+                            </div>
+                        </form>
                     </div>
                     <hr>
                     <footer>

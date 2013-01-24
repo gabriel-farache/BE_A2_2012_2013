@@ -34,6 +34,10 @@
     <bean id="urlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
         <property name="mappings">
             <props>
+                <prop key="/group/">groupPresenter</prop>
+                <prop key="/message/">messagePresenter</prop>
+                <prop key="/task/">taskPresenter</prop>
+                <prop key="/user/">userPresenter</prop>
                 <prop key="*">project_Management_Presenter</prop>
             </props>
         </property>
@@ -55,7 +59,11 @@
     <!--
     The index controller.
     -->  
-    <bean name="project_Management_Presenter" class="Controler.Project_Management_Presenter" />
+    <bean name="groupPresenter" class="presenter.GroupPresenter" />
+    <bean name="messagePresenter" class="presenter.MessagePresenter" />
+    <bean name="taskPresenter" class="presenter.TaskPresenter" />
+    <bean name="userPresenter" class="presenter.UserPresenter" />
+    <bean name="project_Management_Presenter" class="presenter.Project_Management_Presenter" />
 
     
 

@@ -1,7 +1,7 @@
 <%-- 
-    Document   : error
-    Created on : 17 janv. 2013, 11:20:40
-    Author     : Thomas
+    Document   : inbox
+    Created on : Jan 19, 2013, 7:43:30 PM
+    Author     : gabriel
 --%>
 
 <!DOCTYPE html>
@@ -10,7 +10,7 @@
 <html lang="fr">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Erreur...</title>
+        <title>Messagerie</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="">
         <meta name="author" content="">
@@ -85,7 +85,7 @@
                     <a class="brand pull-left" href="#">PESO</a>
                     <div class="nav-collapse collapse">
                         <ul class="nav">
-                            <li class="active"><a href="/BE_A2_2012_2013/welcome">Acceuil</a></li>
+                            <li><a href="/BE_A2_2012_2013/welcome">Acceuil</a></li>
                             <li class="dropdown">
                                 <a id="drop1" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">T&acirc;ches <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
@@ -93,14 +93,14 @@
                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/task/listOfTasks">Toutes les t&acirc;ches</a></li>
                                     <li class="divider"></li>
                                     <% if (session.getAttribute("isAdmin") != null) {%>                                                                             
-                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/task/createTask">Cr&eacute;er une nouvelle t&acirc;che</a></li>
+                                    <li><a tabindex="-1" href="task/createTask">Cr&eacute;er une nouvelle t&acirc;che</a></li>
                                     <% }%>
                                 </ul>
                             </li>
-                            <li class="dropdown">
+                            <li class="dropdown active">
                                 <a id="drop2" href="#" role="button" class="dropdown-toggle" onclick="checkNewMess();" data-toggle="dropdown">Messagerie <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/message/inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess"></b></span></a></li> 
+                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/message/inbox">Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess">${nbNewMessages}</b></span></a></li>
                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/message/createMessage">Envoyer un message</a></li>
                                 </ul>
                             </li>
@@ -125,14 +125,6 @@
                                     <% }%>                                  
                                 </ul>
                             </li>
-                            <% if (session.getAttribute("isAdmin") != null) {%>     
-                            <li class="dropdown">
-                                <a id="drop5" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Import XML <b class="caret"></b></a>
-                                <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/user/createNewUser">Importer un fichier XML</a></li> 
-                                </ul>
-                            </li>
-                            <% }%> 
                         </ul>
                         <% if (session.getAttribute("token") != null) {%> 
                         <a href="/BE_A2_2012_2013/deconnection"><input type="button" class="btn btn-danger pull-right" value="D&eacute;connexion"/></a>
@@ -241,34 +233,151 @@
                 </div><!--/span-->
 
                 <div class="span9 offset2">
-                    <!-- Example row of columns -->
-                    <div class="row-fluid"> 
-                        <p>${errorMessage}</p>
+                    ${alert}
+                    <div class="hero-unit">
+                        <h1>Mes messages <span class="badge badge-info">${nbNewMessages}</span></h1>
                     </div>
+                    <!-- Example row of columns -->
+                    <div class="row-fluid">
+                        <div class="row-fluid">
+                            <div class="accordion" id="accordionMsgs">
+                                <div class="accordion-group">
+                                    <div class="accordion-heading">
+                                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordionMsgs" href="#msgRcpts">
+                                            Boite de r&eacute;ception
+                                        </a>
+                                    </div>
+                                    <div id="msgRcpts" class="accordion-body  collapse" style="height: 0px; ">
+                                        <div class="accordion" id="accordionMsgsRcvs">
+                                            <div class="accordion-group">
+                                                <div class="accordion-heading">
+                                                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordionMsgsRcvs" href="#messUnRead">
+                                                        Messages non lus
+                                                    </a>
+                                                </div>
+                                                <div id="messUnRead" class="accordion-body  collapse" style="height: 0px; ">
+                                                    <div class="accordion-inner">
+                                                        ${messUnRead}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="accordion-group">
+                                                <div class="accordion-heading">
+                                                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordionMsgsRcvs" href="#messRead">
+                                                        Messages lus
+                                                    </a>
+                                                </div>
+                                                <div id="messRead" class="accordion-body  collapse" style="height: 0px; ">
+                                                    <div class="accordion-inner">
+                                                        ${messRead}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="accordion-group">
+                                                <div class="accordion-heading">
+                                                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordionMsgsRcvs" href="#messUrg">
+                                                        Messages urgents
+                                                    </a>
+                                                </div>
+                                                <div id="messUrg" class="accordion-body  collapse" style="height: 0px; ">
+                                                    <div class="accordion-inner">
+                                                        <ul>
+                                                            ${messUrg}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="accordion-group">
+                                                <div class="accordion-heading">
+                                                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordionMsgsRcvs" href="#messImp">
+                                                        Messages importants
+                                                    </a>
+                                                </div>
+                                                <div id="messImp" class="accordion-body  collapse" style="height: 0px; ">
+                                                    <div class="accordion-inner">
+                                                        <ul>
+                                                            ${messImp}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="accordion-group">
+                                                <div class="accordion-heading">
+                                                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordionMsgsRcvs" href="#messToAnsw">
+                                                        Messages auxquels r&eacute;pondres
+                                                    </a>
+                                                </div>
+                                                <div id="messToAnsw" class="accordion-body  collapse" style="height: 0px; ">
+                                                    <div class="accordion-inner">
+                                                        <ul>
+                                                            ${messToAnsw}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="accordion-group">
+                                                <div class="accordion-heading">
+                                                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordionMsgsRcvs" href="#messFwd">
+                                                        Messages transf&eacute;f&eacute;s
+                                                    </a>
+                                                </div>
+                                                <div id="messFwd" class="accordion-body  collapse" style="height: 0px; ">
+                                                    <div class="accordion-inner">
+                                                        <ul>
+                                                            ${messFwd}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-group">
+                                    <div class="accordion-heading">
+                                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordionMsgs" href="#msgSend">
+                                            Boite d'envoi
+                                        </a>
+                                    </div>
+                                    <div id="msgSend" class="accordion-body  collapse" style="height: 0px; ">
+                                        <div class="accordion-inner">
+                                            <ul>
+                                                ${messOutbox}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
                     <hr>
+
                     <footer>
                         <p>&copy; PESO 2012</p>
                     </footer>
-                </div>
-                <!-- /container -->
+
+                </div> <!-- /container -->
+
             </div>
-            <!-- Le javascript
-            ================================================== -->
-            <!-- Placed at the end of the document so the pages load faster -->
-            <script src="<c:url value="/resources/js/jquery.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-transition.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-alert.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-modal.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-dropdown.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-scrollspy.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-tab.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-tooltip.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-popover.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-button.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-collapse.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-carousel.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-typeahead.js"/>"></script>
         </div>
+        <!-- Le javascript
+        ================================================== -->
+        <!-- Placed at the end of the document so the pages load faster -->
+        <script src="<c:url value="/resources/js/jquery.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-transition.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-alert.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-modal.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-dropdown.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-scrollspy.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-tab.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-tooltip.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-popover.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-button.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-collapse.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-carousel.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-typeahead.js"/>"></script>
+
     </body>
 </html>

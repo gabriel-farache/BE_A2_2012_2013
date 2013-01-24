@@ -2,6 +2,7 @@
 package attachmentsManagement;
 
 import dataObjects.Item;
+import dataObjects.Task;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
@@ -83,5 +84,39 @@ public class ManageAttachements {
     		path = "";
         }
         return path;
+    }
+
+    /**
+     * Build the absolute path for the corresponding Item and Attachment name.
+     * @param it Parent item of the attachment.
+     * @param attName attachment file name.
+     * @return the absolute path of the attachment.
+     */
+    protected static String getAttachementPath(Item it, String attName) {
+        String path = getRootPath();
+        if(it instanceof Task) {
+            path += File.separatorChar+"task";
+        } else {
+            path += File.separatorChar+"message";
+        }
+        path +=File.separatorChar;
+        int year = it.getCreationDate().getTime().getYear()+1900;
+        int month = it.getCreationDate().getTime().getMonth()+1;
+        int day = it.getCreationDate().getTime().getDate();
+        path += String.valueOf(year)+File.separatorChar+
+                String.valueOf(month)+File.separatorChar+
+                String.valueOf(day)+File.separatorChar+
+                String.valueOf(it.getId())+File.separatorChar+
+                attName;
+
+        return path;
+    }
+
+    /**
+     * Removes all the attachments of the item on the disk.
+     * @param it Item from which to remove all the attachments.
+     */
+    public static void removeAttachments(Item it) {
+        DeleteAttachments.removeAttachments(it);
     }
 }

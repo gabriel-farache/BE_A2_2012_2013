@@ -1,7 +1,7 @@
 <%-- 
-    Document   : error
-    Created on : 17 janv. 2013, 11:20:40
-    Author     : Thomas
+    Document   : checkGroup
+    Created on : Jan 20, 2013, 11:55:55 PM
+    Author     : gabriel
 --%>
 
 <!DOCTYPE html>
@@ -10,7 +10,7 @@
 <html lang="fr">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Erreur...</title>
+        <title>Consulter un groupe</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="">
         <meta name="author" content="">
@@ -85,7 +85,7 @@
                     <a class="brand pull-left" href="#">PESO</a>
                     <div class="nav-collapse collapse">
                         <ul class="nav">
-                            <li class="active"><a href="/BE_A2_2012_2013/welcome">Acceuil</a></li>
+                            <li ><a href="/BE_A2_2012_2013/welcome">Acceuil</a></li>
                             <li class="dropdown">
                                 <a id="drop1" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">T&acirc;ches <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
@@ -104,7 +104,7 @@
                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/message/createMessage">Envoyer un message</a></li>
                                 </ul>
                             </li>
-                            <li class="dropdown">
+                            <li class="dropdown active" >
                                 <a id="drop3" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Groupes <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/group/listOfGroup">Consulter liste groupes</a></li>
@@ -125,14 +125,6 @@
                                     <% }%>                                  
                                 </ul>
                             </li>
-                            <% if (session.getAttribute("isAdmin") != null) {%>     
-                            <li class="dropdown">
-                                <a id="drop5" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Import XML <b class="caret"></b></a>
-                                <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/user/createNewUser">Importer un fichier XML</a></li> 
-                                </ul>
-                            </li>
-                            <% }%> 
                         </ul>
                         <% if (session.getAttribute("token") != null) {%> 
                         <a href="/BE_A2_2012_2013/deconnection"><input type="button" class="btn btn-danger pull-right" value="D&eacute;connexion"/></a>
@@ -241,9 +233,37 @@
                 </div><!--/span-->
 
                 <div class="span9 offset2">
+                    <div class="hero-unit">
+                        <h1>Consulter les informations d'un groupe</h1>
+                    </div>
                     <!-- Example row of columns -->
                     <div class="row-fluid"> 
-                        <p>${errorMessage}</p>
+                        <fieldset>
+                            <legend>ID</legend>
+                            <p>${id_groupe}</p>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Nomdu groupe</legend>
+                            <p>${nom_groupe}</p>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Description</legend>
+                            <p>${desc_groupe}</p>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Membres</legend>
+                            <p>${liste_membres_groupe}</p>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Chef</legend>
+                            <p>${chef_groupe}</p>
+                        </fieldset>
+
+                        <% if (session.getAttribute("isAdmin") != null) {%> 
+                        <div class="span1 pull-right">
+                            <a href="updateGroup?idGroup=${id_groupe}"><input class="btn btn-primary" type="submit" value="Modifier" /></a>
+                        </div>
+                        <% }%>
                     </div>
                     <hr>
                     <footer>

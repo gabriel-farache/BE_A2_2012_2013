@@ -1,7 +1,7 @@
 <%-- 
-    Document   : error
-    Created on : 17 janv. 2013, 11:20:40
-    Author     : Thomas
+    Document   : listOfTasks
+    Created on : Jan 21, 2013, 12:16:21 AM
+    Author     : gabriel
 --%>
 
 <!DOCTYPE html>
@@ -10,7 +10,7 @@
 <html lang="fr">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Erreur...</title>
+        <title>${typeTask}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="">
         <meta name="author" content="">
@@ -85,8 +85,8 @@
                     <a class="brand pull-left" href="#">PESO</a>
                     <div class="nav-collapse collapse">
                         <ul class="nav">
-                            <li class="active"><a href="/BE_A2_2012_2013/welcome">Acceuil</a></li>
-                            <li class="dropdown">
+                            <li><a href="/BE_A2_2012_2013/welcome">Acceuil</a></li>
+                            <li class="dropdown active">
                                 <a id="drop1" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">T&acirc;ches <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/task/myTasks">Mes t&acirc;ches</a></li>
@@ -125,14 +125,6 @@
                                     <% }%>                                  
                                 </ul>
                             </li>
-                            <% if (session.getAttribute("isAdmin") != null) {%>     
-                            <li class="dropdown">
-                                <a id="drop5" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Import XML <b class="caret"></b></a>
-                                <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/user/createNewUser">Importer un fichier XML</a></li> 
-                                </ul>
-                            </li>
-                            <% }%> 
                         </ul>
                         <% if (session.getAttribute("token") != null) {%> 
                         <a href="/BE_A2_2012_2013/deconnection"><input type="button" class="btn btn-danger pull-right" value="D&eacute;connexion"/></a>
@@ -241,34 +233,47 @@
                 </div><!--/span-->
 
                 <div class="span9 offset2">
-                    <!-- Example row of columns -->
-                    <div class="row-fluid"> 
-                        <p>${errorMessage}</p>
+                    ${alert}
+                    <div class="hero-unit">
+                        <h1>${typeTask}</h1>
                     </div>
+                    <!-- Example row of columns -->
+                    <div class="row-fluid">
+                        <div class="row-fluid">
+                            <form action="<c:url value="checkTask"/>" method="post" ></br>
+                                ${table}
+                            </form>
+                        </div>
+                    </div>
+
                     <hr>
+
                     <footer>
                         <p>&copy; PESO 2012</p>
                     </footer>
-                </div>
-                <!-- /container -->
+
+                </div> <!-- /container -->
+
             </div>
-            <!-- Le javascript
-            ================================================== -->
-            <!-- Placed at the end of the document so the pages load faster -->
-            <script src="<c:url value="/resources/js/jquery.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-transition.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-alert.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-modal.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-dropdown.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-scrollspy.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-tab.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-tooltip.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-popover.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-button.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-collapse.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-carousel.js"/>"></script>
-            <script src="<c:url value="/resources/js/bootstrap-typeahead.js"/>"></script>
         </div>
+        <!-- Le javascript
+        ================================================== -->
+        <!-- Placed at the end of the document so the pages load faster -->
+        <script src="<c:url value="/resources/js/jquery.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-transition.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-alert.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-modal.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-dropdown.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-scrollspy.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-tab.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-tooltip.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-popover.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-button.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-collapse.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-carousel.js"/>"></script>
+        <script src="<c:url value="/resources/js/bootstrap-typeahead.js"/>"></script>
+
     </body>
 </html>
+

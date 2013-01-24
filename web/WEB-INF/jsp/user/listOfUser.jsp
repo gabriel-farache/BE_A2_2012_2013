@@ -1,7 +1,7 @@
 <%-- 
-    Document   : welcom
-    Created on : 19 janv. 2013
-    Author     : Gabriel
+    Document   : ListOfUsers
+    Created on : 13 janv. 2013, 19:52:58
+    Author     : Fangli
 --%>
 
 <!DOCTYPE html>
@@ -10,7 +10,7 @@
 <html lang="fr">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Bienvenue</title>
+        <title>Liste des membres</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="">
         <meta name="author" content="">
@@ -85,7 +85,7 @@
                     <a class="brand pull-left" href="#">PESO</a>
                     <div class="nav-collapse collapse">
                         <ul class="nav">
-                            <li class="active"><a href="/BE_A2_2012_2013/welcome">Acceuil</a></li>
+                            <li><a href="/BE_A2_2012_2013/welcome">Acceuil</a></li>
                             <li class="dropdown">
                                 <a id="drop1" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">T&acirc;ches <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
@@ -114,7 +114,7 @@
                                     <% }%>                           
                                 </ul>
                             </li>
-                            <li class="dropdown">
+                            <li class="dropdown active">
                                 <a id="drop4" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Utilisateurs <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/user/listOfUser">Consulter liste utilisateurs</a></li>
@@ -233,44 +233,43 @@
                 </div><!--/span-->
 
                 <div class="span9 offset2">
-                    ${welcomeMessage} 
+                    ${alert}
                     <div class="hero-unit">
-                        <h1>Bienvenue</h1>
+                        <h1>Liste des utilisateurs</h1>
                     </div>
                     <!-- Example row of columns -->
-                    <div class="row-fluid">
-                        <div class="row-fluid">
-                            <img src="<c:url value="/resources/images/logo_sopra.jpg"/>" alt="logo sopra" title="Bienvenu sur PESO."/>
+                    <div class="row-fluid"> 
+                        ${listOfUsers}
+                        <% if (session.getAttribute("isAdmin") != null) {%> 
+                        <div class="span1 pull-right">
+                            <a href="createNewUser"><input class="btn btn-primary" type="submit" value="Créer" /></a>
                         </div>
+                        <% }%>
                     </div>
-
                     <hr>
-
                     <footer>
                         <p>&copy; PESO 2012</p>
                     </footer>
-
-                </div> <!-- /container -->
-
+                </div>
+                <!-- /container -->
             </div>
+            <!-- Le javascript
+            ================================================== -->
+            <!-- Placed at the end of the document so the pages load faster -->
+            <script src="<c:url value="/resources/js/jquery.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-transition.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-alert.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-modal.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-dropdown.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-scrollspy.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-tab.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-tooltip.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-popover.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-button.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-collapse.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-carousel.js"/>"></script>
+            <script src="<c:url value="/resources/js/bootstrap-typeahead.js"/>"></script>
         </div>
-        <!-- Le javascript
-        ================================================== -->
-        <!-- Placed at the end of the document so the pages load faster -->
-        <script src="<c:url value="/resources/js/jquery.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-transition.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-alert.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-modal.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-dropdown.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-scrollspy.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-tab.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-tooltip.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-popover.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-button.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-collapse.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-carousel.js"/>"></script>
-        <script src="<c:url value="/resources/js/bootstrap-typeahead.js"/>"></script>
-
     </body>
 </html>

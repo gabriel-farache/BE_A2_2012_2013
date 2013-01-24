@@ -1,7 +1,7 @@
 <%-- 
-    Document   : error
-    Created on : 17 janv. 2013, 11:20:40
-    Author     : Thomas
+    Document   : createMessage
+    Created on : Jan 19, 2013, 9:34:26 PM
+    Author     : gabriel
 --%>
 
 <!DOCTYPE html>
@@ -10,7 +10,7 @@
 <html lang="fr">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Erreur...</title>
+        <title>Envoyer un nouveau message</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="">
         <meta name="author" content="">
@@ -85,7 +85,7 @@
                     <a class="brand pull-left" href="#">PESO</a>
                     <div class="nav-collapse collapse">
                         <ul class="nav">
-                            <li class="active"><a href="/BE_A2_2012_2013/welcome">Acceuil</a></li>
+                            <li><a href="/BE_A2_2012_2013/welcome">Acceuil</a></li>
                             <li class="dropdown">
                                 <a id="drop1" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">T&acirc;ches <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
@@ -97,7 +97,7 @@
                                     <% }%>
                                 </ul>
                             </li>
-                            <li class="dropdown">
+                            <li class="dropdown active">
                                 <a id="drop2" href="#" role="button" class="dropdown-toggle" onclick="checkNewMess();" data-toggle="dropdown">Messagerie <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
                                      <li><a tabindex="-1" href="/BE_A2_2012_2013/message/inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess"></b></span></a></li> 
@@ -125,14 +125,6 @@
                                     <% }%>                                  
                                 </ul>
                             </li>
-                            <% if (session.getAttribute("isAdmin") != null) {%>     
-                            <li class="dropdown">
-                                <a id="drop5" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Import XML <b class="caret"></b></a>
-                                <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/user/createNewUser">Importer un fichier XML</a></li> 
-                                </ul>
-                            </li>
-                            <% }%> 
                         </ul>
                         <% if (session.getAttribute("token") != null) {%> 
                         <a href="/BE_A2_2012_2013/deconnection"><input type="button" class="btn btn-danger pull-right" value="D&eacute;connexion"/></a>
@@ -241,9 +233,36 @@
                 </div><!--/span-->
 
                 <div class="span9 offset2">
+                    <div class="hero-unit">
+                        <h1>Envoyer un message</h1>
+                    </div>
                     <!-- Example row of columns -->
                     <div class="row-fluid"> 
-                        <p>${errorMessage}</p>
+                        <form method="POST" name="saisieNouveauMessage" id="saisieNouveauMessage" action="<c:url value="messageCreated"/>">
+                            <fieldset>
+                                <legend>Destinataire(s)</legend>
+                                <div>
+                                    <label>Membre(s)</label> 
+                                    <textarea style="resize: none;" rows="2" class="span14 search-query"type="text" class="input" name="saisieUtilisateurDestinataire" id="saisieUtilisateurDestinataire" >${recipient}</textarea>
+                                    <hr><label>Groupe(s)</label> 
+                                    <textarea style="resize: none;" rows="2" class="span14 search-query"type="text" class="input" name="saisieGroupeDestinataire" id="saisieGroupeDestinataire" ></textarea>
+                                </div>
+
+                            </fieldset>
+                            <fieldset>
+                                <legend>Objet</legend>
+                                <div>
+                                    <textarea style="resize: none;" rows="2" class="span14 search-query"type="text" class="input" name="titreMessage" id="titreMessage"  required>${title}</textarea>
+                                </div>
+                                <legend>Message</legend>
+                                <div>
+                                    <textarea style="resize: none;" rows="16" class="span14  search-query" type="text" class="input" name="saisieMessage" id="saisieMessage" placeholder="message" >${message}</textarea>
+                                </div>
+                            </fieldset>
+                            <div class="span1 pull-right">
+                                <input class="btn btn-primary" type="submit" value="Envoyer"/>
+                            </div>
+                        </form>
                     </div>
                     <hr>
                     <footer>

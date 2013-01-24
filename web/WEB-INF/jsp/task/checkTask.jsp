@@ -1,7 +1,7 @@
 <%-- 
-    Document   : error
-    Created on : 17 janv. 2013, 11:20:40
-    Author     : Thomas
+    Document   : checkTask
+    Created on : Jan 20, 2013, 1:44:09 AM
+    Author     : gabriel
 --%>
 
 <!DOCTYPE html>
@@ -10,7 +10,7 @@
 <html lang="fr">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Erreur...</title>
+        <title>Consulter une t&acirc;che</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="">
         <meta name="author" content="">
@@ -85,8 +85,8 @@
                     <a class="brand pull-left" href="#">PESO</a>
                     <div class="nav-collapse collapse">
                         <ul class="nav">
-                            <li class="active"><a href="/BE_A2_2012_2013/welcome">Acceuil</a></li>
-                            <li class="dropdown">
+                            <li><a href="/BE_A2_2012_2013/welcome">Acceuil</a></li>
+                            <li class="dropdown active">
                                 <a id="drop1" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">T&acirc;ches <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/task/myTasks">Mes t&acirc;ches</a></li>
@@ -125,14 +125,6 @@
                                     <% }%>                                  
                                 </ul>
                             </li>
-                            <% if (session.getAttribute("isAdmin") != null) {%>     
-                            <li class="dropdown">
-                                <a id="drop5" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Import XML <b class="caret"></b></a>
-                                <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/user/createNewUser">Importer un fichier XML</a></li> 
-                                </ul>
-                            </li>
-                            <% }%> 
                         </ul>
                         <% if (session.getAttribute("token") != null) {%> 
                         <a href="/BE_A2_2012_2013/deconnection"><input type="button" class="btn btn-danger pull-right" value="D&eacute;connexion"/></a>
@@ -242,8 +234,66 @@
 
                 <div class="span9 offset2">
                     <!-- Example row of columns -->
+                    <div class="hero-unit">
+                        <h1>Consutler une t&acirc;che</h1>
+                    </div>
                     <div class="row-fluid"> 
-                        <p>${errorMessage}</p>
+                        ${alert}
+                        <fieldset>
+                            <legend for="mb" class="rubrique">Membre(s)</legend>
+                             <label for="mb" >${utilsM}</label>
+                        </fieldset>
+                        <fieldset>
+                            <legend for="gp" class="rubrique">Groupe(s)</legend>
+                             <label for="gp" >${utilsG}</label>
+                        </fieldset>
+                        <fieldset>
+                            <legend for="gp" class="rubrique">Chef</legend>
+                             <label for="gp" >${chief}</label>
+                        </fieldset>
+                        <fieldset>
+                            <legend for="projet" class="rubrique">Projet</legend>
+                            <label for="projet">${projetTache}</label>
+                        </fieldset>
+                        <fieldset>
+                            <legend for="titre" class="rubrique">Titre</legend>
+                            <label for="titre" >${Titre}</label>
+                        </fieldset>
+                        <fieldset>
+                            <legend id="description" class="rubrique">Description</legend>
+                            <label for="descr" ><small>${descriptionTache}</small></label>
+                        </fieldset>
+                        <fieldset>
+                            <legend for="dateDebut" class="rubrique">Date de Début</legend>
+                            <input type="date" for="dateDebut" value="${dateDebut}"/>
+                        </fieldset>
+                        <fieldset>
+                            <legend for="dateFin" class="rubrique">Date de Fin</legend>
+                            <input type="date" for="dateFin" value="${dateFin}"/>
+                            </br>
+                        </fieldset>
+                        <fieldset>
+                            <legend for="statut" class="rubrique">Statut</legend>
+                            <label for="statut">${statut}</label>
+                        </fieldset>
+                        <fieldset>
+                            <legend for="budget" class="rubrique">Budget</legend>
+                            <label for="budget">${budget}</label>
+                        </fieldset>
+                        <fieldset>
+                            <legend for="consumed" class="rubrique">Consomm&eacute;</legend>
+                            <label type="text" for="consumed">${consumed}</label>
+                        </fieldset>
+                        <fieldset>
+                            <legend for="rae" class="rubrique">RAE</legend>
+                            <label type="text" for="rae">${rae}</label>
+                        </fieldset>
+
+                        <% if (session.getAttribute("isAdmin") != null) {%> 
+                        <div class="span1 pull-right">
+                            <a href="updateTask?idTask=${idTask}"><input type="submit" class="btn btn-primary"  value="Modifier tâche" /></a>
+                        </div>
+                        <% }%>
                     </div>
                     <hr>
                     <footer>

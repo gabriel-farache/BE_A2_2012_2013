@@ -1,7 +1,7 @@
 <%-- 
-    Document   : error
-    Created on : 17 janv. 2013, 11:20:40
-    Author     : Thomas
+    Document   : checkMessage
+    Created on : Jan 19, 2013, 8:22:46 PM
+    Author     : gabriel
 --%>
 
 <!DOCTYPE html>
@@ -10,7 +10,7 @@
 <html lang="fr">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Erreur...</title>
+        <title>Consulter un message</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="">
         <meta name="author" content="">
@@ -43,7 +43,6 @@
             }
 
         </style>
-        <link href="css/bootstrap.css" rel="stylesheet">
 
         <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
         <!--[if lt IE 9]>
@@ -59,7 +58,23 @@
         <script type='text/javascript' src='/BE_A2_2012_2013/dwr/engine.js'></script>
         <script type='text/javascript' src='/BE_A2_2012_2013/dwr/interface/Project_Management_Presenter_Intern_Methods.js'></script>
         <script type='text/javascript' src='/BE_A2_2012_2013/dwr/util.js'></script>
-        <script language="javascript">          
+        <script language="javascript"> 
+            var lu = true;
+            var fwd = true;
+            var impo = true;
+            var urg = true;
+            var toAnw = true;
+            
+            function initLabels()
+            {
+                Project_Management_Presenter_Intern_Methods.messageHasStatusAssociatedWithAMember('<%=session.getAttribute("token")%>', '<%=session.getAttribute("idMessStatus")%>', 'READ', affectLu);
+                Project_Management_Presenter_Intern_Methods.messageHasStatusAssociatedWithAMember('<%=session.getAttribute("token")%>', '<%=session.getAttribute("idMessStatus")%>', 'FORWARDED', affectFwd);
+                Project_Management_Presenter_Intern_Methods.messageHasStatusAssociatedWithAMember('<%=session.getAttribute("token")%>', '<%=session.getAttribute("idMessStatus")%>', 'IMPORTANT', affectImpo);
+                Project_Management_Presenter_Intern_Methods.messageHasStatusAssociatedWithAMember('<%=session.getAttribute("token")%>', '<%=session.getAttribute("idMessStatus")%>', 'URGENT', affectUrg);
+                Project_Management_Presenter_Intern_Methods.messageHasStatusAssociatedWithAMember('<%=session.getAttribute("token")%>', '<%=session.getAttribute("idMessStatus")%>', 'HAVE_TO_ANSWER', affectToAnw);
+                checkNewMess();
+            }
+            
             function fillNbMess(data)
             {
                 document.getElementById('nbNewMess').innerHTML = data;
@@ -69,10 +84,157 @@
             {
                 Project_Management_Presenter_Intern_Methods.getNbMessagesForStatus('<%=session.getAttribute("token")%>', '', fillNbMess);
             }
+            function change_class(id) { 
+                var btn = document.getElementById(id);
+                if(id == "lu")
+                {
+                    if(!lu)
+                    {
+                        btn.className= "label label-inverse";
+                    }
+                    else
+                    {
+                        btn.className= "label";
+                    }
+                    lu = !lu;
+                    Project_Management_Presenter_Intern_Methods.updateMessageStatusString('<%=session.getAttribute("token")%>', '<%=session.getAttribute("idMessStatus")%>', 'READ', lu, ok);
+                    
+                }
+                else if(id == "forwarded")
+                {
+                    if(!fwd)
+                    {
+                        btn.className= "label label-success";
+                    }
+                    else
+                    {
+                        btn.className= "label";
+                    }
+                    fwd = !fwd;
+                    Project_Management_Presenter_Intern_Methods.updateMessageStatusString('<%=session.getAttribute("token")%>', '<%=session.getAttribute("idMessStatus")%>', 'FORWARDED', fwd, ok);
+                    
+                }
+                else if(id == "important")
+                {
+                    if(!impo)
+                    {
+                        btn.className= "label label-warning";
+                    }
+                    else
+                    {
+                        btn.className= "label";
+                    }
+                    impo = !impo;
+                    Project_Management_Presenter_Intern_Methods.updateMessageStatusString('<%=session.getAttribute("token")%>', '<%=session.getAttribute("idMessStatus")%>', 'IMPORTANT', impo, ok);
+                    
+                }
+                else if(id == "urgent")
+                {
+                    if(!urg)
+                    {
+                        btn.className= "label label-important";
+                    }
+                    else
+                    {
+                        btn.className= "label";
+                    }
+                    urg = !urg;
+                    Project_Management_Presenter_Intern_Methods.updateMessageStatusString('<%=session.getAttribute("token")%>', '<%=session.getAttribute("idMessStatus")%>', 'URGENT', urg, ok);
+                    
+                }
+                else if(id == "toAnswer")
+                {
+                    if(!toAnw)
+                    {
+                        btn.className= "label label-info";
+                    }
+                    else
+                    {
+                        btn.className= "label";
+                    }
+                    toAnw = !toAnw;
+                    Project_Management_Presenter_Intern_Methods.updateMessageStatusString('<%=session.getAttribute("token")%>', '<%=session.getAttribute("idMessStatus")%>', 'HAVE_TO_ANSWER', toAnw, ok);
+                    
+                }
+                else {
+                    alert(id);
+                }
+            } 
+            function ok (data) { }
+            
+            function affectLu(data)
+            {
+                var btn = document.getElementById('lu');
+                lu = data;
+                if(lu)
+                {
+                    btn.className= "label label-inverse";
+                }
+                else
+                {
+                    btn.className= "label";
+                }
+            }
+            function affectFwd(data)
+            {
+                var btn = document.getElementById('forwarded');
+                fwd = data;
+                if(fwd)
+                {
+                    btn.className= "label label-success";
+                }
+                else
+                {
+                    btn.className= "label";
+                }
+            }
+            function affectImpo(data)
+            {
+                var btn = document.getElementById('important');
+                impo = data;
+                if(impo)
+                {
+                    btn.className= "label label-warning";
+                }
+                else
+                {
+                    btn.className= "label";
+                }
+            }
+            function affectUrg(data)
+            {
+                var btn = document.getElementById('urgent');
+                urg = data;
+                if(urg)
+                {
+                    btn.className= "label label-important";
+                }
+                else
+                {
+                    btn.className= "label";
+                }
+            }
+            function affectToAnw(data)
+            {
+                var btn = document.getElementById('toAnswer');
+                toAnw = data;
+                if(toAnw)
+                {
+                    btn.className= "label label-info";
+                }
+                else
+                {
+                    btn.className= "label";
+                }
+            }
+            
+            
+            
         </script>
+        <!---->
     </head>
 
-    <body>
+    <body onload="initLabels();">
 
         <div class="navbar navbar-inverse navbar-fixed-top">
             <div class="navbar-inner">
@@ -85,7 +247,7 @@
                     <a class="brand pull-left" href="#">PESO</a>
                     <div class="nav-collapse collapse">
                         <ul class="nav">
-                            <li class="active"><a href="/BE_A2_2012_2013/welcome">Acceuil</a></li>
+                            <li><a href="/BE_A2_2012_2013/welcome">Acceuil</a></li>
                             <li class="dropdown">
                                 <a id="drop1" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">T&acirc;ches <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
@@ -97,10 +259,10 @@
                                     <% }%>
                                 </ul>
                             </li>
-                            <li class="dropdown">
+                            <li class="dropdown active">
                                 <a id="drop2" href="#" role="button" class="dropdown-toggle" onclick="checkNewMess();" data-toggle="dropdown">Messagerie <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/message/inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess"></b></span></a></li> 
+                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/message/inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess">${nbNewMessages}</b></span></a></li>
                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/message/createMessage">Envoyer un message</a></li>
                                 </ul>
                             </li>
@@ -125,14 +287,6 @@
                                     <% }%>                                  
                                 </ul>
                             </li>
-                            <% if (session.getAttribute("isAdmin") != null) {%>     
-                            <li class="dropdown">
-                                <a id="drop5" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Import XML <b class="caret"></b></a>
-                                <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/user/createNewUser">Importer un fichier XML</a></li> 
-                                </ul>
-                            </li>
-                            <% }%> 
                         </ul>
                         <% if (session.getAttribute("token") != null) {%> 
                         <a href="/BE_A2_2012_2013/deconnection"><input type="button" class="btn btn-danger pull-right" value="D&eacute;connexion"/></a>
@@ -243,12 +397,58 @@
                 <div class="span9 offset2">
                     <!-- Example row of columns -->
                     <div class="row-fluid"> 
-                        <p>${errorMessage}</p>
+
+                        <fieldset>
+                            <legend>Auteur(s)</legend>
+                            <div>
+                                <p>${sender}</p>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Destinataire(s)</legend>
+                            <div>
+                                <p>Membre(s)</p> <hr>
+                                <p>${recipientsM}</p>
+                                <p>Groupe(s)</p> <hr>
+                                <p>${recipientsG}</p>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+
+                            <legend>Objet</legend>
+                            <div>
+                                <p>${title}</p>
+                            </div>
+                            <hr>
+                            <div class="row-fluid">
+                                <span id="lu" class="label" onclick="change_class('lu');">Lu</span>
+                                <span id="forwarded" class="label" onclick="change_class('forwarded');">Transf&eacute;r&eacute;</span>
+                                <span id="important" class="label" onclick="change_class('important');">Important</span>
+                                <span id="urgent" class="label" onclick="change_class('urgent');">Urgent</span>
+                                <span id="toAnswer" class="label" onclick="change_class('toAnswer');">A r&eacute;pondre</span>
+                            </div>
+                            <legend>Message</legend>
+                            <div>
+                                <p>${content}</p>
+                            </div>
+                        </fieldset>
                     </div>
                     <hr>
+                    <div class="row">
+                        <div class="span1 pull-left">
+                            <a href="<c:url value="supprMessage?idMess=${idMess}&fromInbox=${fromInbox}"/>" class="btn  btn-danger" type="submit"/>Supprimer</a>
+                        </div>
+                        <div class="span1 pull-right">
+                            <a href="<c:url value="createMessage?idMess=${idMess}&fromInbox=${fromInbox}"/>" class="btn  btn-success" type="submit"/>R&eacute;pondre</a>
+                        </div>
+                        <input type="hidden" id="idMessStatus" value="${idMess}"/>
+                    </div>
+                    <hr>
+
                     <footer>
                         <p>&copy; PESO 2012</p>
                     </footer>
+
                 </div>
                 <!-- /container -->
             </div>
@@ -269,6 +469,8 @@
             <script src="<c:url value="/resources/js/bootstrap-collapse.js"/>"></script>
             <script src="<c:url value="/resources/js/bootstrap-carousel.js"/>"></script>
             <script src="<c:url value="/resources/js/bootstrap-typeahead.js"/>"></script>
+
         </div>
     </body>
 </html>
+

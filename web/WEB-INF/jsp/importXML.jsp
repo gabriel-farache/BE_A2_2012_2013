@@ -85,43 +85,43 @@
                     <a class="brand pull-left" href="#">PESO</a>
                     <div class="nav-collapse collapse">
                         <ul class="nav">
-                            <li class="active"><a href="welcome">Acceuil</a></li>
+                            <li class="active"><a href="/BE_A2_2012_2013/welcome">Acceuil</a></li>
                             <li class="dropdown">
                                 <a id="drop1" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">T&acirc;ches <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                    <li><a tabindex="-1" href="myTasks">Mes t&acirc;ches</a></li>
-                                    <li><a tabindex="-1" href="listOfTasks">Toutes les t&acirc;ches</a></li>
+                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/task/myTasks">Mes t&acirc;ches</a></li>
+                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/task/listOfTasks">Toutes les t&acirc;ches</a></li>
                                     <li class="divider"></li>
                                     <% if (session.getAttribute("isAdmin") != null) {%>                                                                             
-                                    <li><a tabindex="-1" href="createTask">Cr&eacute;er une nouvelle t&acirc;che</a></li>
+                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/task/createTask">Cr&eacute;er une nouvelle t&acirc;che</a></li>
                                     <% }%>
                                 </ul>
                             </li>
                             <li class="dropdown">
                                 <a id="drop2" href="#" role="button" class="dropdown-toggle" onclick="checkNewMess();" data-toggle="dropdown">Messagerie <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                     <li><a tabindex="-1" href="inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess"></b></span></a></li> 
-                                    <li><a tabindex="-1" href="createMessage">Envoyer un message</a></li>
+                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/message/inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess"></b></span></a></li> 
+                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/message/createMessage">Envoyer un message</a></li>
                                 </ul>
                             </li>
                             <li class="dropdown">
                                 <a id="drop3" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Groupes <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                    <li><a tabindex="-1" href="listOfGroup">Consulter liste groupes</a></li>
+                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/group/listOfGroup">Consulter liste groupes</a></li>
                                     <li class="divider"></li>
                                     <% if (session.getAttribute("isAdmin") != null) {%>                                                                             
-                                    <li><a tabindex="-1" href="createGroup">Ajouter un nouveau groupe</a></li>
+                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/group/createGroup">Ajouter un nouveau groupe</a></li>
                                     <% }%>                           
                                 </ul>
                             </li>
                             <li class="dropdown">
                                 <a id="drop4" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Utilisateurs <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                    <li><a tabindex="-1" href="listOfUser">Consulter liste utilisateurs</a></li>
+                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/user/listOfUser">Consulter liste utilisateurs</a></li>
                                     <li class="divider"></li>
-                                    <li><a tabindex="-1" href="updateProfileInfos">Mettre &agrave; jour mon profil</a></li>
+                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/user/updateProfileInfos">Mettre &agrave; jour mon profil</a></li>
                                     <% if (session.getAttribute("isAdmin") != null) {%>                                                                             
-                                    <li><a tabindex="-1" href="createNewUser">Ajouter un nouvel utilisateur</a></li> 
+                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/user/createNewUser">Ajouter un nouvel utilisateur</a></li> 
                                     <% }%>                                  
                                 </ul>
                             </li>
@@ -129,13 +129,13 @@
                             <li class="dropdown">
                                 <a id="drop5" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Import XML <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                    <li><a tabindex="-1" href="createNewUser">Importer un fichier XML</a></li> 
+                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/user/createNewUser">Importer un fichier XML</a></li> 
                                 </ul>
                             </li>
                             <% }%> 
                         </ul>
                         <% if (session.getAttribute("token") != null) {%> 
-                        <a href="deconnection"><input type="button" class="btn btn-danger pull-right" value="D&eacute;connexion"/></a>
+                        <a href="/BE_A2_2012_2013/deconnection"><input type="button" class="btn btn-danger pull-right" value="D&eacute;connexion"/></a>
                             <%} else {%>
                         <ul class="nav pull-right">
                             <li class="dropdown">
