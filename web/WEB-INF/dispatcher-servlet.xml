@@ -19,7 +19,7 @@
     <mvc:annotation-driven />
     <mvc:resources mapping="/css/**" location="/css/" /> 
     <mvc:resources mapping="/resources/**" location="/resources/" />
-    <context:component-scan base-package="Controler" />
+    <context:component-scan base-package="presenter" />
     
                 
     <bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter"/>

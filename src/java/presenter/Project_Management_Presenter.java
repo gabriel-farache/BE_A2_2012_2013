@@ -45,6 +45,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
     private static String messages = "";
     private static String tasks = "";
     public final static String domain = "/BE_A2_2012_2013";
+
     public static Project_Management_Presenter getInstance() {
         if (Project_Management_Presenter.me == null) {
             Project_Management_Presenter.me = new Project_Management_Presenter();
@@ -85,12 +86,13 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
     }
 
     @RequestMapping(value = {"connection", "index", "/"}, method = {RequestMethod.GET, RequestMethod.POST})
-    public String displayConnexionPage(HttpSession session, ModelMap m) {
+    public String displayConnexionPage(HttpSession session, ModelMap m, HttpServletRequest request) {
         Project_Management_Presenter_Intern_Methods.getInstance();
         String token;
         this.addAttribute(m);
         token = this.getTokenSession(session, m);
         String id = Project_Management_Presenter.model.isValidToken(token);
+        
         if (token == null || id == null) {
             return "connection";
         } else {
@@ -389,19 +391,19 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
 
             while (!tHeaders.isEmpty() || !mHeaders.isEmpty() || !userss.isEmpty() || !groups.isEmpty()) {
                 if (!tHeaders.isEmpty()) {
-                    Project_Management_Presenter.tasks += "<li><a href=\""+Project_Management_Presenter.domain+"/task/checkTask?idTask=" + tHeaders.get(0).getId().trim() + "\">" + tHeaders.get(0).getTitle() + "</a></li>";
+                    Project_Management_Presenter.tasks += "<li><a href=\"" + Project_Management_Presenter.domain + "/task/checkTask?idTask=" + tHeaders.get(0).getId().trim() + "\">" + tHeaders.get(0).getTitle() + "</a></li>";
                     tHeaders.remove(0);
                 }
                 if (!mHeaders.isEmpty()) {
-                    Project_Management_Presenter.messages += "<li><a href=\""+Project_Management_Presenter.domain+"/message/checkMessage?idMessage=" + mHeaders.get(0).getId().trim() + "&fromInbox=yes\">" + mHeaders.get(0).getTitle() + "</a></li>";
+                    Project_Management_Presenter.messages += "<li><a href=\"" + Project_Management_Presenter.domain + "/message/checkMessage?idMessage=" + mHeaders.get(0).getId().trim() + "&fromInbox=yes\">" + mHeaders.get(0).getTitle() + "</a></li>";
                     mHeaders.remove(0);
                 }
                 if (!userss.isEmpty()) {
-                    Project_Management_Presenter.users += "<li><a href=\""+Project_Management_Presenter.domain+"/user/checkUser?idUser=" + userss.get(0).getId_member().trim() + "\">" + userss.get(0).getId_member() + "</a></li>";
+                    Project_Management_Presenter.users += "<li><a href=\"" + Project_Management_Presenter.domain + "/user/checkUser?idUser=" + userss.get(0).getId_member().trim() + "\">" + userss.get(0).getId_member() + "</a></li>";
                     userss.remove(0);
                 }
                 if (!groups.isEmpty()) {
-                    Project_Management_Presenter.groupes += "<li><a href=\""+Project_Management_Presenter.domain+"/group/checkGroup?id_groupe=" + groups.get(0).getId_group().trim() + "\">" + groups.get(0).getId_group() + "</a></li>";
+                    Project_Management_Presenter.groupes += "<li><a href=\"" + Project_Management_Presenter.domain + "/group/checkGroup?id_groupe=" + groups.get(0).getId_group().trim() + "\">" + groups.get(0).getId_group() + "</a></li>";
                     groups.remove(0);
                 }
             }
@@ -414,4 +416,6 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         m.addAttribute("users", Project_Management_Presenter.users);
         m.addAttribute("groups", Project_Management_Presenter.groupes);
     }
+
+    
 }

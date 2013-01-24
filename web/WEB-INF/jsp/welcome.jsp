@@ -4,9 +4,12 @@
     Author     : Gabriel
 --%>
 
+<%@page import="presenter.User"%>
+<%@page import="java.util.ArrayList"%>
 <!DOCTYPE html>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="display" uri="http://displaytag.sf.net" %>
 <html lang="fr">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -100,7 +103,7 @@
                             <li class="dropdown">
                                 <a id="drop2" href="#" role="button" class="dropdown-toggle" onclick="checkNewMess();" data-toggle="dropdown">Messagerie <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/message/inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess"></b></span></a></li> 
+                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/message/inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess"></b></span></a></li> 
                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/message/createMessage">Envoyer un message</a></li>
                                 </ul>
                             </li>
@@ -237,9 +240,25 @@
                     <div class="hero-unit">
                         <h1>Bienvenue</h1>
                     </div>
-                    <!-- Example row of columns -->
                     <div class="row-fluid">
                         <div class="row-fluid">
+                            <%
+                                ArrayList<User> u = new ArrayList<User>();
+                                User us;
+                                for (int i = 0; i < 10; i++) {
+                                    us = new User(i, "" + i, "" + i, "" + i, i);
+                                    u.add(us);
+                                }
+                                request.setAttribute("test", u);
+
+                            %>
+                            <display:table class="table table-hover" name="test" defaultsort="2" defaultorder="descending" pagesize="5" requestURI="">
+  <display:column property="id" title="ID" sortable="true"/>
+  <display:column property="prenom" sortable="true"/>
+  <display:column property="nom" sortable="true"/>
+  <display:column property="age" sortable="true"/>
+  <display:column property="email" sortable="true"/>
+</display:table>
                             <img src="<c:url value="/resources/images/logo_sopra.jpg"/>" alt="logo sopra" title="Bienvenu sur PESO."/>
                         </div>
                     </div>
