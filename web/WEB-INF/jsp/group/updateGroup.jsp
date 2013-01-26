@@ -69,6 +69,104 @@
             {
                 Project_Management_Presenter_Intern_Methods.getNbMessagesForStatus('<%=session.getAttribute("token")%>', '', fillNbMess);
             }
+            
+            function lookupM(input) {
+                Project_Management_Presenter_Intern_Methods.getDataFromDB('T_Membre', 'NOM', 'PRENOM',  input, 'IDMEMBRE', callbackM);
+                removeListM();
+                verifyBeforeSend();
+            }
+
+            function callbackM(msg) {
+
+                if (msg.length > 0) {
+                    document.getElementById("suggestionsM").style.display = "block";
+                    var sListM = document.getElementById("suggestionsListM");
+
+                    var ulM = document.createElement('ul');
+
+                    for (var i = 0; i < msg.length; i++){
+                        var liM = document.createElement('li'); 
+                        liM.innerHTML = msg[i];
+                        liM.onclick = bindFunctionM(msg[i]);
+                        ulM.appendChild(liM);
+                    }
+
+                    sListM.appendChild(ulM);
+                }
+            }
+
+            function bindFunctionM(txt) {
+                return function () {fillTextFieldM(txt);};
+            }
+
+            function fillTextFieldM(txt) {
+                
+                document.getElementById("choixUtilsM").appendChild(document.createTextNode(txt+", ")); //
+                document.getElementById("choixUtilsMBox").value="";  
+                document.getElementById("suggestionsM").style.display = "none";
+                document.getElementById("labelleM").innerHTML  += "<span class=\"label label-info\" id=\""+txt+"\" onclick=\"decoche('"+txt+"');\">"+txt+"  <input type=\"checkbox\"  name=\"choixUtilsMChk\" id=\""+txt+"_chk\" value=\""+txt+"\" checked=\"checked\" hidden ></span>   ";
+                removeListM();
+            }
+
+            function removeListM() {
+                var sListM = document.getElementById("suggestionsListM"); 
+                var childrenM = sListM.childNodes; 
+                for (var i = 0; i < childrenM.length; i++) {
+                    sListM.removeChild(childrenM[i]);
+                }
+                verifyBeforeSend();
+            }
+            
+            function decoche(id)
+            {
+                var btn = document.getElementById(id);
+                
+                document.getElementById(id+"_chk").checked = !document.getElementById(id+"_chk").checked;
+                if(!document.getElementById(id+"_chk").checked)
+                {
+                    btn.className= "label";   
+                }
+                else
+                {
+                    btn.className= "label label-info";
+                }
+                
+  
+            }
+            
+            function verifyBeforeSend()
+            {
+                var checkboxes = document.getElementsByName("choixUtilsGChk");
+                for (var i=0; i<checkboxes.length; i++) {
+                    // And stick the checked ones onto an array...
+                    var id = checkboxes[i].id;
+                    
+                    var btn = document.getElementById(id.replace("_chk", ""));
+                    if(btn.className == 'label')
+                    {
+                        checkboxes[i].checked = false;
+                    }              
+                    else
+                    {
+                        checkboxes[i].checked = true;
+                    }
+                }
+                
+                var checkboxes = document.getElementsByName("choixUtilsMChk");
+                for (var i=0; i<checkboxes.length; i++) {
+                    // And stick the checked ones onto an array...
+                    var id = checkboxes[i].id;
+                    var btn = document.getElementById(id.replace("_chk", ""));
+                    if(btn.className == 'label')
+                    {
+                        checkboxes[i].checked = false;
+                    }
+                    else
+                    {
+                        checkboxes[i].checked = true;
+                    }
+                }
+            }
         </script>
     </head>
 
@@ -252,10 +350,14 @@
                                 </div>
                             </fieldset>
                             <fieldset>
-                                <legend>Membres</legend>
-                                <div>
-                                    <textarea style="resize: none;" rows="2" class="span14 search-query"type="text" class="input" name="membres" id="membres" required>${liste_membres_groupe}</textarea>
-                                </div>
+                                <fieldset>
+                                <legend for="projet" class="rubrique">Membre(s)</legend>
+                                <input type="text" id="choixUtilsMBox" name ="choixUtilsMBox" onkeyup='lookupM(this.value);' for="projet" />
+                                <div class="suggestionsBox" id="suggestionsM" style="display: none;"></div>
+                                <div class="suggestionList" id="suggestionsListM"></div>
+                                <input type="hidden" id="choixUtilsM" name ="choixUtilsM"  />
+                                <div><b id="labelleM">${liste_membres_groupe} </b></div>
+                            </fieldset>
                             </fieldset>
                             <fieldset>
                                 <legend>Chef</legend>

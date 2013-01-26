@@ -70,8 +70,9 @@
             }
             
             function lookupM(input) {
-                Project_Management_Presenter_Intern_Methods.getDataFromDB('T_Membre', 'NOM', input, 'IDMEMBRE', callbackM);
+                Project_Management_Presenter_Intern_Methods.getDataFromDB('T_Membre', 'NOM', 'PRENOM', input, 'IDMEMBRE', callbackM);
                 removeListM();
+                verifyBeforeSend();
             }
 
             function callbackM(msg) {
@@ -102,7 +103,7 @@
                 document.getElementById("choixUtilsM").appendChild(document.createTextNode(txt+", ")); //
                 document.getElementById("choixUtilsMBox").value="";  
                 document.getElementById("suggestionsM").style.display = "none";
-                document.getElementById("labelleM").innerHTML  += "<span class=\"label label-info\" id=\""+txt+"\" onclick=\"decoche('"+txt+"');\">"+txt+"  <input type=\"checkbox\"  name=\"choixUtilsMChk\" id=\""+txt+"_chk\" value=\""+txt+"\" checked=\"checked\" hidden=\"true\" ></span>   ";
+                document.getElementById("labelleM").innerHTML  += "<span class=\"label label-info\" id=\""+txt+"\" onclick=\"decoche('"+txt+"');\">"+txt+"  <input type=\"checkbox\"  name=\"choixUtilsMChk\" id=\""+txt+"_chk\" value=\""+txt+"\" checked=\"checked\" hidden ></span>   ";
                 removeListM();
             }
 
@@ -112,11 +113,14 @@
                 for (var i = 0; i < childrenM.length; i++) {
                     sListM.removeChild(childrenM[i]);
                 }
+                verifyBeforeSend();
             }
             
             function lookupG(input) {
                 Project_Management_Presenter_Intern_Methods.getDataFromDB('T_Groupe', 'NOM', input, 'IDGROUPE', callbackG);
                 removeListG();
+                verifyBeforeSend();
+                
             }
 
             function callbackG(msg) {
@@ -146,8 +150,9 @@
                 document.getElementById("suggestionsG").style.display = "none";
                 document.getElementById("choixUtilsG").appendChild(document.createTextNode(txt+", ")); //
                 document.getElementById("choixUtilsGBox").value="";      
-                document.getElementById("labelleG").innerHTML  += "<span class=\"label label-info\" id=\""+txt+"\" onclick=\"decoche('"+txt+"');\">"+txt+"  <input type=\"checkbox\"  name=\"choixUtilsGChk\" id=\""+txt+"_chk\" value=\""+txt+"\" checked=\"checked\" hidden=\"true\" ></span>   ";
+                document.getElementById("labelleG").innerHTML  += "<span class=\"label label-info\" id=\""+txt+"\" onclick=\"decoche('"+txt+"');\">"+txt+"  <input type=\"checkbox\"  name=\"choixUtilsGChk\" id=\""+txt+"_chk\" value=\""+txt+"\" hidden checked></span>   ";
                 removeListG();
+                
             }
 
             function removeListG() {
@@ -156,12 +161,13 @@
                 for (var i = 0; i < children.length; i++) {
                     sList.removeChild(children[i]);
                 }
+                verifyBeforeSend();
             }
             
             function decoche(id)
             {
                 var btn = document.getElementById(id);
-               
+                
                 document.getElementById(id+"_chk").checked = !document.getElementById(id+"_chk").checked;
                 if(!document.getElementById(id+"_chk").checked)
                 {
@@ -170,6 +176,42 @@
                 else
                 {
                     btn.className= "label label-info";
+                }
+                
+  
+            }
+            
+            function verifyBeforeSend()
+            {
+                var checkboxes = document.getElementsByName("choixUtilsGChk");
+                for (var i=0; i<checkboxes.length; i++) {
+                    // And stick the checked ones onto an array...
+                    var id = checkboxes[i].id;
+                    
+                    var btn = document.getElementById(id.replace("_chk", ""));
+                    if(btn.className == 'label')
+                    {
+                        checkboxes[i].checked = false;
+                    }              
+                    else
+                    {
+                        checkboxes[i].checked = true;
+                    }
+                }
+                
+                var checkboxes = document.getElementsByName("choixUtilsMChk");
+                for (var i=0; i<checkboxes.length; i++) {
+                    // And stick the checked ones onto an array...
+                    var id = checkboxes[i].id;
+                    var btn = document.getElementById(id.replace("_chk", ""));
+                    if(btn.className == 'label')
+                    {
+                        checkboxes[i].checked = false;
+                    }
+                    else
+                    {
+                        checkboxes[i].checked = true;
+                    }
                 }
             }
             

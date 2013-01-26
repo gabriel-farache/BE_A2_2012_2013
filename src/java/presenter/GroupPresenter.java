@@ -4,6 +4,8 @@
  */
 package presenter;
 
+import dataObjects.Recipient;
+import dataObjects.RecipientType;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,8 +29,9 @@ import peopleObjects.Member;
 @Controller
 @RequestMapping("group")
 public class GroupPresenter extends Project_Management_Presenter {
-    
+
     public final static String urlDomain = "group/";
+
     /**
      * Fonction qui load la liste des groupes dans un jolie tableau pour l'admin
      *
@@ -42,7 +45,7 @@ public class GroupPresenter extends Project_Management_Presenter {
         if (Project_Management_Presenter.model.isValidToken(token) != null) {
             ArrayList<GroupHeader> groupList = this.getGroups();
             request.setAttribute("groupsTable", groupList);
-            
+
             try {
                 if (Project_Management_Presenter.model.isAdmin(token)) {
                     mm.addAttribute("display", "submit");
@@ -55,13 +58,13 @@ public class GroupPresenter extends Project_Management_Presenter {
                 mm.addAttribute("errorMessage", "Erreur Base de donnée.");
                 return "error";
             }
-            return GroupPresenter.urlDomain+"listOfGroup";
+            return GroupPresenter.urlDomain + "listOfGroup";
         } else {
             mm.addAttribute("errorMessage", "Erreur Base de donnée.");
             return "error";
         }
     }
-    
+
     @RequestMapping(value = {"createGroup", "updateGroup"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String groupCreationRequest(HttpServletRequest request, ModelMap mm) {
         try {
@@ -82,21 +85,23 @@ public class GroupPresenter extends Project_Management_Presenter {
                 mm.addAttribute("liste_membres_disponibles", html_liste);
                 try {
                     Group gp = this.getGroupInfos(token, request.getParameter("idGroup"));
-                    ArrayList<Member> memb = gp.getMembers();
-                    String membres = "";
-                    for (Member m : memb) {
-                        membres += m.getId_member() + ", ";
+                    ArrayList<Member> members = gp.getMembers();
+                    String libMemb = "";
+
+                    for (Member memb : members) {
+                        libMemb += "<span class=\"label label-info\" id=\"" + memb.getName() + " (" + memb.getId_member() + ")\" onclick=\"decoche('" + memb.getName() + " (" + memb.getId_member() + ")');\">" + memb.getName() + " (" + memb.getId_member() + ")"
+                                + "  <input type=\"checkbox\"  name=\"choixUtilsMChk\" id=\"" + memb.getName() + " (" + memb.getId_member() + ")_chk\" value=\"" + memb.getName() + " (" + memb.getId_member() + ")\" checked=true hidden></span>   ";
                     }
                     mm.addAttribute("nom_groupe", gp.getGroup_name());
                     mm.addAttribute("desc_groupe", gp.getDescr());
-                    mm.addAttribute("liste_membres_groupe", membres);
+                    mm.addAttribute("liste_membres_groupe", libMemb);
                     mm.addAttribute("idGroup", request.getParameter("idGroup"));
                     mm.addAttribute("chef_groupe", gp.getChief() != null ? gp.getChief().getId_member() : "");
-                    
+
 
                 } catch (Exception ex) {
                     Logger.getLogger(Project_Management_Presenter.class
-                    .getName()).log(Level.SEVERE, null, ex);
+                            .getName()).log(Level.SEVERE, null, ex);
                 }
                 return null;
             } else {
@@ -125,10 +130,11 @@ public class GroupPresenter extends Project_Management_Presenter {
             token = getTokenSession(request.getSession(), mm);
             this.fillAccordionMenu(token, mm);
             if (Project_Management_Presenter.model.isAdmin(token)) {
-                String[] membres_select = request.getParameter("ListeMembres").replaceAll(" ", "").split(",");
+                String[] memberss = request.getParameterValues("choixUtilsMChk");
                 ArrayList<Member> liste_membres = new ArrayList<Member>();
-                for (int i = 0; i < membres_select.length; i++) {
-                    liste_membres.add(Project_Management_Presenter.model.getInfosMember(membres_select[i].trim()));
+
+                for (String s : memberss) {
+                    liste_membres.add(Project_Management_Presenter.model.getInfosMember((s.split("[(]")[1].split("[)]")[0]).trim()));
                 }
 
                 if (this.createGroup(liste_membres, token, request.getParameter("nomGroupe").replace("'", "`"), request.getParameter("descriptionGroupe").replace("'", "`"))) {
@@ -157,7 +163,7 @@ public class GroupPresenter extends Project_Management_Presenter {
         }
         mm.addAttribute("alert", alertMess);
 
-        return GroupPresenter.urlDomain+"listOfGroup";
+        return GroupPresenter.urlDomain + "listOfGroup";
     }
 
 
@@ -211,7 +217,7 @@ public class GroupPresenter extends Project_Management_Presenter {
             return "error";
         }
     }
-    
+
     @RequestMapping(value = {"groupUpdated"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String intercpetGroupUpdated(HttpSession session, ModelMap mm, HttpServletRequest request) {
         String token = this.getTokenSession(session, mm);
@@ -224,9 +230,19 @@ public class GroupPresenter extends Project_Management_Presenter {
                 String idG = request.getParameter("idGroup").trim();
                 String nom = request.getParameter("nom").trim();
                 String descr = request.getParameter("descr").trim();
-                String[] members = request.getParameter("membres").trim().replaceAll(" ,", ",").split(",");
+                String[] members = request.getParameterValues("choixUtilsMChk");
+
+                if (members != null) {
+                    for (int i = 0; i < members.length; i++) {
+                        System.err.println(" MMM-*- " + members[i]);
+                        members[i] = (members[i].split("[(]")[1].split("[)]")[0]).trim();
+                    }
+                } else {
+                    members = new String[]{""};
+                }
+
                 String chef = request.getParameter("chef").split(",")[0].trim();
-                System.err.println("--------- **** //// ---- "+idG+" - "+nom+" - "+descr+" - "+ members+" "+chef);
+                System.err.println("--------- **** //// ---- " + idG + " - " + nom + " - " + descr + " - " + members + " " + chef);
                 if (this.updateGroup(idG, nom, descr, members, chef)) {
                     alertMess = "<div class=\"alert alert-success\">"
                             + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
@@ -247,5 +263,4 @@ public class GroupPresenter extends Project_Management_Presenter {
         mm.addAttribute("alert", alertMess);
         return this.interceptPageListOfGroups(request, mm);
     }
-    
 }

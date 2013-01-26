@@ -10,7 +10,6 @@ import dataObjects.Task;
 import dataObjects.TaskHeader;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -139,13 +138,19 @@ public class TaskPresenter extends Project_Management_Presenter {
                 ArrayList<String> groups = new ArrayList<String>();
                 String[] memberss = request.getParameterValues("choixUtilsMChk");
                 String[] groupss = request.getParameterValues("choixUtilsGChk");
-
-                for (String s : memberss) {
-                    members.add((s.split("[(]")[1].split("[)]")[0]).trim());
+                if (memberss != null) {
+                    for (String s : memberss) {
+                        members.add((s.split("[(]")[1].split("[)]")[0]).trim());
+                    }
+                } else {
+                    members.add("");
                 }
-
-                for (String s : groupss) {
-                    groups.add((s.split("[(]")[1].split("[)]")[0]).trim());
+                if (groupss != null) {
+                    for (String s : groupss) {
+                        groups.add((s.split("[(]")[1].split("[)]")[0]).trim());
+                    }
+                } else {
+                    groups.add("");
                 }
                 //Collections.addAll(groups, allParams.get("selectGroupe"));
                 System.err.println(" -- " + request.getParameter("titreTache") + ", " + request.getParameter("projetTache") + ", " + request.getParameter("dateDebut") + ", " + request.getParameter("dateFin") + ", " + request.getParameter("statutTache") + ", " + request.getParameter("budget") + ", " + request.getParameter("consumed") + ", " + request.getParameter("rae") + ", " + memberss + ", " + request.getParameter("descriptionTache"));
@@ -200,9 +205,7 @@ public class TaskPresenter extends Project_Management_Presenter {
                                 System.err.println(" MMM-*- " + s);
                                 members.add((s.split("[(]")[1].split("[)]")[0]).trim());
                             }
-                        }
-                        else
-                        {
+                        } else {
                             members.add("");
                         }
                         if (groupss != null) {
@@ -211,9 +214,7 @@ public class TaskPresenter extends Project_Management_Presenter {
 
                                 groups.add((s.split("[(]")[1].split("[)]")[0]).trim());
                             }
-                        }
-                        else
-                        {
+                        } else {
                             groups.add("");
                         }
 
@@ -300,8 +301,6 @@ public class TaskPresenter extends Project_Management_Presenter {
             //Il faut faire une autre requete à la base de données pour recuperer les utilisateurs associé une tâche
             //String[] recipients = Arrays.copyOf(taskToUpdate.getRecipients().toArray(), taskToUpdate.getRecipients().toArray().length, String[].class);
             String projectTopic = taskToUpdate.getProjectTopic();
-            String utilsM = "";
-            String utilsG = "";
             String title = taskToUpdate.getTitle();
             String content = taskToUpdate.getContent();
             String creationDate = taskToUpdate.getStringCreationDate();

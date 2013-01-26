@@ -24,7 +24,7 @@ import peopleObjects.Member;
  */
 @Controller
 @RequestMapping("user")
-public class UserPresenter extends Project_Management_Presenter {
+public class MemberPresenter extends Project_Management_Presenter {
 
     public final static String urlDomain = "user/";
 
@@ -85,11 +85,11 @@ public class UserPresenter extends Project_Management_Presenter {
             String[] tsks = this.getMemberTasks(request.getParameter("idUser")).replaceAll(" ", "").split(",");
             try {
                 for (String g : gps) {
-                    groups.add(UserPresenter.model.getGroupInfos(g));
+                    groups.add(MemberPresenter.model.getGroupInfos(g));
                 }
 
                 for (String t : tsks) {
-                    tasks.add(UserPresenter.model.getInfosTask(Integer.parseInt(t.trim())));
+                    tasks.add(MemberPresenter.model.getInfosTask(Integer.parseInt(t.trim())));
                 }
             } catch (Exception ex) {
                 Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
@@ -103,7 +103,7 @@ public class UserPresenter extends Project_Management_Presenter {
             request.setAttribute("groupsTable", groups);
             request.setAttribute("tasksTable", tasks);
             this.fillAccordionMenu(token, mm);
-            return UserPresenter.urlDomain + "checkUser";
+            return MemberPresenter.urlDomain + "checkUser";
         } else {
             mm.addAttribute("errorMessage", "Vous n'êtes pas identifé.");
             return "error";
@@ -124,7 +124,7 @@ public class UserPresenter extends Project_Management_Presenter {
             mm.addAttribute("prenom", memb.getFirst_name());
             mm.addAttribute("mail", memb.getEmail());
             this.fillAccordionMenu(token, mm);
-            return UserPresenter.urlDomain + "updateProfileInfos";
+            return MemberPresenter.urlDomain + "updateProfileInfos";
         } else {
             mm.addAttribute("errorMessage", "Vous n'êtes pas identifé.");
             return "error";
@@ -213,7 +213,7 @@ public class UserPresenter extends Project_Management_Presenter {
                     + "<strong>Erreur Base de donnée.</strong></div>";
         }
         mm.addAttribute("alert", alertMess);
-        return UserPresenter.urlDomain + "listOfUser";
+        return MemberPresenter.urlDomain + "listOfUser";
     }
 
     /*
@@ -257,7 +257,7 @@ public class UserPresenter extends Project_Management_Presenter {
                     + "<strong>Erreur Base de donnée.</strong></div>";
         }
         mm.addAttribute("alert", alertMess);
-        return UserPresenter.urlDomain + "listOfUser";
+        return MemberPresenter.urlDomain + "listOfUser";
     }
 
     @RequestMapping(value = {"profileInfosUpdated"}, method = {RequestMethod.GET, RequestMethod.POST})
@@ -298,7 +298,7 @@ public class UserPresenter extends Project_Management_Presenter {
                     + "<strong>Erreur fatale.</strong></div>";
         }
         mm.addAttribute("alert", alertMess);
-        return UserPresenter.urlDomain + "listOfUser";
+        return MemberPresenter.urlDomain + "listOfUser";
     }
 
     public String fillFormUpUser(HttpServletRequest request, ModelMap modelMap, String token) {

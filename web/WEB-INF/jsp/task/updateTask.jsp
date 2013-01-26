@@ -71,7 +71,7 @@
             }
             
             function lookupM(input) {
-                Project_Management_Presenter_Intern_Methods.getDataFromDB('T_Membre', 'NOM', input, 'IDMEMBRE', callbackM);
+                Project_Management_Presenter_Intern_Methods.getDataFromDB('T_Membre', 'NOM', 'PRENOM',  input, 'IDMEMBRE', callbackM);
                 removeListM();
                 verifyBeforeSend();
             }

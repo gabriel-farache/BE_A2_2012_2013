@@ -73,6 +73,7 @@ public class Db_Request_Model implements User_Model_Interface, Group_Model_Inter
     @Override
     public ArrayList<String> addMembersGroup(List<String> membersID, String id_group) {
         ArrayList<String> affectationFailed = new ArrayList<String>();
+        Group g = this.getGroupInfos(id_group);
         for (String id_member : membersID) {
             try {
                 Db_Request_Model.idb.addAffectionGroup(id_member, "" + id_group, false);
@@ -81,6 +82,18 @@ public class Db_Request_Model implements User_Model_Interface, Group_Model_Inter
                 affectationFailed.add(id_member);
             }
         }
+        for (String id_Member : membersID) {
+            if (!affectationFailed.contains(id_Member)) {
+                try {
+                    Member user = this.getInfosMember(id_Member);
+                    SendEmail.sendEmail(user, "Affectation à un groupe", "Bonjour " + user.getFirst_name() + " " + user.getName()
+                            + ".\nVous venez d'être affecté au groupe de travail " + g.getGroup_name() + " (" + g.getId_group() + ")\n");
+                } catch (Exception ex) {
+                    Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+
         return (affectationFailed);
     }
 
@@ -94,12 +107,24 @@ public class Db_Request_Model implements User_Model_Interface, Group_Model_Inter
     @Override
     public ArrayList<String> deleteMembersGroup(List<String> membersID, String id_group) {
         ArrayList<String> affectationFailed = new ArrayList<String>();
+        Group g = this.getGroupInfos(id_group);
         for (String id_member : membersID) {
             try {
                 Db_Request_Model.idb.deleteMemberFromGroup(id_member, id_group);
             } catch (SQLException ex) {
                 Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
                 affectationFailed.add(id_member);
+            }
+        }
+        for (String id_Member : membersID) {
+            if (!affectationFailed.contains(id_Member)) {
+                try {
+                    Member user = this.getInfosMember(id_Member);
+                    SendEmail.sendEmail(user, "Retrait d'un groupe", "Bonjour " + user.getFirst_name() + " " + user.getName()
+                            + ".\nVous venez d'être retirer du groupe de travail " + g.getGroup_name() + " (" + g.getId_group() + ")\n");
+                } catch (Exception ex) {
+                    Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }
         return (affectationFailed);
@@ -114,15 +139,19 @@ public class Db_Request_Model implements User_Model_Interface, Group_Model_Inter
     @Override
     public Boolean createGroup(Group group) throws SQLException {
         Db_Request_Model.idb = InteractDB.getInstance();
-        int res;
+        ArrayList<Member> membersInGroup = group.getMembers();
         Db_Request_Model.idb.addGroup(group.getId_group(), group.getGroup_name(), group.getDescr());
 
         //ajoute le chef
         Db_Request_Model.idb.addAffectionGroup(group.getChief().getId_member(), group.getId_group(), true);
 
         //ajoute les membres
-        for (int i = 0; i < group.getMembers().size(); i++) {
-            Db_Request_Model.idb.addAffectionGroup(group.getMembers().get(i).getId_member(), group.getId_group(), false);
+        for (int i = 0; i < membersInGroup.size(); i++) {
+            Db_Request_Model.idb.addAffectionGroup(membersInGroup.get(i).getId_member(), group.getId_group(), false);
+            Member user = this.getInfosMember(membersInGroup.get(i).getId_member());
+
+            this.sendEmailToMember(user, "Affectation à un groupe", "Bonjour " + user.getFirst_name() + " " + user.getName()
+                    + ".\nVous venez d'être affecté au groupe de travail " + group.getGroup_name() + " (" + group.getId_group() + ")\n");
         }
 
         return (true);
@@ -156,11 +185,18 @@ public class Db_Request_Model implements User_Model_Interface, Group_Model_Inter
             Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
         }
         if (sucess != null) {
+
             task.setId(String.valueOf(sucess));
             //Adding task's members if they exist
             unfoundMembers += this.associateMembersWithTask(sucess, task, sender, members);
             //Adding task's groups if they exist
             unfoundGroups += this.associateGroupsWithTask(sucess, sender, groups);
+            for (String m : members) {
+                task.addRecipient(new Recipient(RecipientType.USER, m));
+            }
+            for (String g : groups) {
+                task.addRecipient(new Recipient(RecipientType.GROUP, g));
+            }
             //Sending a message to all task's members
             this.notifyMembersNewTask(task);
             if (unfoundMembers.compareTo("") == 0 && unfoundGroups.compareTo("") == 0) {
@@ -231,21 +267,28 @@ public class Db_Request_Model implements User_Model_Interface, Group_Model_Inter
 
     /**
      * Notify the members of the task that they are affected to it.
-     * @param task 
+     *
+     * @param task
      */
     private void notifyMembersNewTask(Task task) {
-        Member m = null;
+        Member m;
         for (Recipient r : task.getRecipients()) {
             try {
-                m = idb.getMemberInfos(r.getId());
+                if (!r.getType().equals(RecipientType.GROUP)) {
+                    m = idb.getMemberInfos(r.getId());
+                    this.sendEmailToMember(r.getId(), "Nouvelle tâche.", "Bonjour " + m.getFirst_name() + " " + m.getName()
+                            + "La tâche " + task.getTitle() + " a été rajouté au projet.\n");
+
+                } else {
+                    ArrayList<Member> members = idb.getGroupInfos(r.getId()).getMembers();
+                    for (Member mm : members) {
+                        this.sendEmailToMember(mm, "Nouvelle tâche.", "Bonjour " + mm.getFirst_name() + " " + mm.getName()
+                                + "La tâche " + task.getTitle() + " a été rajouté au projet.\n");
+                    }
+                }
+
             } catch (SQLException ex) {
                 Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            try {
-                SendEmail.sendEmail(m, "Nouvelle tâche.", "Bonjour " + m.getFirst_name() + " " + m.getName()
-                        + "La tâche " + task.getTitle() + " a été rajouté au projet.\n");
-            } catch (Exception ex) {
-                Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
             }
 
         }
@@ -283,12 +326,8 @@ public class Db_Request_Model implements User_Model_Interface, Group_Model_Inter
                 if (r.getType().compareTo(RecipientType.GROUP) != 0 && r.getType().compareTo(RecipientType.ALL) != 0) {
                     m = Db_Request_Model.idb.getMemberInfos(r.getId());
                     //ENVOYER UN MAIL 
-                    try {
-                        SendEmail.sendEmail(m, "Tâche supprimé.", "Bonjour " + m.getFirst_name() + " " + m.getName()
-                                + "La tâche " + id_Task + " a été supprimé du projet.\n");
-                    } catch (Exception ex) {
-                        Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                    this.sendEmailToMember(m, "Tâche supprimé.", "Bonjour " + m.getFirst_name() + " " + m.getName()
+                            + "La tâche " + id_Task + " a été supprimé du projet.\n");
                 }
             }
 
@@ -944,9 +983,30 @@ public class Db_Request_Model implements User_Model_Interface, Group_Model_Inter
         return ok;
 
     }
-    
-     public ArrayList<String> searchExprInTable(String table, String colName, String expr, String id)
-     {
-         return Db_Request_Model.idb.searchExprInTable(table, colName, expr, id);
-     }
+
+    public ArrayList<String> searchExprInTable(String table, String colName, String expr, String id) {
+        return Db_Request_Model.idb.searchExprInTable(table, colName, expr, id);
+    }
+
+    public ArrayList<String> searchExprInTable(String table, String colNameToSearch, String colNameDetail, String expr, String id) {
+        return Db_Request_Model.idb.searchExprInTable(table, colNameToSearch, colNameDetail, expr, id);
+    }
+
+    public void sendEmailToMember(String idMember, String messageBody, String messageSubject) {
+        try {
+            Member user = this.getInfosMember(idMember);
+            SendEmail.sendEmail(user, messageSubject, messageBody);
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void sendEmailToMember(Member member, String messageBody, String messageSubject) {
+        try {
+            Member user = member;
+            SendEmail.sendEmail(user, messageSubject, messageBody);
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 }

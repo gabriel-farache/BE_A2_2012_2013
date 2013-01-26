@@ -81,6 +81,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
                 } else {
                     ok = true;
                 }
+                
             }
             // implement here...
         } catch (SQLException ex) {
@@ -191,7 +192,6 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
                     //public Task(String id, String sender, String title, String creationDate, String content, String dueDate, String projectTopic, int budget, int consumed, int rae, TaskStatus status) {
 
                     task = new Task(null, sender, title, creationDate, content, dueDate, projectTopic, budget, consumed, rae, statut, sender);
-                    System.err.println("Error,      " + task.getStringDueDate());
                     if (!members.contains(sender)) {
                         members.add(sender);
                     }
@@ -941,6 +941,12 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
 
     public String[] getDataFromDB(String table, String colName, String input, String id) {
         ArrayList<String> searchResult = Project_Management_Presenter_Intern_Methods.model.searchExprInTable(table, colName, input, id);
+        String[] temp = searchResult == null ? new String[]{} : searchResult.toArray(new String[]{});
+        return temp;
+    }
+    
+    public String[] getDataFromDB(String table, String colNameToSearch, String colNameDetail, String input, String id) {
+        ArrayList<String> searchResult = Project_Management_Presenter_Intern_Methods.model.searchExprInTable(table, colNameToSearch,colNameDetail, input, id);
         String[] temp = searchResult == null ? new String[]{} : searchResult.toArray(new String[]{});
         return temp;
     }

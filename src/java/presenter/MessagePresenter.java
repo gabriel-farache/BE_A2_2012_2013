@@ -10,9 +10,9 @@ import dataObjects.MessageHeader;
 import dataObjects.MessageStatus;
 import dataObjects.Recipient;
 import dataObjects.RecipientType;
+import dataObjects.Task;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
@@ -20,6 +20,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import peopleObjects.Group;
+import peopleObjects.Member;
 
 /**
  *
@@ -77,13 +79,42 @@ public class MessagePresenter extends Project_Management_Presenter {
         try {
             Message mess = this.getMessageBody((String) request.getParameter("idMess"), token, (((String) request.getParameter("fromInbox")).compareToIgnoreCase("yes") == 0 ? true : false));
             if (request.getParameter("fwd") == null) {
-                m.addAttribute("recipient", mess.getSender());
+                Member memb = MessagePresenter.model.getInfosMember(mess.getSender());
+               String libMemb = "<span class=\"label label-info\" id=\"" + memb.getName() + " (" + memb.getId_member() + ")\" onclick=\"decoche('" + memb.getName() + " (" + memb.getId_member() + ")');\">" + memb.getName() + " (" + memb.getId_member() + ")"
+                                + "  <input type=\"checkbox\"  name=\"choixUtilsMChk\" id=\"" + memb.getName() + " (" + memb.getId_member() + ")_chk\" value=\"" + memb.getName() + " (" + memb.getId_member() + ")\" checked=true hidden></span>   ";
+                m.addAttribute("utilsM", libMemb);
                 m.addAttribute("title", "Réponse au message : " + mess.getTitle());
                 m.addAttribute("message", "\n\n------- Message original envoyé le " + mess.getStringCreationDate() + " -------\n" + mess.getContent());
             } else {
                 this.updateMessageStatus(token, (String) request.getParameter("idMess"), MessageStatus.FORWARDED, true);
                 m.addAttribute("title", "Fwd : " + mess.getTitle());
-                m.addAttribute("message", "\n\n------- Message original envoyé le " + mess.getStringCreationDate() + " par "+mess.getSender()+" -------\n" + mess.getContent());
+                m.addAttribute("message", "\n\n------- Message original envoyé le " + mess.getStringCreationDate() + " par " + mess.getSender() + " -------\n" + mess.getContent());
+            }
+        } catch (Exception e) {
+        }
+        try {
+            if (request.getParameter("fromTask") != null) {
+                String idTask = request.getParameter("idTask");
+                Task t = MessagePresenter.model.getInfosTask(Integer.parseInt(idTask));
+                String libMemb = "";
+                String libGps = "";
+                Group g;
+                Member memb;
+      
+                for (Recipient r : t.getRecipients()) {
+                    if (!r.getType().equals(RecipientType.GROUP)) {
+                        memb = MessagePresenter.model.getInfosMember(r.getId());
+                        libMemb += "<span class=\"label label-info\" id=\"" + memb.getName() + " (" + memb.getId_member() + ")\" onclick=\"decoche('" + memb.getName() + " (" + memb.getId_member() + ")');\">" + memb.getName() + " (" + memb.getId_member() + ")"
+                                + "  <input type=\"checkbox\"  name=\"choixUtilsMChk\" id=\"" + memb.getName() + " (" + memb.getId_member() + ")_chk\" value=\"" + memb.getName() + " (" + memb.getId_member() + ")\" checked=true hidden></span>   ";
+                    } else {
+                        g = MessagePresenter.model.getGroupInfos(r.getId());
+                        libGps += "<span class=\"label label-info\" id=\"" + g.getGroup_name() + " (" + g.getId_group() + ")\" onclick=\"decoche('" + g.getGroup_name() + " (" + g.getId_group() + ")');\">" + g.getGroup_name() + " (" + g.getId_group() + ")"
+                                + "  <input type=\"checkbox\"  name=\"choixUtilsGChk\" id=\"" + g.getGroup_name() + " (" + g.getId_group() + ")_chk\" value=\"" + g.getGroup_name() + " (" + g.getId_group() + ")\" checked=true  hidden></span>   ";
+                    }
+                }
+                m.addAttribute("utilsM", libMemb);
+                m.addAttribute("utilsG", libGps);
+                m.addAttribute("title", "Message à propos de la tâche : " + t.getTitle() + " (" + idTask + ").");
             }
         } catch (Exception e) {
         }
@@ -150,17 +181,23 @@ public class MessagePresenter extends Project_Management_Presenter {
             title = title.substring(0, (title.length() > 50 ? 49 : title.length()));
             String message = request.getParameter("saisieMessage");
             String[] cheminsPj = request.getParameterValues("choisirPieceJointe");
-            String memberss[] = request.getParameter("saisieUtilisateurDestinataire").replaceAll(" ", "").split(",");
-            String groups[] = request.getParameter("saisieGroupeDestinataire").replaceAll(" ", "").split(",");
-
+            //Récupération des utilisateurs et des groupes
             ArrayList<String> members = new ArrayList<String>();
+            //Collections.addAll(members, allParams.get("selectUtilisateur"));
+            ArrayList<String> groups = new ArrayList<String>();
+            String[] memberss = request.getParameterValues("choixUtilsMChk");
+            String[] groupss = request.getParameterValues("choixUtilsGChk");
 
-            Collections.addAll(members, memberss);
+            for (String s : memberss) {
+                members.add((s.split("[(]")[1].split("[)]")[0]).trim());
+            }
+
+            for (String s : groupss) {
+                groups.add((s.split("[(]")[1].split("[)]")[0]).trim());
+            }
             String idSender = Project_Management_Presenter.model.isValidToken(token);
             System.err.println("interceptMessageToCreate       " + token + " ---  " + idSender);
 
-            ArrayList<String> groupsL = new ArrayList<String>();
-            Collections.addAll(groupsL, groups);
             //Use ManageAttachments qui upload les fichiers
             //Creation des Attachments(nom,nom)
             ArrayList<Attachment> pj = new ArrayList<Attachment>();
@@ -169,7 +206,7 @@ public class MessagePresenter extends Project_Management_Presenter {
                     pj.add(new Attachment(cheminsPj[i], cheminsPj[i]));//pj stockée sous ce nom a cette adresse
                 }
             }
-            if (!this.saveMessage(idSender, groupsL, members, title, message, null, pj, token)) {
+            if (!this.saveMessage(idSender, groups, members, title, message, null, pj, token)) {
                 alertMess = "<div class=\"alert alert-error\">"
                         + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
                         + "<strong>Envoi du message \"" + title + " échoué au niveau de l'envoi au(x) destinataire(s) groupes ! </strong></div>";

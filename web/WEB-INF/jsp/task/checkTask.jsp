@@ -257,6 +257,9 @@
                     </div>
                     <div class="row-fluid"> 
                         ${alert}
+                        <div class="span1 pull-right">
+                            <a href="<c:url value="/message/createMessage?fromTask=yes&idTask=${idTask}"/>" class="btn  btn-success" type="submit"/>Envoyer un message aux membres</a>
+                        </div>
                         <fieldset>
                             <legend for="mb" class="rubrique">Membre(s)</legend>
                             <display:table class="table table-hover" id="rowUser" name="usersTable" defaultsort="2" defaultorder="descending" pagesize="20" requestURI="">
@@ -315,6 +318,7 @@
                             <legend for="rae" class="rubrique">RAE</legend>
                             <label type="text" for="rae">${rae}</label>
                         </fieldset>
+
 
                         <% if (session.getAttribute("isAdmin") != null) {%> 
                         <div class="span1 pull-right">

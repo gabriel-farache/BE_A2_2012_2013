@@ -2145,4 +2145,20 @@ public class InteractDB {
             return null;
         }
     }
+    
+    public ArrayList<String> searchExprInTable(String table, String colNameToSearch, String colNameDetail, String expr, String id) {
+        try {
+            ArrayList<String> result = new ArrayList<String>();
+            String req = "SELECT DISTINCT " + colNameToSearch + " as " + colNameToSearch + ", " + id + " as " + id + ", "+ colNameDetail + " as " + colNameDetail + " FROM APP." + table + " WHERE upper(" + colNameToSearch + ") LIKE upper('" + expr + "%')";
+            ResultSet donnees = this.doRequest(req, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
+
+            while (donnees.next()) {
+                result.add(donnees.getString(colNameToSearch) + " "+donnees.getString(colNameDetail)+" (" + donnees.getString(id) + ")");
+            }
+            return result;
+        } catch (SQLException ex) {
+            Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+    }
 }
