@@ -87,6 +87,8 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </a>
+                    <img class="brand pull-left" src="<c:url value="/resources/images/phare.jpg"/>"/>
+                    <img class="pull-right brandRight" src="<c:url value="/resources/images/hache.jpg"/>"/>
                     <a class="brand pull-left" href="#">PESO</a>
                     <div class="nav-collapse collapse">
                         <ul class="nav">
@@ -102,7 +104,7 @@
                             <li class="dropdown">
                                 <a id="drop2" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Messagerie <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/message/inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess"></b></span></a></li> 
+                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/message/inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess"></b></span></a></li> 
                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/message/createMessage">Envoyer un message</a></li>
                                 </ul>
                             </li>
@@ -148,6 +150,7 @@
                             </li>
                         </ul>
 
+
                     </div><!--/.nav-collapse -->
                 </div>
             </div>
@@ -162,6 +165,7 @@
                 <input type="password" class="input-block-level" placeholder="Password" id="pass" name="pass">
                 <button class="btn btn-large btn-primary" type="submit">Se connecter</button>
             </form>
+
 
         </div> <!-- /container -->
 

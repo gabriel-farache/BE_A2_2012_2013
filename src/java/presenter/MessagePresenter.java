@@ -80,8 +80,8 @@ public class MessagePresenter extends Project_Management_Presenter {
             Message mess = this.getMessageBody((String) request.getParameter("idMess"), token, (((String) request.getParameter("fromInbox")).compareToIgnoreCase("yes") == 0 ? true : false));
             if (request.getParameter("fwd") == null) {
                 Member memb = MessagePresenter.model.getInfosMember(mess.getSender());
-               String libMemb = "<span class=\"label label-info\" id=\"" + memb.getName() + " (" + memb.getId_member() + ")\" onclick=\"decoche('" + memb.getName() + " (" + memb.getId_member() + ")');\">" + memb.getName() + " (" + memb.getId_member() + ")"
-                                + "  <input type=\"checkbox\"  name=\"choixUtilsMChk\" id=\"" + memb.getName() + " (" + memb.getId_member() + ")_chk\" value=\"" + memb.getName() + " (" + memb.getId_member() + ")\" checked=true hidden></span>   ";
+                String libMemb = "<span class=\"label label-info\" id=\"" + memb.getName() + " (" + memb.getId_member() + ")\" onclick=\"decoche('" + memb.getName() + " (" + memb.getId_member() + ")');\">" + memb.getName() + " (" + memb.getId_member() + ")"
+                        + "  <input type=\"checkbox\"  name=\"choixUtilsMChk\" id=\"" + memb.getName() + " (" + memb.getId_member() + ")_chk\" value=\"" + memb.getName() + " (" + memb.getId_member() + ")\" checked=true hidden></span>   ";
                 m.addAttribute("utilsM", libMemb);
                 m.addAttribute("title", "Réponse au message : " + mess.getTitle());
                 m.addAttribute("message", "\n\n------- Message original envoyé le " + mess.getStringCreationDate() + " -------\n" + mess.getContent());
@@ -100,7 +100,7 @@ public class MessagePresenter extends Project_Management_Presenter {
                 String libGps = "";
                 Group g;
                 Member memb;
-      
+
                 for (Recipient r : t.getRecipients()) {
                     if (!r.getType().equals(RecipientType.GROUP)) {
                         memb = MessagePresenter.model.getInfosMember(r.getId());
@@ -172,14 +172,14 @@ public class MessagePresenter extends Project_Management_Presenter {
     public String interceptMessageToCreate(HttpServletRequest request, ModelMap m) {
         //Récupération du token de la session
         String token = this.getTokenSession(request.getSession(), m);
-        String alertMess = "<div class=\"alert alert-success\">"
+        String alertMess = "<div class=\"alert alert-error\">"
                 + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
                 + "<strong>Erreur fatale ! </strong></div>";
         try {
-            //IL FAUT RECUPERER LES GROUPES AUSSI !!!!
             String title = request.getParameter("titreMessage");
             title = title.substring(0, (title.length() > 50 ? 49 : title.length()));
             String message = request.getParameter("saisieMessage");
+            message = message == null ? "" : message;
             String[] cheminsPj = request.getParameterValues("choisirPieceJointe");
             //Récupération des utilisateurs et des groupes
             ArrayList<String> members = new ArrayList<String>();
@@ -187,13 +187,19 @@ public class MessagePresenter extends Project_Management_Presenter {
             ArrayList<String> groups = new ArrayList<String>();
             String[] memberss = request.getParameterValues("choixUtilsMChk");
             String[] groupss = request.getParameterValues("choixUtilsGChk");
-
-            for (String s : memberss) {
-                members.add((s.split("[(]")[1].split("[)]")[0]).trim());
+            if (memberss != null) {
+                for (String s : memberss) {
+                    members.add((s.split("[(]")[1].split("[)]")[0]).trim());
+                }
+            } else {
+                members.add("");
             }
-
-            for (String s : groupss) {
-                groups.add((s.split("[(]")[1].split("[)]")[0]).trim());
+            if (groupss != null) {
+                for (String s : groupss) {
+                    groups.add((s.split("[(]")[1].split("[)]")[0]).trim());
+                }
+            } else {
+                groups.add("");
             }
             String idSender = Project_Management_Presenter.model.isValidToken(token);
             System.err.println("interceptMessageToCreate       " + token + " ---  " + idSender);

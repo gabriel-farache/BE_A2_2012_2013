@@ -175,7 +175,7 @@
                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/task/listOfTasks">Toutes les t&acirc;ches</a></li>
                                     <li class="divider"></li>
                                     <% if (session.getAttribute("isAdmin") != null) {%>                                                                             
-                                    <li><a tabindex="-1" href="task/createTask">Cr&eacute;er une nouvelle t&acirc;che</a></li>
+                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/task/createTask">Cr&eacute;er une nouvelle t&acirc;che</a></li>
                                     <% }%>
                                 </ul>
                             </li>

@@ -257,7 +257,7 @@
                     </div>
                     <div class="row-fluid"> 
                         ${alert}
-                        <div class="span1 pull-right">
+                        <div class="pull-right">
                             <a href="<c:url value="/message/createMessage?fromTask=yes&idTask=${idTask}"/>" class="btn  btn-success" type="submit"/>Envoyer un message aux membres</a>
                         </div>
                         <fieldset>

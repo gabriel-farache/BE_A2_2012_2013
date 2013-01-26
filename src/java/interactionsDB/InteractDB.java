@@ -19,7 +19,7 @@ import peopleObjects.*;
  *
  * @author gabriel
  */
-public class InteractDB {
+public class InteractDB implements InteractDB_Interface {
 
     protected static java.sql.Connection connexion;
     private static Integer nextIDTask;
@@ -123,6 +123,7 @@ public class InteractDB {
      * @return 1 : Success, != 1 error
      * @throws SQLException
      */
+    @Override
     public int addMember(String id, String nom, String prenom, String email, String hash, boolean isAdmin) throws SQLException {
         String addMemberRequest = "INSERT INTO APP.T_Membre (idMembre, nom, prenom, email, motDePasse,isAdmin) "
                 + "VALUES ('" + id.trim() + "', '" + nom.trim() + "', '" + prenom.trim() + "', '" + email.trim() + "', '" + hash.trim() + "', '" + (isAdmin ? 'Y' : 'N') + "' )";
@@ -138,6 +139,7 @@ public class InteractDB {
      * @return 1 : Success, != 1 error
      * @throws SQLException
      */
+    @Override
     public int addGroup(String id, String nom, String description) throws SQLException {
         String addGroupRequest = "INSERT INTO APP.T_Groupe (idGroupe, nom, description) "
                 + "VALUES ('" + id.trim() + "', '" + nom.trim() + "', '" + description.trim() + "')";
@@ -154,6 +156,7 @@ public class InteractDB {
      * @return 1 : Success, != 1 error
      * @throws SQLException
      */
+    @Override
     public int addAffectionGroup(String idPersonne, String idGroupe, boolean isChefProjet) throws SQLException {
         String addGroupRequest = "INSERT INTO APP.T_AffectationGroupe (idPersonne,idGroupe,isChefProjet) "
                 + "VALUES ('" + idPersonne.trim() + "', '" + idGroupe.trim() + "', '" + ((isChefProjet) ? 'Y' : 'N') + "')";
@@ -176,40 +179,16 @@ public class InteractDB {
      * @return null error, else ID of the task newly inserted in the DB
      * @throws SQLException, Exception
      */
+    @Override
     public Integer addTask(String titre, String description, String topicProjet, java.util.Date dateDebut, java.util.Date dateFin, TaskStatus statut, float budget, float consomme, float rae) throws SQLException, Exception {
-        if (dateDebut.compareTo(dateFin) < 0) {
+        if (!dateDebut.after(dateFin)) {
             Integer idT;
             String addTaskRequest;
-            String ddebut = (dateDebut.getYear() + 1900) + "-"
-                    + ((dateDebut.getMonth() + 1) < 10 ? "0" : "")
-                    + (dateDebut.getMonth() + 1) + "-"
-                    + (dateDebut.getDate() < 10 ? "0" : "")
-                    + dateDebut.getDate() + " "
-                    + (dateDebut.getHours() < 10 ? "0" : "")
-                    + dateDebut.getHours() + ":"
-                    + (dateDebut.getMinutes() < 10 ? "0" : "")
-                    + dateDebut.getMinutes() + ":00";
+            String ddebut = this.formatStringAsTimestamp(dateDebut);
 
-            String dfin = (dateFin.getYear() + 1900) + "-"
-                    + ((dateFin.getMonth() + 1) < 10 ? "0" : "")
-                    + (dateFin.getMonth() + 1) + "-"
-                    + (dateFin.getDate() < 10 ? "0" : "")
-                    + dateFin.getDate() + " "
-                    + (dateFin.getHours() < 10 ? "0" : "")
-                    + dateFin.getHours() + ":"
-                    + (dateFin.getMinutes() < 10 ? "0" : "")
-                    + dateFin.getMinutes() + ":00";
+            String dfin = this.formatStringAsTimestamp(dateFin);
 
-            java.util.Date dcrea = new java.util.Date(((java.util.Calendar.getInstance()).getTime()).getTime());
-            String dcreat = (dcrea.getYear() + 1900) + "-"
-                    + ((dcrea.getMonth() + 1) < 10 ? "0" : "")
-                    + (dcrea.getMonth() + 1) + "-"
-                    + (dcrea.getDate() < 10 ? "0" : "")
-                    + dcrea.getDate() + " "
-                    + (dcrea.getHours() < 10 ? "0" : "")
-                    + dcrea.getHours() + ":"
-                    + (dcrea.getMinutes() < 10 ? "0" : "")
-                    + dcrea.getMinutes() + ":00";
+            String dcreat = this.formatStringAsTimestamp(new java.util.Date(((java.util.Calendar.getInstance()).getTime()).getTime()));
             synchronized (InteractDB.nextIDTask) {
                 // traitement du cas dateDebut < dateFin
                 addTaskRequest = "INSERT INTO APP.T_Tache (idTache, titre, description, topicProjet, dateCreation, "
@@ -222,6 +201,24 @@ public class InteractDB {
         } else {
             throw new Exception("Date debut après date fin : debut : " + dateDebut + " fin : " + dateFin);
         }
+    }
+
+    /**
+     * Generates a string which represents a date in derby timestamp
+     *
+     * @param date The date to format
+     * @return A string which represents a date in derby timestamp
+     */
+    private String formatStringAsTimestamp(java.util.Date date) {
+        return ((date.getYear() + 1900) + "-"
+                + ((date.getMonth() + 1) < 10 ? "0" : "")
+                + (date.getMonth() + 1) + "-"
+                + (date.getDate() < 10 ? "0" : "")
+                + date.getDate() + " "
+                + (date.getHours() < 10 ? "0" : "")
+                + date.getHours() + ":"
+                + (date.getMinutes() < 10 ? "0" : "")
+                + date.getMinutes() + ":00");
     }
 
     /**
@@ -239,14 +236,18 @@ public class InteractDB {
      * @return null error, else ID of the task newly inserted in the DB
      * @throws SQLException, Exception
      */
+    @Override
     public Integer addTaskAndAssociate(Task t) throws SQLException, Exception {
+        //ajouter la tache dans la BDD et récupérer le code de retour (si == 1 ok)
         int i = this.addTask(t.getTitle(), t.getContent(),
                 t.getProjectTopic(), new java.util.Date(t.getCreationDate().getTimeInMillis()),
                 new java.util.Date(t.getDueDate().getTimeInMillis()), TaskStatus.OPEN,
                 t.getBudget(), t.getConsumed(), t.getRae());
 
+        //Pour tous les destinataires, les affecter à la tâche
         for (Recipient r : t.getRecipients()) {
             if (r.getType().equals(RecipientType.GROUP)) {
+                //Si c'est un groupe, associé ses membres à la tâches
                 this.addSendTaskToGroup(t.getSender().trim(), r.getId(), Integer.parseInt(t.getId().trim()));
                 ArrayList<String> members = this.getMembersGroup(r.getId());
                 for (String member : members) {
@@ -277,6 +278,7 @@ public class InteractDB {
      * @return 1 : Success, != 1 error
      * @throws SQLException
      */
+    @Override
     public int addSendAttachmentToTask(Attachment att, int idTache) throws SQLException {
         String rqst = "INSERT INTO APP.T_FichierJointTache (idPJTache, idTache, nomFichier) "
                 + "VALUES ( DEFAULT, " + idTache + ", '" + att.getName().trim() + "')";
@@ -292,6 +294,7 @@ public class InteractDB {
      * @return 1 : Success, != 1 error
      * @throws SQLException
      */
+    @Override
     public int addSendTaskToMember(String idPersonneSource, String idPersonneDestination, int idTache, RecipientType typeRept, boolean isChefProjet) throws SQLException {
         String rqst;
         if (this.taskIsAssociatedWithMember(idTache, idPersonneDestination)) {
@@ -314,6 +317,7 @@ public class InteractDB {
      * @return 1 : Success, != 1 error, 1991 : group not exists
      * @throws SQLException
      */
+    @Override
     public int addSendTaskToGroup(String idPersonneSource, String idGroupeDestination, int idTache) throws SQLException {
 
         int ret = 1991;
@@ -338,6 +342,7 @@ public class InteractDB {
      * @return 1 : Success, != 1 error, 1991 : group not exists
      * @throws SQLException
      */
+    @Override
     public int addSendTaskToGroupAndAssociateToMembers(String idPersonneSource, String idGroupeDestination, int idTache) throws SQLException {
 
         int ret = 1991;
@@ -353,6 +358,7 @@ public class InteractDB {
             } catch (SQLException e) {
             }
             if (membres != null) {
+                //Associer les membres du groupes à la tâche
                 for (String id_membre : membres) {
                     if (!this.taskIsAssociatedWithMember(idTache, id_membre)) {
                         ret = (this.addSendTaskToMember(idPersonneSource, id_membre, idTache, RecipientType.USER_IN_GROUP, (id_membre.compareToIgnoreCase(this.getGroupInfos(idGroupeDestination).getChief().getId_member()) == 0 ? true : false)) == 1 && ret == 1 ? 1 : 0);
@@ -373,22 +379,14 @@ public class InteractDB {
      * @return null error, else ID of the message newly inserted in the DB
      * @throws SQLException
      */
+    @Override
     public Integer addMessage(String objet, java.util.Date date, String contenu) throws SQLException {
         Integer idM;
         String addMemberRequest;
         synchronized (InteractDB.nextIDMessage) {
             // traitement du cas dateDebut < dateFin
             System.err.print(date);
-            String dcreat = (date.getYear() + 1900) + "-"
-                    + ((date.getMonth() + 1) < 10 ? "0" : "")
-                    + (date.getMonth() + 1) + "-"
-                    + (date.getDate() < 10 ? "0" : "")
-                    + date.getDate() + " "
-                    + (date.getHours() < 10 ? "0" : "")
-                    + date.getHours() + ":"
-                    + (date.getMinutes() < 10 ? "0" : "")
-                    + date.getMinutes() + ":00";
-            System.err.print(dcreat);
+            String dcreat = this.formatStringAsTimestamp(date);
             addMemberRequest = "INSERT INTO APP.T_Message (idMessage, objet, date, contenu) "
                     + "VALUES (" + InteractDB.nextIDMessage + ", '" + objet.trim() + "',  TIMESTAMP('" + dcreat + "'), '" + contenu.trim() + "' )";
             idM = InteractDB.nextIDMessage++;
@@ -404,6 +402,7 @@ public class InteractDB {
      * @return 1 : Success, != 1 error
      * @throws SQLException
      */
+    @Override
     public int addAttachedFileToMessage(int idMessage, Attachment att) throws SQLException {
         String addMemberRequest = "INSERT INTO APP.T_FichierJointMessage (idPJMessage, idMessage, nomFichier) "
                 + "VALUES ( DEFAULT, " + idMessage + ",  '" + att.getName().trim() + "')";
@@ -422,12 +421,13 @@ public class InteractDB {
      * @throws SQLException
      */
     // typeDestinataire : 'User', 'User_in_group'
+    @Override
     public int addSendMessageToMember(String idPersonneSource, String idPersonneDestination, int idMessage, RecipientType typeDestinataire) throws SQLException {
         if (typeDestinataire.equals(RecipientType.USER) || typeDestinataire.equals(RecipientType.USER_IN_GROUP)) {
             if (!this.messageIsAssociatedWithMember(idMessage, idPersonneDestination)) {
+                //Envoyer les message
                 String addSendMessageToMemberRequest = "INSERT INTO APP.T_EnvoiMessageMembre (idPersonneSource, idPersonneDestination, idMessage, typeDestinataire) "
                         + "VALUES ( '" + idPersonneSource.trim() + "', '" + idPersonneDestination.trim() + "', " + idMessage + ", '" + typeDestinataire + "')";
-
                 return doModif(addSendMessageToMemberRequest, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE);
             } else {
                 return 1;
@@ -447,12 +447,13 @@ public class InteractDB {
      * @return 1 : Success, != 1 error, 1991 : association already exists
      * @throws SQLException
      */
+    @Override
     public int addSendMessageToGroup(String idPersonneSource, String idGroupDestination, int idMessage) throws SQLException {
         int ret = 1991;
         if (!this.messageIsAssociatedWithGroup(idMessage, idGroupDestination)) {
+            //envoyer le message au groupe
             String addSendMessageToGroupRequest = "INSERT INTO APP.T_EnvoiMessageGroupe (idPersonneSource, idGroupeDestination, idMessage, typeDestinataire) "
                     + "VALUES ( '" + idPersonneSource.trim() + "', '" + idGroupDestination.trim() + "', " + idMessage + ", 'GROUP')";
-
             ret = doModif(addSendMessageToGroupRequest, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE);
         }
         return ret;
@@ -469,10 +470,12 @@ public class InteractDB {
      * @return 1 : Success, != 1 error, 1991 : group id not exists
      * @throws SQLException
      */
+    @Override
     public int addSendMessageToGroupAndAssociateToMembers(String idPersonneSource, String idGroupDestination, int idMessage) throws SQLException {
         int ret = 1991;
 
         if (this.checkIDGroupExists(idGroupDestination)) {
+            //envoyer le message au groupe
             String addSendMessageToGroupRequest = "INSERT INTO APP.T_EnvoiMessageGroupe (idPersonneSource, idGroupeDestination, idMessage, typeDestinataire) "
                     + "VALUES ( '" + idPersonneSource.trim() + "', '" + idGroupDestination.trim() + "', " + idMessage + ", 'GROUP')";
             ArrayList<String> membres = null;
@@ -483,6 +486,7 @@ public class InteractDB {
             } catch (SQLException e) {
             }
             if (membres != null) {
+                //Envoyer le messages aux membres du groupe
                 for (String id_membre : membres) {
                     ret = (this.addSendMessageToMember(idPersonneSource, id_membre, idMessage, RecipientType.USER_IN_GROUP) == 1 && ret == 1 ? 1 : 0);
                 }
@@ -499,18 +503,17 @@ public class InteractDB {
      * @return The members in the group
      * @throws SQLException
      */
+    @Override
     public ArrayList<String> getMembersGroup(String id_group) throws SQLException {
         ArrayList<String> membersInGroup = new ArrayList<String>();
         String request = "SELECT ag.idPersonne as idPersonne "
                 + "FROM APP.T_AffectationGroupe ag "
                 + "WHERE ag.idGroupe = '" + id_group.trim() + "' ";
-
         ResultSet donnees = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
-
+        //Pour tous les membres du groupes, ajouter leur ID à la liste
         while (donnees.next()) {
             membersInGroup.add(donnees.getString("idPersonne"));
         }
-
         return membersInGroup;
     }
 
@@ -520,15 +523,16 @@ public class InteractDB {
      * @return All the groups headers
      * @throws SQLException
      */
+    @Override
     public ArrayList<GroupHeader> getGroupsHeaderData() throws SQLException {
         String request = "SELECT g.nom as nom, g.idGroupe as idGroupe, g.description as description FROM APP.T_Groupe g";
         ResultSet donnees = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
         ArrayList<GroupHeader> groupsHeader = new ArrayList<GroupHeader>();
 
+        //Créer les headers des différents groupes
         while (donnees.next()) {
             groupsHeader.add(new GroupHeader(donnees.getString("idGroupe"), donnees.getString("nom"), donnees.getString("description")));
         }
-
         return (groupsHeader);
     }
 
@@ -539,6 +543,7 @@ public class InteractDB {
      * @return The group that has the given ID
      * @throws SQLException
      */
+    @Override
     public Group getGroupInfos(String id_group) throws SQLException {
         String request = "SELECT DISTINCT af.isChefProjet as isChefProj, g.description as description, g.nom as Gnom, g.idGroupe as idGroupe, m.idMembre as idMembre, m.nom as Mnom, m.prenom as Mprenom, m.email as Memail "
                 + "FROM APP.T_Groupe g, APP.T_AffectationGroupe af, APP.T_Membre m "
@@ -552,15 +557,14 @@ public class InteractDB {
         Member chef = null;
         ArrayList<Member> membres = new ArrayList<Member>();
 
+        //Récupérer et insérer les informations du groupe dans un objet Group
         while (donnees.next()) {
-
             if (nom_group == null) {
                 nom_group = donnees.getString("gnom");
             }
             if (description == null) {
                 description = donnees.getString("description");
             }
-
             membres.add(new Member(donnees.getString("idMembre"), donnees.getString("Mnom"), donnees.getString("Mprenom"), donnees.getString("Memail")));
 
             if (donnees.getString("isChefProj").compareTo("Y") == 0) {
@@ -569,7 +573,6 @@ public class InteractDB {
         }
 
         group = new Group(id_group, nom_group, membres, chef, description);
-
 
         return (group);
     }
@@ -581,17 +584,16 @@ public class InteractDB {
      * @return The member that has the given ID
      * @throws SQLException
      */
+    @Override
     public Member getMemberInfos(String id_membre) throws SQLException {
         String request = "SELECT m.idMembre as idMembre, m.nom as Mnom, m.prenom as Mprenom, m.email as Memail "
                 + "FROM APP.T_Membre m "
                 + "WHERE m.idMembre = '" + id_membre.trim() + "' ";
         ResultSet donnees = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
         Member membre;
-
+        //Récupérer les infos du membre et le créer
         donnees.first();
         membre = new Member(donnees.getString("idMembre"), donnees.getString("Mnom"), donnees.getString("Mprenom"), donnees.getString("Memail"));
-
-
         return (membre);
     }
 
@@ -601,6 +603,7 @@ public class InteractDB {
      * @return All the members store in the DB
      * @throws SQLException
      */
+    @Override
     public ArrayList<Member> getAllMembers() throws SQLException {
         String request = "SELECT m.idMembre as idMembre, m.nom as Mnom, m.prenom as Mprenom, m.email as Memail "
                 + "FROM APP.T_Membre m ";
@@ -608,7 +611,6 @@ public class InteractDB {
         ArrayList<Member> membres = new ArrayList<Member>();
 
         while (donnees.next()) {
-
             membres.add(new Member(donnees.getString("idMembre"), donnees.getString("Mnom"), donnees.getString("Mprenom"), donnees.getString("Memail")));
         }
         return (membres);
@@ -620,6 +622,7 @@ public class InteractDB {
      * @return All tasks headers store in the DB
      * @throws SQLException
      */
+    @Override
     public ArrayList<TaskHeader> getTasksHeaders() throws SQLException {
         ArrayList<TaskHeader> tasksHeaders = new ArrayList<TaskHeader>();
         String request = "SELECT DISTINCT e.idPersonneSource as idPersonneSource, t.idTache as idTache, t.titre as titre, t.dateDebut as dateDebut, t.dateFin as dateFin, t.topicProjet as topicProjet, t.statut as statut "
@@ -627,24 +630,9 @@ public class InteractDB {
                 + "WHERE e.idTache = t.idTache "
                 + "ORDER BY t.statut DESC";
         ResultSet donnees = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
-        String statut;
-        TaskStatus status;
-        TaskHeader taskHeader;
+
         while (donnees.next()) {
-            statut = donnees.getString("statut");
-            if (statut.compareToIgnoreCase("OPEN") == 0) {
-                status = TaskStatus.OPEN;
-            } else if (statut.compareToIgnoreCase("CLOSED") == 0) {
-                status = TaskStatus.CLOSED;
-            } else {
-                status = TaskStatus.URGENT;
-            }
-            taskHeader = new TaskHeader(donnees.getString("idTache"), donnees.getString("titre"), donnees.getString("idPersonneSource"), donnees.getString("dateDebut"), true, donnees.getString("topicProjet"), donnees.getString("dateFin"), status);
-            System.err.println("------------       " + taskHeader.getStringCreationDate() + " to " + taskHeader.getStringDueDate() + " --- " + donnees.getString("dateFin"));
-            taskHeader.setHasAttachments(this.taskHasAttachement(Integer.parseInt(taskHeader.getId())));
-
-            tasksHeaders.add(taskHeader);
-
+            tasksHeaders.add(this.parseInfoTaskHeader(donnees));
         }
 
         return tasksHeaders;
@@ -657,6 +645,7 @@ public class InteractDB {
      * @return All tasks headers store in the DB for this member
      * @throws SQLException
      */
+    @Override
     public ArrayList<TaskHeader> getTasksHeaders(String id_member) throws SQLException {
         ArrayList<TaskHeader> tasksHeaders = new ArrayList<TaskHeader>();
         String request = "SELECT e.idPersonneSource as idPersonneSource, t.idTache as idTache, t.titre as titre, t.dateCreation as dateCreation, t.dateFin as dateFin, t.topicProjet as topicProjet, t.statut as statut "
@@ -665,27 +654,39 @@ public class InteractDB {
                 + "AND e.idTache = t.idTache "
                 + "ORDER BY t.statut DESC";
         ResultSet donnees = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
-        String statut;
-        TaskStatus status;
-        TaskHeader taskHeader;
+
         while (donnees.next()) {
-            statut = donnees.getString("statut");
-            if (statut.compareToIgnoreCase("OPEN") == 0) {
-                status = TaskStatus.OPEN;
-            } else if (statut.compareToIgnoreCase("CLOSED") == 0) {
-                status = TaskStatus.CLOSED;
-            } else {
-                status = TaskStatus.URGENT;
-            }
-            taskHeader = new TaskHeader(donnees.getString("idTache"), donnees.getString("titre"), donnees.getString("idPersonneSource"), donnees.getString("dateCreation"), true, donnees.getString("topicProjet"), donnees.getString("dateFin"), status);
-
-            taskHeader.setHasAttachments(this.taskHasAttachement(Integer.parseInt(taskHeader.getId())));
-
-            tasksHeaders.add(taskHeader);
-
+            tasksHeaders.add(this.parseInfoTaskHeader(donnees));
         }
 
         return tasksHeaders;
+    }
+
+    /**
+     * Parses the informations of a task given by a ResultSet and add them to a
+     * TaskHeader
+     *
+     * @param donnees The ResultSet in which gets the informations
+     * @return The TaskHeader of in the current cursor position
+     * @throws SQLException
+     */
+    private TaskHeader parseInfoTaskHeader(ResultSet donnees) throws SQLException {
+        TaskStatus status;
+        TaskHeader taskHeader;
+        String statut = donnees.getString("statut");
+
+        if (statut.compareToIgnoreCase("OPEN") == 0) {
+            status = TaskStatus.OPEN;
+        } else if (statut.compareToIgnoreCase("CLOSED") == 0) {
+            status = TaskStatus.CLOSED;
+        } else {
+            status = TaskStatus.URGENT;
+        }
+        //Créer la tâche avec les infos récupérés
+        taskHeader = new TaskHeader(donnees.getString("idTache"), donnees.getString("titre"), donnees.getString("idPersonneSource"), donnees.getString("dateCreation"), true, donnees.getString("topicProjet"), donnees.getString("dateFin"), status);
+        taskHeader.setHasAttachments(this.taskHasAttachement(Integer.parseInt(taskHeader.getId())));
+
+        return taskHeader;
     }
 
     /**
@@ -695,6 +696,7 @@ public class InteractDB {
      * @return The task associate with the given ID
      * @throws SQLException
      */
+    @Override
     public Task getTask(int id_tache) throws SQLException {
         //récupérer les infos propres de la taches
         String request = "SELECT DISTINCT t.description as description, t.budget as budget, t.consomme as consomme, t.RAE as rae, e.idPersonneSource as idPersonneSource, "
@@ -703,7 +705,6 @@ public class InteractDB {
                 + "WHERE t.idTache = " + id_tache + " "
                 + "ORDER BY t.titre ASC ";
         ResultSet donnees = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
-        ResultSet donneesRecpt;
         String statut;
         TaskStatus status;
         Task task = null;
@@ -722,52 +723,84 @@ public class InteractDB {
                     Float.parseFloat(donnees.getString("budget").trim()), Float.parseFloat(donnees.getString("consomme").trim()), Float.parseFloat(donnees.getString("rae").trim()), status, donnees.getString("idPersonneSource").trim());
 
             //récupérer les destinataires de la tache
-            try {
-                request = "SELECT DISTINCT tm.idPersonneDestination as idPersonneDestination FROM APP.T_EnvoiTacheMembre tm  WHERE tm.idTache = " + id_tache + " AND tm.typeDestinataire != 'USER_IN_GROUP' ";
-
-                donneesRecpt = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
-                while (donneesRecpt.next()) {
-                    task.addRecipient(new Recipient(RecipientType.USER, donneesRecpt.getString("idPersonneDestination")));
-                }
-
-            } catch (SQLException ex) {
-                if (!ex.getSQLState().startsWith("02")) {
-                    Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
+            this.getTasksRecipientsUser(id_tache, task);
 
             //récupérer les groupe destinataires de la tache
-            try {
-                request = "SELECT DISTINCT tg.idGroupeDestination as idGroupeDestination FROM APP.T_EnvoiTacheGroupe tg , APP.T_Tache t WHERE tg.idTache = " + id_tache + " ";
-
-                donneesRecpt = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
-                while (donneesRecpt.next()) {
-                    task.addRecipient(new Recipient(RecipientType.GROUP, donneesRecpt.getString("idGroupeDestination")));
-                }
-            } catch (SQLException ex) {
-                if (!ex.getSQLState().startsWith("02")) {
-                    Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
+            this.getTasksRecipientsGroup(id_tache, task);
 
             //recuperation fichiers joints
-            try {
-                request = "SELECT DISTINCT pj.nomFichier as nomFichier "
-                        + "FROM APP.T_FichierJointTache pj "
-                        + "WHERE pj.idTache = " + task.getId() + " ";
-                ResultSet donneesAtt = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
-                while (donneesAtt.next()) {
-                    task.addAttachment(new Attachment(donneesAtt.getString("nomFichier"), donneesAtt.getString("nomFichier")));
-                }
-            } catch (SQLException ex) {
-                if (!ex.getSQLState().startsWith("02")) {
-                    Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                task.setHasAttachments(false);
-            }
+            this.getTasksAttachments(id_tache, task);
         }
 
         return task;
+    }
+
+    /**
+     * Gets the recipients USER of a task
+     *
+     * @param id_tache The ID of the task
+     * @param task The task in which add the recipients USER
+     */
+    private void getTasksRecipientsUser(int id_tache, Task task) {
+        ResultSet donneesRecpt;
+        try {
+            String request = "SELECT DISTINCT tm.idPersonneDestination as idPersonneDestination FROM APP.T_EnvoiTacheMembre tm  WHERE tm.idTache = " + id_tache + " AND tm.typeDestinataire != 'USER_IN_GROUP' ";
+
+            donneesRecpt = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
+            while (donneesRecpt.next()) {
+                task.addRecipient(new Recipient(RecipientType.USER, donneesRecpt.getString("idPersonneDestination")));
+            }
+
+        } catch (SQLException ex) {
+            if (!ex.getSQLState().startsWith("02")) {
+                Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    /**
+     * Gets the recipients GROUP of a task
+     *
+     * @param id_tache The ID of the task
+     * @param task The task in which add the recipients GROUP
+     */
+    private void getTasksRecipientsGroup(int id_tache, Task task) {
+        ResultSet donneesRecpt;
+        try {
+            String request = "SELECT DISTINCT tg.idGroupeDestination as idGroupeDestination FROM APP.T_EnvoiTacheGroupe tg , APP.T_Tache t WHERE tg.idTache = " + id_tache + " ";
+
+            donneesRecpt = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
+            while (donneesRecpt.next()) {
+                task.addRecipient(new Recipient(RecipientType.GROUP, donneesRecpt.getString("idGroupeDestination")));
+            }
+        } catch (SQLException ex) {
+            if (!ex.getSQLState().startsWith("02")) {
+                Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    /**
+     * Gets the attachments of a task
+     *
+     * @param id_tache The ID of the task
+     * @param task The task in which add the attachments
+     */
+    private void getTasksAttachments(int id_tache, Task task) {
+        try {
+            String request = "SELECT DISTINCT pj.nomFichier as nomFichier "
+                    + "FROM APP.T_FichierJointTache pj "
+                    + "WHERE pj.idTache = " + task.getId() + " ";
+            ResultSet donneesAtt = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
+            while (donneesAtt.next()) {
+                task.addAttachment(new Attachment(donneesAtt.getString("nomFichier"), donneesAtt.getString("nomFichier")));
+            }
+        } catch (SQLException ex) {
+            if (!ex.getSQLState().startsWith("02")) {
+                Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            task.setHasAttachments(false);
+        }
     }
 
     /**
@@ -777,6 +810,7 @@ public class InteractDB {
      * @return 1 : Success, != 1 error
      * @throws SQLException
      */
+    @Override
     public int updateTask(Task t) throws SQLException {
         String ddebut = t.getStringCreationDate().replaceAll("/", "-") + ":00";
         String dfin = t.getStringDueDate().replaceAll("/", "-") + ":00";
@@ -800,6 +834,7 @@ public class InteractDB {
      * @throws SQLException
      * @throws NumberFormatException
      */
+    @Override
     public int updateRecipientsTask(HashMap<Recipient, Boolean[]> rcpts, String id_Task, String id_Sender) throws NumberFormatException, SQLException {
         int ret = 0;
         String err = "";
@@ -850,6 +885,7 @@ public class InteractDB {
      * @return 1 : Success, != 1 error
      * @throws SQLException
      */
+    @Override
     public int updateAttachmentsTask(HashMap<Attachment, Boolean> atts, String id_Task) throws NumberFormatException, SQLException {
         for (Entry<Attachment, Boolean> entry : atts.entrySet()) {
             Attachment cle = entry.getKey();
@@ -876,6 +912,7 @@ public class InteractDB {
      * @return TRUE : Success, FALSE : one (or more) error(s) occur(s)
      * @throws SQLException
      */
+    @Override
     public boolean deleteTaskForMember(int idTask, String id_member) throws SQLException {
         String request;
         boolean ok = true;
@@ -912,6 +949,7 @@ public class InteractDB {
      * @return TRUE : Success, FALSE : one (or more) error(s) occur(s)
      * @throws SQLException
      */
+    @Override
     public boolean deleteTask(int idTask) throws SQLException {
         String request;
         boolean ok = true;
@@ -949,6 +987,7 @@ public class InteractDB {
      * @return TRUE : all succeed, FALSE : one or more errors occurs
      * @throws SQLException
      */
+    @Override
     public boolean deleteAllMemberTasks(String id_member) throws SQLException {
         boolean allOk = true;
         if (this.checkIDMemberExists(id_member)) {
@@ -970,6 +1009,7 @@ public class InteractDB {
      * @param hashPwd The hash password
      * @return TRUE: success, FALSE: fail
      */
+    @Override
     public boolean authenticate(String login, String hashPwd) {
         boolean ok = true;
         String rqst = "SELECT m.idMembre "
@@ -993,6 +1033,7 @@ public class InteractDB {
      * @return The message send to the member
      * @throws SQLException
      */
+    @Override
     public Message getReceivedMessage(int id_message, String id_membre) throws SQLException {
         Message message = null;
         //recupération informations générales message
@@ -1005,97 +1046,158 @@ public class InteractDB {
                 + "ORDER BY date DESC";
         ResultSet donnees = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
         MessageRecipient mrcpt;
-        String statut;
-        MessageStatus status;
 
         while (donnees.next()) {
             message = new Message("" + id_message, donnees.getString("idPersonneSource"), donnees.getString("titre"), donnees.getString("dateCreation"), donnees.getString("contenu"));
-            mrcpt = new MessageRecipient(donnees.getString("typeDestinataire"), id_membre);
-            System.err.println("Date créa mess : " + donnees.getString("dateCreation"));
-            try {
-                //Recupération des statuts message pour le membre
-                request = "SELECT sm.statut as statut "
-                        + "FROM APP.T_StatusMessageMembre sm "
-                        + "WHERE sm.idPersonneDestination = '" + id_membre.trim() + "' "
-                        + "AND sm.idMessage = " + id_message + " ";
 
-                ResultSet donneesStatus = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
-                while (donneesStatus.next()) {
-                    statut = donneesStatus.getString("statut");
-                    if (statut.compareToIgnoreCase("FORWARDED") == 0) {
-                        status = MessageStatus.FORWARDED;
-                    } else if (statut.compareToIgnoreCase("HAVE_TO_ANSWER") == 0) {
-                        status = MessageStatus.HAVE_TO_ANSWER;
-                    } else if (statut.compareToIgnoreCase("IMPORTANT") == 0) {
-                        status = MessageStatus.IMPORTANT;
-                    } else if (statut.compareToIgnoreCase("URGENT") == 0) {
-                        status = MessageStatus.URGENT;
-                    } else {
-                        status = MessageStatus.READ;
-                    }
-                    mrcpt.addStatus(status);
-                }
+            mrcpt = this.getMessageStatusToMember(donnees, id_membre, id_message);
+            if (mrcpt != null) {
                 message.addRecipient(mrcpt);
-            } catch (SQLException ex) {
-                if (!ex.getSQLState().startsWith("02")) {
-                    Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
-                }
             }
-            //ajout desinataire membre (hors groupe)
-            try {
-                request = "SELECT em.idPersonneDestination as idPersonneDestination "
-                        + "FROM APP.T_EnvoiMessageMembre em "
-                        + "WHERE em.idPersonneSource = '" + donnees.getString("idPersonneSource").trim() + "' "
-                        + "AND em.idMessage = " + id_message + " "
-                        + "AND em.typeDestinataire = 'USER' "
-                        + "AND em.idPersonneDestination != '" + id_membre.trim() + "' ";
+            this.addMessageRecipientsUser(message, donnees, id_message, id_membre);
 
-                ResultSet donneeRcpt = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
-                while (donneeRcpt.next()) {
-                    message.addRecipient(new Recipient(RecipientType.USER, donneeRcpt.getString("idPersonneDestination")));
-                }
-            } catch (SQLException ex) {
-                if (!ex.getSQLState().startsWith("02")) {
-                    Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-            try {
-                //ajout destinataire group
-                request = "SELECT eg.idGroupeDestination as idGroupeDestination "
-                        + "FROM APP.T_EnvoiMessageGroupe eg "
-                        + "WHERE eg.idPersonneSource = '" + donnees.getString("idPersonneSource").trim() + "' "
-                        + "AND eg.idMessage = " + id_message + " "
-                        + "AND eg.typeDestinataire = 'GROUP' ";
+            this.addMessageRecipientsGroup(message, donnees, id_message);
 
-                ResultSet donneeRcptGroup = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
-                while (donneeRcptGroup.next()) {
-                    message.addRecipient(new Recipient(RecipientType.GROUP, donneeRcptGroup.getString("idGroupeDestination")));
-                }
-            } catch (SQLException ex) {
-                if (!ex.getSQLState().startsWith("02")) {
-                    Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-            //recuperation fichiers joints
-            try {
-                request = "SELECT pj.nomFichier as nomFichier "
-                        + "FROM APP.T_FichierJointMessage pj "
-                        + "WHERE pj.idMessage = " + message.getId() + " ";
-                ResultSet donneesAtt = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
-                while (donneesAtt.next()) {
-                    message.addAttachment(new Attachment(donneesAtt.getString("nomFichier"), donneesAtt.getString("nomFichier")));
-                }
-            } catch (SQLException ex) {
-                if (!ex.getSQLState().startsWith("02")) {
-                    Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                message.setHasAttachments(false);
-            }
+            this.addMessageAttachements(message);
         }
 
         return message;
     }
 
+    /**
+     * Gets the status of a message for a member
+     *
+     * @param donnees The ResultSet that contains the type of recipient
+     * @param id_membre The ID of the member
+     * @param id_message The ID of the message
+     * @return A MessageRecipient containing the different status of the message
+     * to the member
+     */
+    private MessageRecipient getMessageStatusToMember(ResultSet donnees, String id_membre, int id_message) {
+        MessageRecipient mrcpt = null;
+        String statut;
+        MessageStatus status;
+        try {
+            mrcpt = new MessageRecipient(donnees.getString("typeDestinataire"), id_membre);
+            //Recupération des statuts message pour le membre
+            String request = "SELECT sm.statut as statut "
+                    + "FROM APP.T_StatusMessageMembre sm "
+                    + "WHERE sm.idPersonneDestination = '" + id_membre.trim() + "' "
+                    + "AND sm.idMessage = " + id_message + " ";
+
+            ResultSet donneesStatus = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
+            while (donneesStatus.next()) {
+                statut = donneesStatus.getString("statut");
+                if (statut.compareToIgnoreCase("FORWARDED") == 0) {
+                    status = MessageStatus.FORWARDED;
+                } else if (statut.compareToIgnoreCase("HAVE_TO_ANSWER") == 0) {
+                    status = MessageStatus.HAVE_TO_ANSWER;
+                } else if (statut.compareToIgnoreCase("IMPORTANT") == 0) {
+                    status = MessageStatus.IMPORTANT;
+                } else if (statut.compareToIgnoreCase("URGENT") == 0) {
+                    status = MessageStatus.URGENT;
+                } else {
+                    status = MessageStatus.READ;
+                }
+                mrcpt.addStatus(status);
+            }
+
+        } catch (SQLException ex) {
+            if (!ex.getSQLState().startsWith("02")) {
+                Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return mrcpt;
+    }
+
+    /**
+     * Add the users recipient to the message
+     *
+     * @param message The message
+     * @param donnees The ResultSet tot get the sender
+     * @param id_message The ID of the message
+     * @param id_membre The ID of the member (exclude from recipients)
+     */
+    private void addMessageRecipientsUser(Message message, ResultSet donnees, int id_message, String id_membre) {
+        try {
+            String request = "SELECT em.idPersonneDestination as idPersonneDestination "
+                    + "FROM APP.T_EnvoiMessageMembre em "
+                    + "WHERE em.idPersonneSource = '" + donnees.getString("idPersonneSource").trim() + "' "
+                    + "AND em.idMessage = " + id_message + " "
+                    + "AND em.typeDestinataire = 'USER' "
+                    + "AND em.idPersonneDestination != '" + id_membre.trim() + "' ";
+
+            ResultSet donneeRcpt = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
+            while (donneeRcpt.next()) {
+                message.addRecipient(new Recipient(RecipientType.USER, donneeRcpt.getString("idPersonneDestination")));
+            }
+        } catch (SQLException ex) {
+            if (!ex.getSQLState().startsWith("02")) {
+                Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    /**
+     * Add the groups recipient to the message
+     *
+     * @param message The message
+     * @param donnees The ResultSet tot get the sender
+     * @param id_message The ID of the message
+     */
+    private void addMessageRecipientsGroup(Message message, ResultSet donnees, int id_message) {
+        try {
+            //ajout destinataire group
+            String request = "SELECT eg.idGroupeDestination as idGroupeDestination "
+                    + "FROM APP.T_EnvoiMessageGroupe eg "
+                    + "WHERE eg.idPersonneSource = '" + donnees.getString("idPersonneSource").trim() + "' "
+                    + "AND eg.idMessage = " + id_message + " "
+                    + "AND eg.typeDestinataire = 'GROUP' ";
+
+            ResultSet donneeRcptGroup = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
+            while (donneeRcptGroup.next()) {
+                message.addRecipient(new Recipient(RecipientType.GROUP, donneeRcptGroup.getString("idGroupeDestination")));
+            }
+        } catch (SQLException ex) {
+            if (!ex.getSQLState().startsWith("02")) {
+                Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    /**
+     * Add the message's attachments
+     *
+     * @param message The message to add the attachments
+     */
+    private void addMessageAttachements(Message message) {
+        //recuperation fichiers joints
+        try {
+            String request = "SELECT pj.nomFichier as nomFichier "
+                    + "FROM APP.T_FichierJointMessage pj "
+                    + "WHERE pj.idMessage = " + message.getId() + " ";
+            ResultSet donneesAtt = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
+            while (donneesAtt.next()) {
+                message.addAttachment(new Attachment(donneesAtt.getString("nomFichier"), donneesAtt.getString("nomFichier")));
+            }
+        } catch (SQLException ex) {
+            if (!ex.getSQLState().startsWith("02")) {
+                Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            message.setHasAttachments(false);
+        }
+    }
+
+    /**
+     *
+     * Gets a message send by member
+     *
+     * @param id_membre The member who received the messages
+     * @param id_message ID of the message to get
+     * @return All the headers of all the send messages of the member
+     * @throws SQLException
+     */
+    @Override
     public Message getSendMessage(int id_message, String id_membre) throws SQLException {
         Message message = null;
         //recupération informations générales message
@@ -1107,63 +1209,15 @@ public class InteractDB {
                 + "AND e.idMessage = m.idMessage "
                 + "ORDER BY date DESC";
         ResultSet donnees = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
-        MessageRecipient mrcpt;
 
         while (donnees.next()) {
             message = new Message("" + id_message, donnees.getString("idPersonneSource"), donnees.getString("titre"), donnees.getString("dateCreation"), donnees.getString("contenu"));
-            mrcpt = new MessageRecipient(donnees.getString("typeDestinataire"), id_membre);
 
-            //ajout desinataire membre (hors groupe)
-            try {
-                request = "SELECT em.idPersonneDestination as idPersonneDestination "
-                        + "FROM APP.T_EnvoiMessageMembre em "
-                        + "WHERE em.idPersonneSource = '" + donnees.getString("idPersonneSource").trim() + "' "
-                        + "AND em.idMessage = " + id_message + " "
-                        + "AND em.typeDestinataire = 'USER' "
-                        + "AND em.idPersonneDestination != '" + id_membre.trim() + "' ";
+            this.addMessageRecipientsUser(message, donnees, id_message, id_membre);
 
-                ResultSet donneeRcpt = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
-                while (donneeRcpt.next()) {
-                    message.addRecipient(new Recipient(RecipientType.USER, donneeRcpt.getString("idPersonneDestination")));
-                }
-            } catch (SQLException ex) {
-                if (!ex.getSQLState().startsWith("02")) {
-                    Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
+            this.addMessageRecipientsGroup(message, donnees, id_message);
 
-            try {
-                //ajout destinataire group
-                request = "SELECT eg.idGroupeDestination as idGroupeDestination "
-                        + "FROM APP.T_EnvoiMessageGroupe eg "
-                        + "WHERE eg.idPersonneSource = '" + donnees.getString("idPersonneSource").trim() + "' "
-                        + "AND eg.idMessage = " + id_message + " "
-                        + "AND eg.typeDestinataire = 'GROUP' ";
-
-                ResultSet donneeRcptGroup = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
-                while (donneeRcptGroup.next()) {
-                    message.addRecipient(new Recipient(RecipientType.GROUP, donneeRcptGroup.getString("idGroupeDestination")));
-                }
-            } catch (SQLException ex) {
-                if (!ex.getSQLState().startsWith("02")) {
-                    Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-            //recuperation fichiers joints
-            try {
-                request = "SELECT pj.nomFichier as nomFichier "
-                        + "FROM APP.T_FichierJointMessage pj "
-                        + "WHERE pj.idMessage = " + message.getId() + " ";
-                ResultSet donneesAtt = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
-                while (donneesAtt.next()) {
-                    message.addAttachment(new Attachment(donneesAtt.getString("nomFichier"), donneesAtt.getString("nomFichier")));
-                }
-            } catch (SQLException ex) {
-                if (!ex.getSQLState().startsWith("02")) {
-                    Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
-                    message.setHasAttachments(false);
-                }
-            }
+            this.addMessageAttachements(message);
         }
         return message;
     }
@@ -1175,6 +1229,7 @@ public class InteractDB {
      * @return All the headers of all the messages of the member
      * @throws SQLException
      */
+    @Override
     public ArrayList<MessageHeader> getReceivedMessagesHeader(String id_membre) throws SQLException {
         ArrayList<MessageHeader> messagesHeaders = new ArrayList<MessageHeader>();
         String request = "SELECT m.idMessage as idMessage, m.objet as titre, m.date as dateCreation, e.idPersonneSource as idPersonneSource "
@@ -1189,7 +1244,6 @@ public class InteractDB {
 
         while (donnees.next()) {
             messageHeader = new MessageHeader(donnees.getString("idMessage").trim(), donnees.getString("titre").trim(), donnees.getString("idPersonneSource").trim(), donnees.getString("dateCreation").trim(), true);
-            System.err.println("Date créa mess : " + donnees.getString("dateCreation".trim()));
 
             try {
                 request = "SELECT sm.statut as statut "
@@ -1225,6 +1279,14 @@ public class InteractDB {
         return messagesHeaders;
     }
 
+    /**
+     * Gets all messages send by member
+     *
+     * @param id_membre The member who received the messages
+     * @return All the headers of all the send messages of the member
+     * @throws SQLException
+     */
+    @Override
     public ArrayList<MessageHeader> getSendMessagesHeader(String id_membre) throws SQLException {
         ArrayList<MessageHeader> messagesHeaders = new ArrayList<MessageHeader>();
         String request = "SELECT m.idMessage as idMessage, m.objet as titre, m.date as dateCreation, e.idPersonneSource as idPersonneSource "
@@ -1254,6 +1316,7 @@ public class InteractDB {
      * @return 1 : Success, != 1 error
      * @throws SQLException
      */
+    @Override
     public int addMessageStatus(int id_message, MessageStatus status, String id_member) throws SQLException {
         int ret = 1;
         String request;
@@ -1278,6 +1341,7 @@ public class InteractDB {
      * @return 1 : Success, != 1 error
      * @throws SQLException
      */
+    @Override
     public int delMessageStatus(int id_message, MessageStatus status, String id_member) throws SQLException {
         String request;
         int result = 1;
@@ -1300,6 +1364,7 @@ public class InteractDB {
      * @return TRUE : all succeed, FALSE : one or more errors occurs
      * @throws SQLException
      */
+    @Override
     public boolean deleteAllMemberMessages(String id_member) throws SQLException {
         boolean allOk = true;
         if (this.checkIDMemberExists(id_member)) {
@@ -1325,6 +1390,7 @@ public class InteractDB {
      * failed
      * @throws SQLException
      */
+    @Override
     public boolean delMessage(int id_message, String id_membre) throws SQLException {
         boolean allOk = true;
         String request;
@@ -1337,7 +1403,6 @@ public class InteractDB {
             allOk = allOk && (this.doModif(request, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE) == 1);
         }
 
-
         //Delete the association membre - message
         request = "DELETE FROM APP.T_EnvoiMessageMembre "
                 + "WHERE idPersonneDestination = '" + id_membre.trim() + "' "
@@ -1346,34 +1411,56 @@ public class InteractDB {
 
         //Test si reste des membre associé au message
         if (!this.messageHasAssociatedMembers(id_message)) {
-            try {
-                //Suppression fichiers joints
-                request = "DELETE FROM APP.T_FichierJointMessage "
-                        + "WHERE  idMessage = " + id_message + " ";
-                allOk = allOk && (this.doModif(request, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE) == 1);
-            } catch (SQLException ex) {
-                if (!ex.getSQLState().startsWith("02")) {
-                    Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
+            this.cleanAndDeleteMessage(allOk, id_message);
+        }
 
-            try {
-                //suppression de l'association entre un message et un groupe car plus de membre associé
-                request = "DELETE FROM APP.T_EnvoiMessageGroupe "
-                        + "WHERE  idMessage = " + id_message + " ";
-                allOk = allOk && (this.doModif(request, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE) == 1);
-            } catch (SQLException ex) {
-                if (!ex.getSQLState().startsWith("02")) {
-                    Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
-                }
+        return (allOk);
+    }
+
+    /**
+     * Cleans all the informations related to the message and delete the message
+     *
+     * @param allOk Boolean to check if everything was OK
+     * @param id_message The ID of the message
+     * @return TRUE : ok, FALSE : error
+     */
+    private boolean cleanAndDeleteMessage(boolean allOk, int id_message) {
+        String request;
+        try {
+            //Suppression fichiers joints
+            request = "DELETE FROM APP.T_FichierJointMessage "
+                    + "WHERE  idMessage = " + id_message + " ";
+            allOk = allOk && (this.doModif(request, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE) == 1);
+        } catch (SQLException ex) {
+            if (!ex.getSQLState().startsWith("02")) {
+                Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
+                allOk = false;
             }
+        }
+
+        try {
+            //suppression de l'association entre un message et un groupe car plus de membre associé
+            request = "DELETE FROM APP.T_EnvoiMessageGroupe "
+                    + "WHERE  idMessage = " + id_message + " ";
+            allOk = allOk && (this.doModif(request, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE) == 1);
+        } catch (SQLException ex) {
+            if (!ex.getSQLState().startsWith("02")) {
+                Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
+                allOk = false;
+            }
+        }
+        try {
             //Suppression message pur et dur
             request = "DELETE FROM APP.T_Message "
                     + "WHERE  idMessage = " + id_message + " ";
             allOk = allOk && (this.doModif(request, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE) == 1);
+        } catch (SQLException ex) {
+            if (!ex.getSQLState().startsWith("02")) {
+                Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
+                allOk = false;
+            }
         }
-
-        return (allOk);
+        return allOk;
     }
 
     /**
@@ -1388,6 +1475,7 @@ public class InteractDB {
      * member
      * @throws SQLException
      */
+    @Override
     public boolean messageHasStatusAssociatedWithAMember(String id_membre, int id_message) throws SQLException {
         //Verification qu'il y ai des statuts pour le message avant de les supprimer
         String request = "SELECT count(*) as nbStatuts FROM APP.T_StatusMessageMembre "
@@ -1412,6 +1500,7 @@ public class InteractDB {
      * member
      * @throws SQLException
      */
+    @Override
     public boolean messageHasStatusAssociatedWithAMember(String id_membre, int id_message, MessageStatus status) throws SQLException {
         //Verification qu'il y ai des statuts pour le message avant de les supprimer
         String request = "SELECT count(*) as nbStatuts FROM APP.T_StatusMessageMembre "
@@ -1432,6 +1521,7 @@ public class InteractDB {
      * : the message has no member associated with
      * @throws SQLException
      */
+    @Override
     public boolean messageHasAssociatedMembers(int id_message) throws SQLException {
         //Verify if the member was the last member in the association
         String request = "SELECT count(*) as nbRecipients FROM APP.T_EnvoiMessageMembre "
@@ -1450,6 +1540,7 @@ public class InteractDB {
      * the message has no group associated with
      * @throws SQLException
      */
+    @Override
     public boolean messageHasAssociatedGroups(int id_message) throws SQLException {
         //Verify if the member was the last member in the association
         String request = "SELECT count(*) as nbRecipients FROM APP.T_EnvoiMessageGroupe "
@@ -1468,6 +1559,7 @@ public class InteractDB {
      * message has no attachment
      * @throws SQLException
      */
+    @Override
     public boolean messageHasAttachment(int id_message) throws SQLException {
         //Verify if the member was the last member in the association
         String request = "SELECT count(*) as pjs FROM APP.T_FichierJointMessage "
@@ -1485,6 +1577,7 @@ public class InteractDB {
      * @param id_member The ID to test if exists
      * @return TRUE : exists, FALSE : not exists
      */
+    @Override
     public boolean checkIDMemberExists(String id_member) {
         boolean exists;
         String request = "SELECT count(*) as nb "
@@ -1507,6 +1600,7 @@ public class InteractDB {
      * @param id_Task The ID to test if exists
      * @return TRUE : exists, FALSE : not exists
      */
+    @Override
     public boolean checkIDTaskExists(int id_Task) {
         boolean exists;
         String request = "SELECT count(*) as nb "
@@ -1529,6 +1623,7 @@ public class InteractDB {
      * @param id_Group The ID to test if exists
      * @return TRUE : exists, FALSE : not exists
      */
+    @Override
     public boolean checkIDGroupExists(String id_Group) {
         boolean exists;
         String request = "SELECT count(*) as nb "
@@ -1552,6 +1647,7 @@ public class InteractDB {
      * @return 1 == sucess, != 1 at least one error
      * @throws SQLException
      */
+    @Override
     public int deleteMember(String id_member) throws SQLException {
         int ret = 1991;
         if (this.checkIDMemberExists(id_member)) {
@@ -1576,10 +1672,12 @@ public class InteractDB {
      * @return 1 == sucess, != 1 at least one error
      * @throws SQLException
      */
+    @Override
     public int deleteMemberFromGroup(String id_member, String id_Group) throws SQLException {
         int ret = 1991;
         if (this.checkIDMemberExists(id_member)) {
             ResultSet donnees;
+            //delete affectations
             String request = "DELETE FROM APP.T_AffectationGroupe WHERE idPersonne  = '" + id_member.trim() + "' AND idGroupe  = '" + id_Group.trim() + "' ";
             ret = ((this.doModif(request, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE) == 1 && ret == 1) ? 1 : 0);
             //T_EnvoiTacheGroupe  typeDestinataire 
@@ -1587,6 +1685,7 @@ public class InteractDB {
             try {
                 donnees = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
                 while (donnees.next()) {
+                    //mettre à jour le type de destinataire du membre pour les taches relié au groupe
                     request = "UPDATE APP.T_EnvoiTacheMembre SET typeDestinataire = 'USER' WHERE idPersonneDestination  = '" + id_member.trim() + "' AND idTache   = " + donnees.getString("idTache").trim() + " ";
                     this.doModif(request, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE);
                 }
@@ -1596,6 +1695,7 @@ public class InteractDB {
                 }
             }
             try {
+                //mettre à jour le type de destinataire du membre pour les messages relié au groupe
                 request = "SELECT idMessage as idMessage  FROM APP.T_EnvoiMessageGroupe WHERE idGroupeDestination = '" + id_Group.trim() + "' ";
                 donnees = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
                 while (donnees.next()) {
@@ -1620,6 +1720,7 @@ public class InteractDB {
      * @return 1 == sucess, != 1 at least one error
      * @throws SQLException
      */
+    @Override
     public int deleteGroup(String id_Group) throws SQLException {
         int ret = 1;
         if (this.checkIDGroupExists(id_Group)) {
@@ -1634,6 +1735,24 @@ public class InteractDB {
                         + "WHERE  idGroupe = '" + id_Group.trim() + "' ";
                 ret = (this.doModif(request, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE) == 1 && ret == 1 ? 1 : 0);
             }
+
+            this.deleteGroupMessages(id_Group, membres);
+            this.deleteGroupTasks(id_Group, membres);
+
+            String request = "DELETE FROM APP.T_Groupe "
+                    + "WHERE  idGroupe = '" + id_Group.trim() + "' ";
+            ret = (this.doModif(request, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE) == 1 && ret == 1 ? 1 : 0);
+
+            return ret;
+
+        } else {
+            throw new SQLException("No group is associated with this ID : " + id_Group.trim());
+        }
+    }
+
+    private int deleteGroupMessages(String id_Group, ArrayList<String> membres) {
+        int ret = 1991;
+        try {
             //suppression de précaution de l'association des messages - groupe
             if (groupHasAssociatedMessaged(id_Group)) {
                 String request = "SELECT emg.idMessage as idMessage "
@@ -1650,35 +1769,36 @@ public class InteractDB {
                         + "WHERE  idGroupeDestination = '" + id_Group.trim() + "' ";
                 ret = (this.doModif(request, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE) == 1 && ret == 1 ? 1 : 0);
             }
+        } catch (SQLException ex) {
+            Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
+            ret = -1;
+        }
+        return ret;
+    }
+
+    private int deleteGroupTasks(String id_Group, ArrayList<String> membres) {
+        int ret = 1991;
+        try {
             //suppression de précaution de l'association des task - groupe
             if (groupHasAssociatedTask(id_Group)) {
                 String request = "SELECT etg.idTache as idTache "
                         + "FROM APP.T_EnvoiTacheGroupe etg "
                         + "WHERE etg.idGroupeDestination = '" + id_Group.trim() + "' ";
                 ResultSet donnees = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
-
                 while (donnees.next()) {
                     for (String m : membres) {
                         ret = (this.alterTypeDestinataireTacheMembre(m, Integer.parseInt(donnees.getString("idTache").trim()), RecipientType.USER) == 1 && ret == 1 ? 1 : 0);
                     }
                 }
-
                 request = "DELETE FROM APP.T_EnvoiTacheGroupe "
                         + "WHERE  idGroupeDestination = '" + id_Group.trim() + "' ";
                 ret = (this.doModif(request, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE) == 1 && ret == 1 ? 1 : 0);
             }
-
-            String request = "DELETE FROM APP.T_Groupe "
-                    + "WHERE  idGroupe = '" + id_Group.trim() + "' ";
-            ret = (this.doModif(request, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE) == 1 && ret == 1 ? 1 : 0);
-
-            return ret;
-
-        } else {
-            throw new SQLException("No group is associated with this ID : " + id_Group.trim());
+        } catch (SQLException ex) {
+            Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
+            ret = -1;
         }
-
-
+        return ret;
     }
 
     /**
@@ -1689,6 +1809,7 @@ public class InteractDB {
      * no association
      * @throws SQLException
      */
+    @Override
     public boolean groupHasAssociatedMessaged(String id_Group) throws SQLException {
         //Verify if the member was the last member in the association
         String request = "SELECT count(*) as nbGMess FROM APP.T_EnvoiMessageGroupe "
@@ -1707,6 +1828,7 @@ public class InteractDB {
      * no association
      * @throws SQLException
      */
+    @Override
     public boolean memberHasAssociatedMessaged(String id_member) throws SQLException {
         //Verify if the member was the last member in the association
         String request = "SELECT count(*) as nbMMess FROM APP.T_EnvoiMessageMembre "
@@ -1725,6 +1847,7 @@ public class InteractDB {
      * association
      * @throws SQLException
      */
+    @Override
     public boolean groupHasAssociatedTask(String id_Group) throws SQLException {
         //Verify if the member was the last member in the association
         String request = "SELECT count(*) as nbGTask FROM APP.T_EnvoiTacheGroupe "
@@ -1743,6 +1866,7 @@ public class InteractDB {
      * association
      * @throws SQLException
      */
+    @Override
     public boolean memberHasAssociatedTask(String id_member) throws SQLException {
         //Verify if the member was the last member in the association
         String request = "SELECT count(*) as nbMTask FROM APP.T_EnvoiTacheMembre "
@@ -1761,6 +1885,7 @@ public class InteractDB {
      * @return TRUE : it is associated, FALSE : not associate
      * @throws SQLException
      */
+    @Override
     public boolean messageIsAssociatedWithGroup(int idMessage, String id_group) throws SQLException {
         // T_EnvoiMessageMembre 
         //Verify if the member was the last member in the association
@@ -1781,6 +1906,7 @@ public class InteractDB {
      * @return TRUE : it is associated, FALSE : not associate
      * @throws SQLException
      */
+    @Override
     public boolean messageIsAssociatedWithMember(int idMessage, String id_member) throws SQLException {
         // T_EnvoiMessageMembre 
         //Verify if the member was the last member in the association
@@ -1801,6 +1927,7 @@ public class InteractDB {
      * no association
      * @throws SQLException
      */
+    @Override
     public boolean taskHasAssociatedMember(int id_task) throws SQLException {
         //Verify if the member was the last member in the association
         String request = "SELECT count(*) as nbMTask FROM APP.T_EnvoiTacheMembre "
@@ -1820,6 +1947,7 @@ public class InteractDB {
      * associated
      * @throws SQLException
      */
+    @Override
     public boolean taskIsAssociatedWithMember(int id_task, String id_member) throws SQLException {
         if (this.checkIDMemberExists(id_member)) {
             //Verify if the member was the last member in the association
@@ -1835,6 +1963,14 @@ public class InteractDB {
         }
     }
 
+    /**
+     * Gets the tasks of a member
+     *
+     * @param id_member The ID of the member
+     * @return The list of the tasks of the member separated by a comma
+     * @throws SQLException
+     */
+    @Override
     public String getTasksMember(String id_member) throws SQLException {
         if (this.memberHasAssociatedTask(id_member)) {
             //Verify if the member was the last member in the association
@@ -1862,6 +1998,7 @@ public class InteractDB {
      * associated
      * @throws SQLException
      */
+    @Override
     public boolean taskIsAssociatedWithGroup(int id_task, String id_Group) throws SQLException {
         if (this.checkIDGroupExists(id_Group)) {
             //Verify if the member was the last member in the association
@@ -1885,6 +2022,7 @@ public class InteractDB {
      * association
      * @throws SQLException
      */
+    @Override
     public boolean taskHasAssociatedGroup(int id_task) throws SQLException {
         //Verify if the member was the last member in the association
         String request = "SELECT count(*) as nbMTask FROM APP.T_EnvoiTacheGroupe "
@@ -1902,6 +2040,7 @@ public class InteractDB {
      * @return TRUE : there is at least one attachment, FALSE : no attachment
      * @throws SQLException
      */
+    @Override
     public boolean taskHasAttachement(int id_task) throws SQLException {
         //Verify if the member was the last member in the association
         String request = "SELECT count(*) as nbMTask FROM APP.T_FichierJointTache "
@@ -1955,6 +2094,7 @@ public class InteractDB {
      * @return TRUE : is admin, FALSE : is not admin
      * @throws SQLException
      */
+    @Override
     public boolean isAdmin(String id_member) throws SQLException {
         String request = "SELECT count(idMembre) as nbMembre FROM APP.T_Membre WHERE isAdmin = 'Y' AND idMembre = '" + id_member.trim() + "' ";
         ResultSet donnees = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
@@ -1971,6 +2111,7 @@ public class InteractDB {
      * @return TRUE : is chief, FALSE : is not chief
      * @throws SQLException
      */
+    @Override
     public boolean isChiefTask(String id_member, int id_task) throws SQLException {
 
         String request = "SELECT count(etm.idPersonneDestination) as idPersonne FROM T_EnvoiTacheMembre etm WHERE etm.isChefProjet = 'Y' AND etm.idTache = " + id_task + " AND etm.idPersonneDestination = '" + id_member.trim() + "' ";
@@ -1980,6 +2121,13 @@ public class InteractDB {
         return ((donnees.getString("idPersonne") != null) && Integer.parseInt(donnees.getString("idPersonne").trim()) > 0);
     }
 
+    /**
+     * Updates a member with the new informations
+     *
+     * @param m The member with the new informations
+     * @return 1 : ok, != 1 error
+     */
+    @Override
     public int updateMember(Member m) {
         int ret = 1991;
         if (this.checkIDMemberExists(m.getId_member())) {
@@ -1996,6 +2144,16 @@ public class InteractDB {
         return ret;
     }
 
+    /**
+     * Updates the group with the new informations
+     *
+     * @param g The group containing the new informations
+     * @param newRecipients The new recipients : <ID of the recipient, (TRUE :
+     * add the recipient, FALSE : delete the recpient)>
+     * @param idChef The new chief
+     * @return 1 : ok, != 1 error
+     */
+    @Override
     public int updateGroup(Group g, HashMap<String, Boolean> newRecipients, String idChef) {
         int ret = 1991;
         String idGroup = g.getId_group().trim();
@@ -2010,45 +2168,80 @@ public class InteractDB {
                 ret = -1;
             }
             if (idChef != null) {
-                req = "UPDATE APP.T_AffectationGroupe SET isChefProjet = 'Y' WHERE idGroupe ='" + idGroup + "' AND idPersonne ='" + idChef + "' ";
-
                 try {
-                    ret = this.doModif(req, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE);
-                } catch (SQLException ex) {
-                    Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
-                    ret = -1;
-                }
-            }
-            if (newRecipients != null && !newRecipients.isEmpty()) {
-                for (Entry<String, Boolean> entry : newRecipients.entrySet()) {
-                    String cle = entry.getKey();
-                    Boolean valeur = entry.getValue();
-                    Boolean chef = false;
-                    if (valeur) {
-                        if (cle.equals(idChef)) {
-                            chef = true;
-                        }
-                        try {
-                            this.addAffectionGroup(cle, idGroup, chef);
-                        } catch (SQLException ex) {
-                            Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
-                            ret = -1;
-                        }
+                    if (!this.groupIsAssociatedWithMember(idGroup, idChef)) {
+                        this.addAffectionGroup(idChef, idGroup, true);
                     } else {
+                        req = "UPDATE APP.T_AffectationGroupe SET isChefProjet = 'Y' WHERE idGroupe ='" + idGroup + "' AND idPersonne ='" + idChef + "' ";
+
                         try {
-                            this.deleteMemberFromGroup(cle, idGroup);
+                            ret = this.doModif(req, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE);
                         } catch (SQLException ex) {
                             Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
                             ret = -1;
                         }
                     }
+                } catch (SQLException ex) {
+                    Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
                 }
+
             }
+            this.updateGroupRecipients(newRecipients, idChef, idGroup);
+
         }
 
         return ret;
     }
 
+    /**
+     * Updates the recipients of a group
+     *
+     * @param newRecipients The new recipients : <ID of the recipient, (TRUE :
+     * add the recipient, FALSE : delete the recpient)>
+     * @param idChef The new chief
+     * @param idGroup The ID of the group to update the recipients
+     * @return
+     */
+    private int updateGroupRecipients(HashMap<String, Boolean> newRecipients, String idChef, String idGroup) {
+
+        int ret = 1991;
+        if (newRecipients != null && !newRecipients.isEmpty()) {
+            for (Entry<String, Boolean> entry : newRecipients.entrySet()) {
+                String cle = entry.getKey();
+                Boolean valeur = entry.getValue();
+                Boolean chef = false;
+                if (valeur) {
+                    if (cle.equals(idChef)) {
+                        chef = true;
+                    }
+                    try {
+                        this.addAffectionGroup(cle, idGroup, chef);
+                    } catch (SQLException ex) {
+                        Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
+                        ret = -1;
+                    }
+                } else {
+                    try {
+                        this.deleteMemberFromGroup(cle, idGroup);
+                    } catch (SQLException ex) {
+                        Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
+                        ret = -1;
+                    }
+                }
+            }
+        }
+        return ret;
+    }
+
+    /**
+     * Checks if the group is associated with the given member
+     *
+     * @param idGroup The ID of the group
+     * @param id_member The ID of the given member
+     * @return TRUE : yes, FALSE : no
+     * @throws SQLException
+     */
+    @Override
     public boolean groupIsAssociatedWithMember(String idGroup, String id_member) throws SQLException {
         // T_EnvoiMessageMembre 
         //Verify if the member was the last member in the association
@@ -2061,6 +2254,14 @@ public class InteractDB {
         return (donnees.getString("nbGMemb") != null && Integer.parseInt(donnees.getString("nbGMemb").trim()) >= 1);
     }
 
+    /**
+     * Checks if the member is associated with at least one group
+     *
+     * @param id_member The ID of the member
+     * @return TRUE : yes, FALSE : no
+     * @throws SQLException
+     */
+    @Override
     public boolean memberHasAssociatedGroup(String id_member) throws SQLException {
         // T_EnvoiMessageMembre 
         //Verify if the member was the last member in the association
@@ -2072,6 +2273,14 @@ public class InteractDB {
         return (donnees.getString("nbGMemb") != null && Integer.parseInt(donnees.getString("nbGMemb").trim()) >= 1);
     }
 
+    /**
+     * Gets the groups in which the member is in
+     *
+     * @param id_member The ID of the member
+     * @return The list of the groups of the member separated by a comma
+     * @throws SQLException
+     */
+    @Override
     public String getMemberGroups(String id_member) throws SQLException {
         if (this.memberHasAssociatedGroup(id_member)) {
             String groups = "";
@@ -2091,6 +2300,14 @@ public class InteractDB {
         }
     }
 
+    /**
+     * Gets the number of messages for a status for a member
+     *
+     * @param id_membre The ID of the member who has the status
+     * @param mst The message status, if null, search a non read message
+     * @return The number of messages with the mst status
+     */
+    @Override
     public int getNbMessagesForStatus(String id_membre, MessageStatus mst) {
         int nbMess = 0;
         String req;
@@ -2116,6 +2333,14 @@ public class InteractDB {
         return nbMess;
     }
 
+    /**
+     * Updates the password of a member
+     *
+     * @param idMember The ID of the member to change the password
+     * @param hashMdp The new password as a hash
+     * @return
+     */
+    @Override
     public int updateMemberPswd(String idMember, String hashMdp) {
         int ret = 1991;
         if (this.checkIDMemberExists(idMember.trim())) {
@@ -2130,6 +2355,16 @@ public class InteractDB {
         return ret;
     }
 
+    /**
+     * Search an expression in a table
+     *
+     * @param table The table in which perform the search
+     * @param colName The column in which perform the search
+     * @param expr The expression to search
+     * @param id The ID of the table (name of the column)
+     * @return A list of string in the format : colNameToSearch (id)
+     */
+    @Override
     public ArrayList<String> searchExprInTable(String table, String colName, String expr, String id) {
         try {
             ArrayList<String> result = new ArrayList<String>();
@@ -2145,15 +2380,27 @@ public class InteractDB {
             return null;
         }
     }
-    
+
+    /**
+     * Search an expression in a table
+     *
+     * @param table The table in which perform the search
+     * @param colNameToSearch The column in which perform the search
+     * @param colNameDetail Column for additional informations
+     * @param expr The expression to search
+     * @param id The ID of the table (name of the column)
+     * @return A list of string in the format : colNameToSearch colNameDetail
+     * (id)
+     */
+    @Override
     public ArrayList<String> searchExprInTable(String table, String colNameToSearch, String colNameDetail, String expr, String id) {
         try {
             ArrayList<String> result = new ArrayList<String>();
-            String req = "SELECT DISTINCT " + colNameToSearch + " as " + colNameToSearch + ", " + id + " as " + id + ", "+ colNameDetail + " as " + colNameDetail + " FROM APP." + table + " WHERE upper(" + colNameToSearch + ") LIKE upper('" + expr + "%')";
+            String req = "SELECT DISTINCT " + colNameToSearch + " as " + colNameToSearch + ", " + id + " as " + id + ", " + colNameDetail + " as " + colNameDetail + " FROM APP." + table + " WHERE upper(" + colNameToSearch + ") LIKE upper('" + expr + "%')";
             ResultSet donnees = this.doRequest(req, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
 
             while (donnees.next()) {
-                result.add(donnees.getString(colNameToSearch) + " "+donnees.getString(colNameDetail)+" (" + donnees.getString(id) + ")");
+                result.add(donnees.getString(colNameToSearch) + " " + donnees.getString(colNameDetail) + " (" + donnees.getString(id) + ")");
             }
             return result;
         } catch (SQLException ex) {
