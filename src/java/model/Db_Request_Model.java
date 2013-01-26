@@ -344,8 +344,13 @@ public class Db_Request_Model implements User_Model_Interface, Group_Model_Inter
      * @return The group with all it informations
      */
     @Override
-    public Group getGroupInfos(String id_group) throws SQLException {
-        return Db_Request_Model.idb.getGroupInfos("" + id_group);
+    public Group getGroupInfos(String id_group) {
+        try {
+            return Db_Request_Model.idb.getGroupInfos("" + id_group);
+        } catch (SQLException ex) {
+            Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
     }
 
     /**
@@ -939,4 +944,9 @@ public class Db_Request_Model implements User_Model_Interface, Group_Model_Inter
         return ok;
 
     }
+    
+     public ArrayList<String> searchExprInTable(String table, String colName, String expr, String id)
+     {
+         return Db_Request_Model.idb.searchExprInTable(table, colName, expr, id);
+     }
 }

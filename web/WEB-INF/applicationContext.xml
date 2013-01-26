@@ -32,6 +32,7 @@
             <dwr:include method="updateMessageStatusString" />
             <dwr:include method="messageHasStatusAssociatedWithAMember" />
             <dwr:include method="getNbMessagesForStatus" />
+            <dwr:include method="getDataFromDB" />
         </dwr:remote>
     </bean>  
 </beans>

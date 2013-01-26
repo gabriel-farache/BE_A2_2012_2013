@@ -7,6 +7,7 @@
 <!DOCTYPE html>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="display" uri="http://displaytag.sf.net" %>
 <html lang="fr">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -43,7 +44,6 @@
             }
 
         </style>
-        <link href="css/bootstrap.css" rel="stylesheet">
 
         <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
         <!--[if lt IE 9]>
@@ -69,10 +69,57 @@
             {
                 Project_Management_Presenter_Intern_Methods.getNbMessagesForStatus('<%=session.getAttribute("token")%>', '', fillNbMess);
             }
+            
+            function addRowHandlersInit() {
+                addRowHandlersGroups('rowGroups', '/BE_A2_2012_2013/group/checkGroup', 'id_groupe', 0);
+                addRowHandlersTasks('row','/BE_A2_2012_2013/task/checkTask', 'idTask', 0);
+            }
+            function addRowHandlersGroups(tableId, url, paramName, columnIndex) {
+                var table = document.getElementById(tableId);
+                var rows = table.getElementsByTagName("tr");
+                for (i = 1; i < rows.length; i++) {      
+                    rows[i].onclick = function () {
+                        var cell = this.getElementsByTagName("td")[columnIndex];
+                        var paramValue = cell.innerHTML;
+                        window.open(url + "?" + paramName + "=" + paramValue,'_blank');
+                    };
+                }
+            }
+            
+            function addRowHandlersTasks(tableId, url, paramName, columnIndex) {
+                var table = document.getElementById(tableId);
+                var rows = table.getElementsByTagName("tr");
+
+                for (i = 1; i < rows.length; i++) {
+                
+
+                    if (rows[i].getElementsByTagName("td")[3].innerHTML == 'URGENT')
+                    {
+                        rows[i].className = 'error';
+                    }
+                    else if (rows[i].getElementsByTagName("td")[3].innerHTML == 'OPEN')
+                    {
+                        rows[i].className = 'success';
+                    }
+                    else if (rows[i].getElementsByTagName("td")[3].innerHTML == 'CLOSED')
+                    {
+                        rows[i].className = 'default';
+                    }
+                    else
+                    {
+                        rows[i].className = 'warning';
+                    }
+                    rows[i].onclick = function () {
+                        var cell = this.getElementsByTagName("td")[columnIndex];
+                        var paramValue = cell.innerHTML;
+                        window.open(url + "?" + paramName + "=" + paramValue,'_blank');
+                    };
+                }
+            }
         </script>
     </head>
 
-    <body>
+    <body onload="addRowHandlersInit()">
 
         <div class="navbar navbar-inverse navbar-fixed-top">
             <div class="navbar-inner">
@@ -100,7 +147,7 @@
                             <li class="dropdown">
                                 <a id="drop2" href="#" role="button" class="dropdown-toggle" onclick="checkNewMess();" data-toggle="dropdown">Messagerie <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/message/inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess"></b></span></a></li> 
+                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/message/inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess"></b></span></a></li> 
                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/message/createMessage">Envoyer un message</a></li>
                                 </ul>
                             </li>
@@ -254,20 +301,32 @@
                             <legend>Adresse mail</legend>
                             <p>${mail}</p>
                         </fieldset>
-                        <fieldset>
-                            <legend>Groupe(s)</legend>
-                            <p>${groups}</p>
-                        </fieldset>
+
                         <fieldset>
                             <legend>T&acirc;che(s)</legend>
-                            <p>${tasks}</p>
+                            <display:table class="table table-hover" id="row" name="tasksTable" defaultsort="3" defaultorder="descending" decorator="dataObjects.TaskDecorator" pagesize="5" requestURI="">
+                                <display:column property="id" title="ID" sortable="true" />
+                                <display:column property="project_topic"  title ="Projet" sortable="true" />
+                                <display:column property="title" title="Nom de la tâche" sortable="true" />
+                                <display:column property="status" title="Statut" sortable="true" />
+                                <display:column property="creationDate" title="Date début" sortable="true" />
+                                <display:column property="dueDate" title="Date limite" sortable="true" />
+                            </display:table>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Groupe(s)</legend>
+                            <display:table class="table table-hover" id="rowGroups" name="groupsTable" defaultsort="1" defaultorder="descending" decorator="" pagesize="5" requestURI="">
+                                <display:column property="id_group" title="ID" sortable="true" />
+                                <display:column property="group_name"  title ="Nom du groupe" sortable="true" />
+                                <display:column property="descr" title="Description du groupe" sortable="false" />
+                            </display:table>
                         </fieldset>
 
                         <% if (session.getAttribute("isAdmin") != null) {%> 
                         <div class="span1 pull-right">
                             <a href="updateUser?idUser=${id}"><input class="btn btn-primary" type="submit" value="Modifier" /></a>
                         </div>
-                        <% } %>
+                        <% }%>
                     </div>
                     <hr>
                     <footer>

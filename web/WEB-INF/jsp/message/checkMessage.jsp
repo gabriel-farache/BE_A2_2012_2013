@@ -439,7 +439,10 @@
                             <a href="<c:url value="supprMessage?idMess=${idMess}&fromInbox=${fromInbox}"/>" class="btn  btn-danger" type="submit"/>Supprimer</a>
                         </div>
                         <div class="span1 pull-right">
-                            <a href="<c:url value="createMessage?idMess=${idMess}&fromInbox=${fromInbox}"/>" class="btn  btn-success" type="submit"/>R&eacute;pondre</a>
+                            <a href="<c:url value="createMessage?idMess=${idMess}&fromInbox=${fromInbox}"/>" class="btn  btn-primary" type="submit"/>R&eacute;pondre</a>
+                        </div>
+                        <div class="span1 pull-right">
+                            <a href="<c:url value="createMessage?idMess=${idMess}&fromInbox=${fromInbox}&fwd=yes"/>" class="btn  btn-success" type="submit"/>Transf&eacute;r&eacute;</a>
                         </div>
                         <input type="hidden" id="idMessStatus" value="${idMess}"/>
                     </div>

@@ -4,6 +4,7 @@
  */
 package presenter;
 
+import dataObjects.Task;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import peopleObjects.Group;
 import peopleObjects.Member;
 
 /**
@@ -41,47 +43,25 @@ public class UserPresenter extends Project_Management_Presenter {
         String token = this.getTokenSession(session, mm);
         System.out.println("Token : " + session);
         if ((Project_Management_Presenter.model.isValidToken(token) != null)) {
-            ArrayList<Member> memberList;
+            ArrayList<Member> memberList = this.getUsers();
             //Récuperation de toutes les taches
-            memberList = this.getUsers();
-            if (memberList != null) {
-                //Creation de la table en html contenant tous les headers de toutes les taches
-                String table =
-                        "<table class=\"table table-hover\">"
-                        + "<tr id='entete'>"
-                        + "<th>Nom</th>"
-                        + "<th>Prénom</th>"
-                        + "<th>Email</th>"
-                        + "</tr>";
-                for (Member m : memberList) {
-                    table +=
-                            "<tr id='utilisateur1' onclick='window.location.href=\"/user/checkUser?idUser=" + m.getId_member() + "\";'>"
-                            + "<td>" + m.getName() + "</td>"
-                            + "<td>" + m.getFirst_name() + "</td>"
-                            + "<td>" + m.getEmail() + "</td>"
-                            + "</tr>";
+            request.setAttribute("usersTable", memberList);
+        } else {
+            mm.addAttribute("errorMessage", "Aucun utilisateur.");
+            pageToLoad = "error";
+        }
 
-                }
-                table += "</table>";
-                //Mise en place de la table 
-                mm.addAttribute("listOfUsers", table);
+        try {
+            if (Project_Management_Presenter.model.isAdmin(token)) {
+                mm.addAttribute("display", "submit");
             } else {
-                mm.addAttribute("errorMessage", "Aucun utilisateur.");
-                pageToLoad = "error";
+                mm.addAttribute("display", "hidden");
             }
-
-            try {
-                if (Project_Management_Presenter.model.isAdmin(token)) {
-                    mm.addAttribute("display", "submit");
-                } else {
-                    mm.addAttribute("display", "hidden");
-                }
-            } catch (SQLException ex) {
-                Logger.getLogger(Project_Management_Presenter.class
-                        .getName()).log(Level.SEVERE, null, ex);
-                mm.addAttribute("errorMessage", "Erreur Base de donnée.");
-                return "error";
-            }
+        } catch (SQLException ex) {
+            Logger.getLogger(Project_Management_Presenter.class
+                    .getName()).log(Level.SEVERE, null, ex);
+            mm.addAttribute("errorMessage", "Erreur Base de donnée.");
+            return "error";
         }
         return pageToLoad;
     }
@@ -99,13 +79,29 @@ public class UserPresenter extends Project_Management_Presenter {
         String token = this.getTokenSession(request.getSession(), mm);
         String id = Project_Management_Presenter.model.isValidToken(token);
         if (id != null) {
+            ArrayList<Group> groups = new ArrayList<Group>();
+            ArrayList<Task> tasks = new ArrayList<Task>();
+            String[] gps = this.getMemberGroups(request.getParameter("idUser")).replaceAll(" ", "").split(",");
+            String[] tsks = this.getMemberTasks(request.getParameter("idUser")).replaceAll(" ", "").split(",");
+            try {
+                for (String g : gps) {
+                    groups.add(UserPresenter.model.getGroupInfos(g));
+                }
+
+                for (String t : tsks) {
+                    tasks.add(UserPresenter.model.getInfosTask(Integer.parseInt(t.trim())));
+                }
+            } catch (Exception ex) {
+                Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
             Member memb = this.getInfoUser(request.getParameter("idUser"), token);
             mm.addAttribute("id", memb.getId_member());
             mm.addAttribute("nom", memb.getName());
             mm.addAttribute("prenom", memb.getFirst_name());
             mm.addAttribute("mail", memb.getEmail());
-            mm.addAttribute("groups", this.getMemberGroups(request.getParameter("idUser")));
-            mm.addAttribute("tasks", this.getMemberTasks(request.getParameter("idUser")));
+            request.setAttribute("groupsTable", groups);
+            request.setAttribute("tasksTable", tasks);
             this.fillAccordionMenu(token, mm);
             return UserPresenter.urlDomain + "checkUser";
         } else {
@@ -167,8 +163,7 @@ public class UserPresenter extends Project_Management_Presenter {
                 return "error";
             }
         } catch (SQLException ex) {
-            Logger.getLogger(Project_Management_Presenter.class
-                    .getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
             mm.addAttribute("errorMessage", "Erreur Base de donnée.");
             return "error";
         }
@@ -218,7 +213,7 @@ public class UserPresenter extends Project_Management_Presenter {
                     + "<strong>Erreur Base de donnée.</strong></div>";
         }
         mm.addAttribute("alert", alertMess);
-        return UserPresenter.urlDomain+"listOfUser";
+        return UserPresenter.urlDomain + "listOfUser";
     }
 
     /*
@@ -262,7 +257,7 @@ public class UserPresenter extends Project_Management_Presenter {
                     + "<strong>Erreur Base de donnée.</strong></div>";
         }
         mm.addAttribute("alert", alertMess);
-        return UserPresenter.urlDomain+"listOfUser";
+        return UserPresenter.urlDomain + "listOfUser";
     }
 
     @RequestMapping(value = {"profileInfosUpdated"}, method = {RequestMethod.GET, RequestMethod.POST})
@@ -303,7 +298,7 @@ public class UserPresenter extends Project_Management_Presenter {
                     + "<strong>Erreur fatale.</strong></div>";
         }
         mm.addAttribute("alert", alertMess);
-        return UserPresenter.urlDomain+"listOfUser";
+        return UserPresenter.urlDomain + "listOfUser";
     }
 
     public String fillFormUpUser(HttpServletRequest request, ModelMap modelMap, String token) {

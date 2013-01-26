@@ -7,6 +7,7 @@
 <!DOCTYPE html>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="display" uri="http://displaytag.sf.net" %>
 <html lang="fr">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -62,17 +63,55 @@
         <script language="javascript">          
             function fillNbMess(data)
             {
-                document.getElementById('nbNewMess').innerHTML = data;
+                if(data > 0 )
+                {
+                    document.getElementById('nbNewMess').innerHTML = data;
+                }
+                else
+                {
+                    document.getElementById('nbNewMess').innerHTML = 0;  
+                }
             }
             
             function checkNewMess()
             {
                 Project_Management_Presenter_Intern_Methods.getNbMessagesForStatus('<%=session.getAttribute("token")%>', '', fillNbMess);
             }
+            
+            function addRowHandlers(tableId, url, paramName, columnIndex) {
+                var table = document.getElementById(tableId);
+                var rows = table.getElementsByTagName("tr");
+
+                for (i = 1; i < rows.length; i++) {
+                
+
+                    if (rows[i].getElementsByTagName("td")[3].innerHTML == 'URGENT')
+                    {
+                        rows[i].className = 'error';
+                    }
+                    else if (rows[i].getElementsByTagName("td")[3].innerHTML == 'OPEN')
+                    {
+                        rows[i].className = 'success';
+                    }
+                    else if (rows[i].getElementsByTagName("td")[3].innerHTML == 'CLOSED')
+                    {
+                        rows[i].className = 'default';
+                    }
+                    else
+                    {
+                        rows[i].className = 'warning';
+                    }
+                    rows[i].onclick = function () {
+                        var cell = this.getElementsByTagName("td")[columnIndex];
+                        var paramValue = cell.innerHTML;
+                        location.href = url + "?" + paramName + "=" + paramValue;
+                    };
+                }
+            }
         </script>
     </head>
 
-    <body>
+    <body onload="addRowHandlers('row','/BE_A2_2012_2013/task/checkTask', 'idTask', 0);">
 
         <div class="navbar navbar-inverse navbar-fixed-top">
             <div class="navbar-inner">
@@ -100,7 +139,7 @@
                             <li class="dropdown">
                                 <a id="drop2" href="#" role="button" class="dropdown-toggle" onclick="checkNewMess();" data-toggle="dropdown">Messagerie <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/message/inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess"></b></span></a></li> 
+                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/message/inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess"></b></span></a></li> 
                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/message/createMessage">Envoyer un message</a></li>
                                 </ul>
                             </li>
@@ -240,9 +279,14 @@
                     <!-- Example row of columns -->
                     <div class="row-fluid">
                         <div class="row-fluid">
-                            <form action="<c:url value="checkTask"/>" method="post" ></br>
-                                ${table}
-                            </form>
+                            <display:table class="table table-hover" id="row" name="tasks" defaultsort="3" defaultorder="descending" decorator="dataObjects.TaskHeaderDecorator" pagesize="20" requestURI="">
+                                <display:column property="id" title="ID" sortable="true" />
+                                <display:column property="project_topic"  title ="Projet" sortable="true" />
+                                <display:column property="title" title="Nom de la tâche" sortable="true" />
+                                <display:column property="status" title="Statut" sortable="true" />
+                                <display:column property="creationDate" title="Date début" sortable="true" />
+                                <display:column property="dueDate" title="Date limite" sortable="true" />
+                            </display:table>
                         </div>
                     </div>
 

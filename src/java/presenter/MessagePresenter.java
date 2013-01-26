@@ -45,8 +45,15 @@ public class MessagePresenter extends Project_Management_Presenter {
         String pageToLoad = null;
         String id = Project_Management_Presenter.model.isValidToken(token);
         if (id != null) {
-            this.generateAndAddMessagesInbox(mm, token);
-            this.generateAndAddMessagesOutbox(mm, token);
+            String autoAccordi = (String) request.getParameter("displayAccordi");
+            this.generateAndAddMessagesInbox(token, request);
+            this.generateAndAddMessagesOutbox(token, request);
+            if (autoAccordi != null && !autoAccordi.equalsIgnoreCase("")) {
+                if (!autoAccordi.equalsIgnoreCase("autoOut")) {
+                    mm.addAttribute("autoIn", "auto");
+                }
+                mm.addAttribute(autoAccordi, "auto");
+            }
             mm.addAttribute("nbNewMessages", this.getNbMessagesForStatus(token, ""));
 
         } else {
@@ -69,9 +76,15 @@ public class MessagePresenter extends Project_Management_Presenter {
         }
         try {
             Message mess = this.getMessageBody((String) request.getParameter("idMess"), token, (((String) request.getParameter("fromInbox")).compareToIgnoreCase("yes") == 0 ? true : false));
-            m.addAttribute("recipient", mess.getSender());
-            m.addAttribute("title", "Réponse au message : " + mess.getTitle());
-            m.addAttribute("message", "\n\n------- Message original envoyé le " + mess.getStringCreationDate() + " -------\n" + mess.getContent());
+            if (request.getParameter("fwd") == null) {
+                m.addAttribute("recipient", mess.getSender());
+                m.addAttribute("title", "Réponse au message : " + mess.getTitle());
+                m.addAttribute("message", "\n\n------- Message original envoyé le " + mess.getStringCreationDate() + " -------\n" + mess.getContent());
+            } else {
+                this.updateMessageStatus(token, (String) request.getParameter("idMess"), MessageStatus.FORWARDED, true);
+                m.addAttribute("title", "Fwd : " + mess.getTitle());
+                m.addAttribute("message", "\n\n------- Message original envoyé le " + mess.getStringCreationDate() + " par "+mess.getSender()+" -------\n" + mess.getContent());
+            }
         } catch (Exception e) {
         }
         if (token != null) {
@@ -174,7 +187,7 @@ public class MessagePresenter extends Project_Management_Presenter {
                     .getName()).log(Level.SEVERE, null, ex);
 
         }
-        this.generateAndAddMessagesInbox(m, token);
+        this.generateAndAddMessagesInbox(token, request);
         m.addAttribute("alert", alertMess);
         return MessagePresenter.urlDomain + "inbox";
     }
@@ -245,125 +258,74 @@ public class MessagePresenter extends Project_Management_Presenter {
      * @return Array : [0] : Important, [1] : Have to answer, [2] : Urgent, [3]
      * : Forwarded, [4] : Read, [5] unread
      */
-    private String[] fillInboxMessages(String token, ArrayList<MessageHeader> messageList) {
-        String[] table = {null, null, null, null, null, null};
-        int[] hasMsgs = {0, 0, 0, 0, 0, 0};
+    private ArrayList<ArrayList<MessageHeader>> fillInboxMessages(String token, ArrayList<MessageHeader> messageList) {
+        ArrayList<ArrayList<MessageHeader>> mess = new ArrayList<ArrayList<MessageHeader>>();
+
+        for (int i = 0; i < 6; i++) {
+            mess.add(i, new ArrayList<MessageHeader>());
+        }
         try {
             if (messageList != null) {
                 //Creation de la table en html contenant tous les headers de toutes les taches
-                for (int i = 0; i < 6; i++) {
-                    table[i] =
-                            "<table class=\"table table-hover\" >"
-                            + "<tr id='entete'>"
-                            + "<th>Titre du message</th>"
-                            + "<th>Auteur</th>"
-                            + "<th>Date de création</th>"
-                            + "</tr>";
-                }
+
                 for (MessageHeader m : messageList) {
                     int[] hasLine = {0, 0, 0, 0, 0, 0};
                     ArrayList<MessageStatus> mst = m.getStatus();
                     if (mst != null && !mst.isEmpty()) {
                         for (MessageStatus ms : mst) {
                             if (ms.equals(MessageStatus.IMPORTANT) && hasLine[0] < 1) {
-                                table[0] += "<tr class=\"warning\" id='groupe' ";
-                                hasMsgs[0]++;
+                                mess.get(0).add(m);
                                 hasLine[0]++;
                             } else if (ms.equals(MessageStatus.HAVE_TO_ANSWER) && hasLine[1] < 1) {
-                                table[1] += "<tr class=\"info\" id='groupe' ";
-                                hasMsgs[1]++;
+                                mess.get(1).add(m);
                                 hasLine[1]++;
                             } else if (ms.equals(MessageStatus.URGENT) && hasLine[2] < 1) {
-                                table[2] += "<tr class=\"error\" id='groupe' ";
-                                hasMsgs[2]++;
+                                mess.get(2).add(m);
                                 hasLine[2]++;
                             } else if (ms.equals(MessageStatus.FORWARDED) && hasLine[3] < 1) {
-                                table[3] += "<tr class=\"success\" id='groupe' ";
-                                hasMsgs[3]++;
+                                mess.get(3).add(m);
                                 hasLine[3]++;
-                            } else if(hasLine[4] < 1){
-                                table[4] += "<tr id='groupe' ";
-                                hasMsgs[4]++;
+                            } else if (hasLine[4] < 1) {
+                                mess.get(4).add(m);
                                 hasLine[4]++;
                             }
                         }
                     } else {
-                        table[5] += "<tr id='groupe' class=\"default\" ";
-                        hasMsgs[5]++;
+                        mess.get(5).add(m);
                         hasLine[5]++;
                     }
-                    for (int i = 0; i < 6; i++) {
-                        table[i] += hasLine[i] > 0 ? "onclick='window.location.href = \"" + Project_Management_Presenter.domain + "/message/checkMessage?idMessage=" + m.getId() + "&fromInbox=yes\";'>" + "<td>" + m.getTitle() + "</td>"
-                                + "<td>" + m.getSender() + "</td>"
-                                + "<td>" + m.getStringCreationDate() + "</td>"
-                                + "</tr>" : "";
-                    }
                 }
-                for (int i = 0; i < 6; i++) {
-                    table[i] = hasMsgs[i] > 0 ? table[i] + "</table>" : null;
-                }
+
             }
         } catch (Exception ex) {
             Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return table;
+        return mess;
     }
 
-    private void generateAndAddMessagesInbox(ModelMap mm, String token) {
+    private void generateAndAddMessagesInbox(String token, HttpServletRequest request) {
         ArrayList<MessageHeader> mh = this.getHeaderMessages(token, true);
         //[0] : Important, [1] : Have to answer, [2] : Urgent, [3] : Forwarded, [4] : Read, [5] unread
 
-        String[] messInbox = this.fillInboxMessages(token, mh);
-                                    System.err.println("/*-/-*/-*/-*/-*/-/-*/-*/*- " + messInbox[5]);
+        ArrayList<ArrayList<MessageHeader>> messInbox = this.fillInboxMessages(token, mh);
 
-        String messRead = (messInbox == null ? null : messInbox[4]);
-        String messUnRead = (messInbox == null ? null : messInbox[5]);
-        String messUrg = (messInbox == null ? null : messInbox[2]);
-        String messImp = (messInbox == null ? null : messInbox[0]);
-        String messToAnsw = (messInbox == null ? null : messInbox[1]);
-        String messFwd = (messInbox == null ? null : messInbox[3]);
+        ArrayList<MessageHeader> messRead = (messInbox == null ? null : messInbox.get(4));
+        ArrayList<MessageHeader> messUnRead = (messInbox == null ? null : messInbox.get(5));
+        ArrayList<MessageHeader> messUrg = (messInbox == null ? null : messInbox.get(2));
+        ArrayList<MessageHeader> messImp = (messInbox == null ? null : messInbox.get(0));
+        ArrayList<MessageHeader> messToAnsw = (messInbox == null ? null : messInbox.get(1));
+        ArrayList<MessageHeader> messFwd = (messInbox == null ? null : messInbox.get(3));
         //Mise en place de la table 
-        mm.addAttribute("messRead", messRead == null ? "Pas de messages." : messRead);
-        mm.addAttribute("messUnRead", messUnRead == null ? "Pas de messages." : messUnRead);
-        mm.addAttribute("messUrg", messUrg == null ? "Pas de messages." : messUrg);
-        mm.addAttribute("messImp", messImp == null ? "Pas de messages." : messImp);
-        mm.addAttribute("messToAnsw", messToAnsw == null ? "Pas de messages." : messToAnsw);
-        mm.addAttribute("messFwd", messFwd == null ? "Pas de messages." : messFwd);
+        request.setAttribute("messRead", messRead);
+        request.setAttribute("messUnRead", messUnRead);
+        request.setAttribute("messUrg", messUrg);
+        request.setAttribute("messImp", messImp);
+        request.setAttribute("messToAnsw", messToAnsw);
+        request.setAttribute("messFwd", messFwd);
     }
 
-    private String fillOutboxMessages(String token, ArrayList<MessageHeader> messageList) {
-        String table = null;
-
-        try {
-            if (messageList != null) {
-                //Creation de la table en html contenant tous les headers de toutes les taches
-
-                table =
-                        "<table class=\"table table-hover\" >"
-                        + "<tr id='entete'>"
-                        + "<th>Titre du message</th>"
-                        + "<th>Auteur</th>"
-                        + "<th>Date de création</th>"
-                        + "</tr>";
-
-                for (MessageHeader m : messageList) {
-                    table += "<tr id='groupe' onclick='window.location.href = \"" + Project_Management_Presenter.domain + "/message/checkMessage?idMessage=" + m.getId() + "&fromInbox=no\";'>" + "<td>" + m.getTitle() + "</td>"
-                            + "<td>" + m.getSender() + "</td>"
-                            + "<td>" + m.getStringCreationDate() + "</td>"
-                            + "</tr>";
-                }
-                table += "</table>";
-            }
-        } catch (Exception ex) {
-            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return table;
-    }
-
-    private void generateAndAddMessagesOutbox(ModelMap mm, String token) {
+    private void generateAndAddMessagesOutbox(String token, HttpServletRequest request) {
         ArrayList<MessageHeader> mh = this.getHeaderMessages(token, false);
-        //[0] : Important, [1] : Have to answer, [2] : Urgent, [3] : Forwarded, [4] : Read, [5] unread
-        String messOutbox = this.fillOutboxMessages(token, mh);
-        mm.addAttribute("messOutbox", messOutbox == null ? "Pas de messages." : messOutbox);
+        request.setAttribute("messOutbox", mh);
     }
 }

@@ -7,6 +7,7 @@
 <!DOCTYPE html>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="display" uri="http://displaytag.sf.net" %>
 <html lang="fr">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -69,10 +70,21 @@
             {
                 Project_Management_Presenter_Intern_Methods.getNbMessagesForStatus('<%=session.getAttribute("token")%>', '', fillNbMess);
             }
+            function addRowHandlers(tableId, url, paramName, columnIndex) {
+                var table = document.getElementById(tableId);
+                var rows = table.getElementsByTagName("tr");
+                for (i = 1; i < rows.length; i++) {      
+                    rows[i].onclick = function () {
+                        var cell = this.getElementsByTagName("td")[columnIndex];
+                        var paramValue = cell.innerHTML;
+                        location.href = url + "?" + paramName + "=" + paramValue +" ";
+                    };
+                }
+            }
         </script>
     </head>
 
-    <body>
+    <body onload="addRowHandlers('rowGroups', '/BE_A2_2012_2013/group/checkGroup', 'id_groupe', 0)">
 
         <div class="navbar navbar-inverse navbar-fixed-top">
             <div class="navbar-inner">
@@ -100,7 +112,7 @@
                             <li class="dropdown">
                                 <a id="drop2" href="#" role="button" class="dropdown-toggle" onclick="checkNewMess();" data-toggle="dropdown">Messagerie <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/message/inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess"></b></span></a></li> 
+                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/message/inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess"></b></span></a></li> 
                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/message/createMessage">Envoyer un message</a></li>
                                 </ul>
                             </li>
@@ -239,7 +251,11 @@
                         <h1>Liste des groupes</h1>
                     </div>
                     <div class="row-fluid"> 
-                        ${groupList}
+                        <display:table class="table table-hover" id="rowGroups" name="groupsTable" defaultsort="1" defaultorder="descending" pagesize="20" requestURI="">
+                            <display:column property="id_group" title="ID" sortable="true" />
+                            <display:column property="group_name"  title ="Nom du groupe" sortable="true" />
+                            <display:column property="descr" title="Description du groupe" sortable="false" />
+                        </display:table>
                         <% if (session.getAttribute("isAdmin") != null) {%> 
                         <div class="span1 pull-right">
                             <a href="/group/createGroup"><input class="btn btn-primary" type="submit" value="Créer" /></a>

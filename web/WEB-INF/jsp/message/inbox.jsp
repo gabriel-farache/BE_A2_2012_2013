@@ -64,16 +64,97 @@
             function fillNbMess(data)
             {
                 document.getElementById('nbNewMess').innerHTML = data;
+                document.getElementById('nbNewMessDisp').innerHTML = data;
             }
             
             function checkNewMess()
             {
                 Project_Management_Presenter_Intern_Methods.getNbMessagesForStatus('<%=session.getAttribute("token")%>', '', fillNbMess);
             }
+            function addRowHandlers(url, paramName, columnIndex) {
+                
+                var table = document.getElementById('rowFwd');
+                var rows = table.getElementsByTagName("tr");
+                for (i = 1; i < rows.length; i++) {
+                    rows[i].className = 'success';
+                    rows[i].onclick = function () {
+                        var cell = this.getElementsByTagName("td")[columnIndex];
+                        var paramValue = cell.innerHTML;
+                        location.href = url + "?" + paramName + "=" + paramValue + "&fromInbox=yes";
+                    };
+                }
+                
+                var table = document.getElementById('row2Answ');
+                var rows = table.getElementsByTagName("tr");
+                for (i = 1; i < rows.length; i++) {
+                    rows[i].className = 'info';
+                    rows[i].onclick = function () {
+                        var cell = this.getElementsByTagName("td")[columnIndex];
+                        var paramValue = cell.innerHTML;
+                        location.href = url + "?" + paramName + "=" + paramValue + "&fromInbox=yes";
+                    };
+                }
+                var table = document.getElementById('rowUrg');
+                var rows = table.getElementsByTagName("tr");
+                for (i = 1; i < rows.length; i++) {
+                    rows[i].className = 'error';
+                    rows[i].onclick = function () {
+                        var cell = this.getElementsByTagName("td")[columnIndex];
+                        var paramValue = cell.innerHTML;
+                        location.href = url + "?" + paramName + "=" + paramValue + "&fromInbox=yes";
+                    };
+                }
+                
+                var table = document.getElementById('rowImp');
+                var rows = table.getElementsByTagName("tr");
+                for (i = 1; i < rows.length; i++) {
+                    rows[i].className = 'warning';
+                    rows[i].onclick = function () {
+                        var cell = this.getElementsByTagName("td")[columnIndex];
+                        var paramValue = cell.innerHTML;
+                        location.href = url + "?" + paramName + "=" + paramValue + "&fromInbox=yes";
+                    };
+                } 
+                
+                var table = document.getElementById('rowRead');
+                var rows = table.getElementsByTagName("tr");
+                for (i = 1; i < rows.length; i++) {
+                    rows[i].onclick = function () {
+                        var cell = this.getElementsByTagName("td")[columnIndex];
+                        var paramValue = cell.innerHTML;
+                        location.href = url + "?" + paramName + "=" + paramValue + "&fromInbox=yes";
+                    };
+                } 
+                
+                var table = document.getElementById('rowOut');
+                var rows = table.getElementsByTagName("tr");
+                for (i = 1; i < rows.length; i++) {
+                    rows[i].onclick = function () {
+                        var cell = this.getElementsByTagName("td")[columnIndex];
+                        var paramValue = cell.innerHTML;
+                        location.href = url + "?" + paramName + "=" + paramValue + "&fromInbox=no";
+                    };
+                } 
+                
+                var table = document.getElementById('rowUnread');
+                var rows = table.getElementsByTagName("tr");
+                for (i = 1; i < rows.length; i++) {
+                    rows[i].className = 'default';
+                    rows[i].onclick = function () {
+                        var cell = this.getElementsByTagName("td")[columnIndex];
+                        var paramValue = cell.innerHTML;
+                        location.href = url + "?" + paramName + "=" + paramValue + "&fromInbox=yes";
+                    };
+                } 
+                
+                
+                
+                checkNewMess();
+            }
         </script>
     </head>
 
-    <body>
+    <body onload="addRowHandlers('/BE_A2_2012_2013/message/checkMessage', 'idMessage', 0);">
 
         <div class="navbar navbar-inverse navbar-fixed-top">
             <div class="navbar-inner">
@@ -236,7 +317,7 @@
                 <div class="span9 offset2">
                     ${alert}
                     <div class="hero-unit">
-                        <h1>Mes messages <span class="badge badge-info">${nbNewMessages}</span></h1>
+                        <h1>Mes messages <span class="badge badge-info"><b id="nbNewMessDisp">${nbNewMessages}</b></span></h1>
                     </div>
                     <!-- Example row of columns -->
                     <div class="row-fluid">
@@ -248,7 +329,7 @@
                                             Boite de r&eacute;ception
                                         </a>
                                     </div>
-                                    <div id="msgRcpts" class="accordion-body  collapse" style="height: 0px; ">
+                                    <div id="msgRcpts" class="accordion-body  in collapse" style="height: ${autoIn}; ">
                                         <div class="accordion" id="accordionMsgsRcvs">
                                             <div class="accordion-group">
                                                 <div class="accordion-heading">
@@ -256,9 +337,14 @@
                                                         Messages non lus
                                                     </a>
                                                 </div>
-                                                <div id="messUnRead" class="accordion-body  collapse" style="height: 0px; ">
+                                                <div id="messUnRead" class="accordion-body  collapse" style="height: ${autoUnread}; ">
                                                     <div class="accordion-inner">
-                                                        ${messUnRead}
+                                                        <display:table class="table table-hover" id="rowUnread" name="messUnRead" defaultsort="3" defaultorder="descending" decorator="dataObjects.MessageHeaderDecorator" pagesize="15" requestURI="/BE_A2_2012_2013/message/inbox?displayAccordi=autoUnread" excludedParams="displayAccordi">
+                                                            <display:column property="id" title="ID" sortable="true" />
+                                                            <display:column property="title" title="Objet" sortable="true" />
+                                                            <display:column property="sender" title="Expediteur" sortable="true" />
+                                                            <display:column property="creationDate" title="Date" sortable="true" />
+                                                        </display:table>
                                                     </div>
                                                 </div>
                                             </div>
@@ -268,9 +354,14 @@
                                                         Messages lus
                                                     </a>
                                                 </div>
-                                                <div id="messRead" class="accordion-body  collapse" style="height: 0px; ">
+                                                <div id="messRead" class="accordion-body  collapse" style="height: ${autoRead}; ">
                                                     <div class="accordion-inner">
-                                                        ${messRead}
+                                                        <display:table class="table table-hover" id="rowRead" name="messRead" defaultsort="3" defaultorder="descending" decorator="dataObjects.MessageHeaderDecorator" pagesize="15" requestURI="/BE_A2_2012_2013/message/inbox?displayAccordi=autoRead" excludedParams="displayAccordi">
+                                                            <display:column property="id" title="ID" sortable="true" />
+                                                            <display:column property="title" title="Objet" sortable="true" />
+                                                            <display:column property="sender" title="Expediteur" sortable="true" />
+                                                            <display:column property="creationDate" title="Date" sortable="true" />
+                                                        </display:table>
                                                     </div>
                                                 </div>
                                             </div>
@@ -280,10 +371,15 @@
                                                         Messages urgents
                                                     </a>
                                                 </div>
-                                                <div id="messUrg" class="accordion-body  collapse" style="height: 0px; ">
+                                                <div id="messUrg" class="accordion-body  collapse" style="height: ${autoUrg}; ">
                                                     <div class="accordion-inner">
                                                         <ul>
-                                                            ${messUrg}
+                                                            <display:table class="table table-hover" id="rowUrg" name="messUrg" defaultsort="3" defaultorder="descending" decorator="dataObjects.MessageHeaderDecorator" pagesize="15" requestURI="/BE_A2_2012_2013/message/inbox?displayAccordi=autoUrg" excludedParams="displayAccordi">
+                                                                <display:column property="id" title="ID" sortable="true" />
+                                                                <display:column property="title" title="Objet" sortable="true" />
+                                                                <display:column property="sender" title="Expediteur" sortable="true" />
+                                                                <display:column property="creationDate" title="Date" sortable="true" />
+                                                            </display:table>
                                                         </ul>
                                                     </div>
                                                 </div>
@@ -294,10 +390,15 @@
                                                         Messages importants
                                                     </a>
                                                 </div>
-                                                <div id="messImp" class="accordion-body  collapse" style="height: 0px; ">
+                                                <div id="messImp" class="accordion-body  collapse" style="height: ${autoImp}; ">
                                                     <div class="accordion-inner">
                                                         <ul>
-                                                            ${messImp}
+                                                            <display:table class="table table-hover" id="rowImp" name="messImp" defaultsort="3" defaultorder="descending" decorator="dataObjects.MessageHeaderDecorator" pagesize="15" requestURI="/BE_A2_2012_2013/message/inbox?displayAccordi=autoImp" excludedParams="displayAccordi">
+                                                                <display:column property="id" title="ID" sortable="true" />
+                                                                <display:column property="title" title="Objet" sortable="true" />
+                                                                <display:column property="sender" title="Expediteur" sortable="true" />
+                                                                <display:column property="creationDate" title="Date" sortable="true" />
+                                                            </display:table>
                                                         </ul>
                                                     </div>
                                                 </div>
@@ -308,10 +409,15 @@
                                                         Messages auxquels r&eacute;pondres
                                                     </a>
                                                 </div>
-                                                <div id="messToAnsw" class="accordion-body  collapse" style="height: 0px; ">
+                                                <div id="messToAnsw" class="accordion-body  collapse" style="height: ${autoToAnsw}; ">
                                                     <div class="accordion-inner">
                                                         <ul>
-                                                            ${messToAnsw}
+                                                            <display:table class="table table-hover" id="row2Answ" name="messToAnsw" defaultsort="3" defaultorder="descending" decorator="dataObjects.MessageHeaderDecorator" pagesize="15" requestURI="/BE_A2_2012_2013/message/inbox?displayAccordi=autoToAnsw" excludedParams="displayAccordi">
+                                                                <display:column property="id" title="ID" sortable="true" />
+                                                                <display:column property="title" title="Objet" sortable="true" />
+                                                                <display:column property="sender" title="Expediteur" sortable="true" />
+                                                                <display:column property="creationDate" title="Date" sortable="true" />
+                                                            </display:table>
                                                         </ul>
                                                     </div>
                                                 </div>
@@ -322,10 +428,15 @@
                                                         Messages transf&eacute;f&eacute;s
                                                     </a>
                                                 </div>
-                                                <div id="messFwd" class="accordion-body  collapse" style="height: 0px; ">
+                                                <div id="messFwd" class="accordion-body  collapse" style="height: ${autoFwd}; ">
                                                     <div class="accordion-inner">
                                                         <ul>
-                                                            ${messFwd}
+                                                            <display:table class="table table-hover" id="rowFwd" name="messFwd" defaultsort="3" defaultorder="descending" decorator="dataObjects.MessageHeaderDecorator" pagesize="15" requestURI="/BE_A2_2012_2013/message/inbox?displayAccordi=autoFwd" excludedParams="displayAccordi">
+                                                                <display:column property="id" title="ID" sortable="true" />
+                                                                <display:column property="title" title="Objet" sortable="true" />
+                                                                <display:column property="sender" title="Expediteur" sortable="true" />
+                                                                <display:column property="creationDate" title="Date" sortable="true" />
+                                                            </display:table>
                                                         </ul>
                                                     </div>
                                                 </div>
@@ -339,10 +450,15 @@
                                             Boite d'envoi
                                         </a>
                                     </div>
-                                    <div id="msgSend" class="accordion-body  collapse" style="height: 0px; ">
+                                    <div id="msgSend" class="accordion-body  collapse" style="height: ${autoOut}; ">
                                         <div class="accordion-inner">
                                             <ul>
-                                                ${messOutbox}
+                                                <display:table class="table table-hover" id="rowOut" name="messOutbox" defaultsort="0" defaultorder="descending" decorator="dataObjects.MessageHeaderDecorator" pagesize="15" requestURI="/BE_A2_2012_2013/message/inbox?displayAccordi=autoOut" excludedParams="displayAccordi">
+                                                    <display:column property="id" title="ID" sortable="true" />
+                                                    <display:column property="title" title="Objet" sortable="true" />
+                                                    <display:column property="sender" title="Expediteur" sortable="true" />
+                                                    <display:column property="creationDate" title="Date" sortable="true" />
+                                                </display:table>
                                             </ul>
                                         </div>
                                     </div>

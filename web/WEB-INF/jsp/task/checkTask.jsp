@@ -7,6 +7,7 @@
 <!DOCTYPE html>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="display" uri="http://displaytag.sf.net" %>
 <html lang="fr">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -69,10 +70,27 @@
             {
                 Project_Management_Presenter_Intern_Methods.getNbMessagesForStatus('<%=session.getAttribute("token")%>', '', fillNbMess);
             }
+            function addRowHandlersInit() {
+                addRowHandlers('rowGroups', '/BE_A2_2012_2013/group/checkGroup', 'id_groupe', 0);
+                addRowHandlers('rowUser', '/BE_A2_2012_2013/user/checkUser', 'idUser', 0);
+            }
+            
+            function addRowHandlers(tableId, url, paramName, columnIndex) {
+                var table = document.getElementById(tableId);
+                var rows = table.getElementsByTagName("tr");
+                for (i = 1; i < rows.length; i++) {      
+                    rows[i].onclick = function () {
+                        var cell = this.getElementsByTagName("td")[columnIndex];
+                        var paramValue = cell.innerHTML;
+                        window.open(url + "?" + paramName + "=" + paramValue,'_blank');
+                    };
+                }
+            }
+            
         </script>
     </head>
 
-    <body>
+    <body onload="addRowHandlersInit();">
 
         <div class="navbar navbar-inverse navbar-fixed-top">
             <div class="navbar-inner">
@@ -100,7 +118,7 @@
                             <li class="dropdown">
                                 <a id="drop2" href="#" role="button" class="dropdown-toggle" onclick="checkNewMess();" data-toggle="dropdown">Messagerie <b class="caret"></b></a>
                                 <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
-                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/message/inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess"></b></span></a></li> 
+                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/message/inbox" >Bo&icirc;te de r&eacute;c&eacute;ption <span class="badge badge-info" ><b id="nbNewMess"></b></span></a></li> 
                                     <li><a tabindex="-1" href="/BE_A2_2012_2013/message/createMessage">Envoyer un message</a></li>
                                 </ul>
                             </li>
@@ -241,15 +259,24 @@
                         ${alert}
                         <fieldset>
                             <legend for="mb" class="rubrique">Membre(s)</legend>
-                             <label for="mb" >${utilsM}</label>
+                            <display:table class="table table-hover" id="rowUser" name="usersTable" defaultsort="2" defaultorder="descending" pagesize="20" requestURI="">
+                                <display:column property="id_member" title="ID" sortable="true" />
+                                <display:column property="name"  title ="Nom" sortable="true" />
+                                <display:column property="first_name" title="Prénom" sortable="true" />
+                                <display:column property="email" title="email externe" sortable="true" />
+                            </display:table>
                         </fieldset>
                         <fieldset>
                             <legend for="gp" class="rubrique">Groupe(s)</legend>
-                             <label for="gp" >${utilsG}</label>
+                            <display:table class="table table-hover" id="rowGroups" name="groupsTable" defaultsort="1" defaultorder="descending" pagesize="20" requestURI="">
+                                <display:column property="id_group" title="ID" sortable="true" />
+                                <display:column property="group_name"  title ="Nom du groupe" sortable="true" />
+                                <display:column property="descr" title="Description du groupe" sortable="false" />
+                            </display:table>
                         </fieldset>
                         <fieldset>
                             <legend for="gp" class="rubrique">Chef</legend>
-                             <label for="gp" >${chief}</label>
+                            <label for="gp" >${chief}</label>
                         </fieldset>
                         <fieldset>
                             <legend for="projet" class="rubrique">Projet</legend>
@@ -265,11 +292,11 @@
                         </fieldset>
                         <fieldset>
                             <legend for="dateDebut" class="rubrique">Date de Début</legend>
-                            <input type="date" for="dateDebut" value="${dateDebut}"/>
+                            <input type="date" for="dateDebut" value="${dateDebut}" readonly/>
                         </fieldset>
                         <fieldset>
                             <legend for="dateFin" class="rubrique">Date de Fin</legend>
-                            <input type="date" for="dateFin" value="${dateFin}"/>
+                            <input type="date" for="dateFin" value="${dateFin}" readonly/>
                             </br>
                         </fieldset>
                         <fieldset>

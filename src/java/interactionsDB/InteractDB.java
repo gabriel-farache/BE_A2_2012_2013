@@ -814,19 +814,28 @@ public class InteractDB {
                         ret = this.addSendTaskToGroupAndAssociateToMembers(id_Sender, cle.getId(), Integer.parseInt(id_Task));
                     }
                 } else {
-                    String request = "DELETE FROM APP.T_EnvoiTacheMembre WHERE idPersonneDestination = '" + cle.getId().trim() + "' AND idTache = " + id_Task + " ";
-                    if (this.doModif(request, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE) != 1) {
-                        throw new SQLException("La requête de suppression a échoué pour le recipient ID : " + cle.getId().trim() + " pour la tache " + id_Task + ".");
+                    if (cle.getType().compareTo(RecipientType.GROUP) != 0) {
+                        String request = "DELETE FROM APP.T_EnvoiTacheMembre WHERE idPersonneDestination = '" + cle.getId().trim() + "' AND idTache = " + id_Task + " ";
+                        if (this.doModif(request, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE) != 1) {
+                            throw new SQLException("La requête de suppression a échoué pour le recipient ID : " + cle.getId().trim() + " pour la tache " + id_Task + ".");
+                        } else {
+                            ret = 1;
+                        }
                     } else {
-                        ret = 1;
+                        String request = "DELETE FROM APP.T_EnvoiTacheGroupe WHERE idGroupeDestination = '" + cle.getId().trim() + "' AND idTache = " + id_Task + " ";
+                        if (this.doModif(request, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE) != 1) {
+                            throw new SQLException("La requête de suppression a échoué pour le recipient ID : " + cle.getId().trim() + " pour la tache " + id_Task + ".");
+                        } else {
+                            ret = 1;
+                        }
                     }
                 }
             } catch (Exception ex) {
                 Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
-                err += ex.getMessage() + "\n";
+                err += ex.getMessage() + " \n";
             }
         }
-        if (err.compareTo("") == 0) {
+        if (err.compareTo("") != 0) {
             throw new SQLException(err);
         }
         return ret;
@@ -1835,12 +1844,12 @@ public class InteractDB {
                     + "AND t.idTache = etm.idTache";
             ResultSet donnees = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
             while (donnees.next()) {
-                tasks += donnees.getString("titre").trim() + " (" + donnees.getString("idTache").trim() + "), ";
+                tasks += donnees.getString("idTache").trim() + ", ";
             }
             return tasks;
 
         } else {
-            return "Error when fetching tasks.";
+            return "No tasks.";
         }
     }
 
@@ -2073,12 +2082,12 @@ public class InteractDB {
 
             ResultSet donnees = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
             while (donnees.next()) {
-                groups += donnees.getString("nom") + " (" + donnees.getString("idGroupe") + "), ";
+                groups += donnees.getString("idGroupe") + ", ";
             }
 
             return (groups);
         } else {
-            return "Error when fetching groups.";
+            return "No groups.";
         }
     }
 
@@ -2119,5 +2128,21 @@ public class InteractDB {
             }
         }
         return ret;
+    }
+
+    public ArrayList<String> searchExprInTable(String table, String colName, String expr, String id) {
+        try {
+            ArrayList<String> result = new ArrayList<String>();
+            String req = "SELECT DISTINCT " + colName + " as " + colName + ", " + id + " as " + id + " FROM APP." + table + " WHERE upper(" + colName + ") LIKE upper('" + expr + "%')";
+            ResultSet donnees = this.doRequest(req, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
+
+            while (donnees.next()) {
+                result.add(donnees.getString(colName) + " (" + donnees.getString(id) + ")");
+            }
+            return result;
+        } catch (SQLException ex) {
+            Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
     }
 }

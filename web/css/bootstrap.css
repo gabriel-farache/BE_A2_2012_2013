@@ -6042,3 +6042,21 @@ a.badge:hover {
 .affix {
   position: fixed;
 }
+.suggestionsBox {
+position: relative;
+left: 20px;
+width: 200px;
+border: 1px solid #000;
+}
+
+/* remove indents and bullets */
+.suggestionList ul { 
+margin: 0;
+padding : 0;
+list-style: none; 
+}
+
+/* indicate selection with background color */
+.suggestionList li:hover {
+background-color: #eee;
+}

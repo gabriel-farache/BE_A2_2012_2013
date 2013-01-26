@@ -41,24 +41,8 @@ public class GroupPresenter extends Project_Management_Presenter {
         String token = this.getTokenSession(request.getSession(), mm);
         if (Project_Management_Presenter.model.isValidToken(token) != null) {
             ArrayList<GroupHeader> groupList = this.getGroups();
-            //Creation de la table en html contenant tous les headers de toutes les taches
-            String table =
-                    "<table class=\"table table-hover\">"
-                    + "<tr id='entete'>"
-                    + "<th>Nom du groupe</th>"
-                    + "<th>Description du groupe</th>"
-                    + "</tr>";
-            for (GroupHeader g : groupList) {
-                table +=
-                        "<tr id='groupe' onclick='window.location.href = \""+Project_Management_Presenter.domain+"/group/checkGroup?id_groupe=" + g.getId_group() + "\";'>"
-                        + "<td>" + g.getGroup_name() + "</td>"
-                        + "<td>" + g.getDescr() + "</td>"
-                        + "</tr>";
-
-            }
-            table += "</table>";
-            //Mise en place de la table 
-            mm.addAttribute("groupList", table);
+            request.setAttribute("groupsTable", groupList);
+            
             try {
                 if (Project_Management_Presenter.model.isAdmin(token)) {
                     mm.addAttribute("display", "submit");
@@ -185,7 +169,6 @@ public class GroupPresenter extends Project_Management_Presenter {
     public String interceptPageAdminCheckGroup(HttpServletRequest request, ModelMap mm) {
 
         String token = this.getTokenSession(request.getSession(), mm);
-        String html_liste, table;
         Group g;
         String id_group;
         if ((Project_Management_Presenter.model.isValidToken(token) != null)) {// && Project_Management_Presenter.model.isAdmin(token)) {
@@ -218,20 +201,7 @@ public class GroupPresenter extends Project_Management_Presenter {
             mm.addAttribute("chef_groupe", g.getChief() != null ? g.getChief().getId_member() : "");
 
             ArrayList<Member> liste_membres = g.getMembers();
-            table = "<select id=\"ListeMembresGroupe\" name=\"ListeMembresGroupe\" size=20>";
-            for (int i = 0; i < liste_membres.size(); i++) {
-                table += "<option value=" + liste_membres.get(i).getId_member() + ">" + liste_membres.get(i).getName() + " " + liste_membres.get(i).getFirst_name() + "</option>";
-            }
-            table += "</select>";
-            mm.addAttribute("liste_membres_groupe", table);
-
-            ArrayList<Member> liste_utilisateurs = substractUserList(liste_membres, getUsers());
-            html_liste = "<select id=\"ListeMembresAjouter\" name=\"ListeMembresAjouter\" size=20>";
-            for (int i = 0; i < liste_utilisateurs.size(); i++) {
-                html_liste += "<option value=" + liste_utilisateurs.get(i).getId_member() + ">" + liste_utilisateurs.get(i).getName() + " " + liste_utilisateurs.get(i).getFirst_name() + "</option>";
-            }
-            html_liste += "</select>";
-            mm.addAttribute("liste_membres_ajouter", html_liste);
+            request.setAttribute("usersTable", liste_membres);
 
             return null;
 

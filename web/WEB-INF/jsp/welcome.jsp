@@ -4,8 +4,7 @@
     Author     : Gabriel
 --%>
 
-<%@page import="presenter.User"%>
-<%@page import="java.util.ArrayList"%>
+
 <!DOCTYPE html>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
@@ -72,10 +71,26 @@
             {
                 Project_Management_Presenter_Intern_Methods.getNbMessagesForStatus('<%=session.getAttribute("token")%>', '', fillNbMess);
             }
+            
+            
+            function addRowHandlers(tableId, rowClassName, url, paramName, columnIndex) {
+                var previousClass = null;
+                var table = document.getElementById(tableId);
+                var rows = table.getElementsByTagName("tr");
+                for (i = 1; i < rows.length; i++) {
+                    rows[i].className = rowClassName;
+      
+                    rows[i].onclick = function () {
+                        var cell = this.getElementsByTagName("td")[columnIndex];
+                        var paramValue = cell.innerHTML;
+                        location.href = url + "?" + paramName + "=" + paramValue;
+                    };
+                }
+            }
         </script>
     </head>
 
-    <body>
+    <body onload="addRowHandlers('row', 'warning', '/BE_2012_2013_A2/task/checkTask', 'idTask', 0)">
 
         <div class="navbar navbar-inverse navbar-fixed-top">
             <div class="navbar-inner">
@@ -242,23 +257,6 @@
                     </div>
                     <div class="row-fluid">
                         <div class="row-fluid">
-                            <%
-                                ArrayList<User> u = new ArrayList<User>();
-                                User us;
-                                for (int i = 0; i < 10; i++) {
-                                    us = new User(i, "" + i, "" + i, "" + i, i);
-                                    u.add(us);
-                                }
-                                request.setAttribute("test", u);
-
-                            %>
-                            <display:table class="table table-hover" name="test" defaultsort="2" defaultorder="descending" pagesize="5" requestURI="">
-  <display:column property="id" title="ID" sortable="true"/>
-  <display:column property="prenom" sortable="true"/>
-  <display:column property="nom" sortable="true"/>
-  <display:column property="age" sortable="true"/>
-  <display:column property="email" sortable="true"/>
-</display:table>
                             <img src="<c:url value="/resources/images/logo_sopra.jpg"/>" alt="logo sopra" title="Bienvenu sur PESO."/>
                         </div>
                     </div>

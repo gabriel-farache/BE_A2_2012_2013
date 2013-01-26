@@ -232,7 +232,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
 
         while (i < idsNewGroups.size()) {
 
-            if (!toAvoid.contains(idsNewGroups.get(i).trim())) {
+            if (!toAvoid.contains(idsNewGroups.get(i).trim()) && !idsNewGroups.get(i).replaceAll(" ", "").equals("")) {
                 Boolean[] add = {true, false};
                 rpt = new Recipient(RecipientType.GROUP, idsNewGroups.get(i).trim());
                 rcpts.put(rpt, add);
@@ -242,7 +242,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
         i = 0;
         while (i < idsNewMembers.size()) {
 
-            if (!toAvoid.contains(idsNewMembers.get(i).trim())) {
+            if (!toAvoid.contains(idsNewMembers.get(i).trim()) && !idsNewMembers.get(i).replaceAll(" ", "").equals("")) {
                 Boolean[] add = {true, idsNewMembers.get(i).compareToIgnoreCase(chief) == 0 ? true : false};
                 rpt = new Recipient(RecipientType.USER, idsNewMembers.get(i).trim());
                 rcpts.put(rpt, add);
@@ -401,13 +401,13 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
         if (id != null) {
             try {
                 group = Project_Management_Presenter_Intern_Methods.model.getGroupInfos(id_group);
-            } catch (SQLException ex) {
+            } catch (Exception ex) {
                 Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         return group;
     }
-    
+
     /**
      * Gets all groups store in the DB.
      *
@@ -421,7 +421,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
             return null;
         }
     }
-    
+
     /**
      * Gets all the groups of a member as a String. Each group is separated with
      * a comma.
@@ -441,7 +441,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
         }
         return gps;
     }
-    
+
     /**
      * Updates a group
      *
@@ -887,6 +887,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
 
     /**
      * Gets the number of messages for a given status
+     *
      * @param token The token session
      * @param mst The status to count
      * @return The number of messages for a given status
@@ -902,8 +903,10 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
 
     /**
      * Parse a message status from a String to a MessageStatus
+     *
      * @param mst The String to parse
-     * @return null if do not fit with any status, else, the MessageStatus object with the good status
+     * @return null if do not fit with any status, else, the MessageStatus
+     * object with the good status
      */
     public MessageStatus parseMessageStatus(String mst) {
         MessageStatus msts;
@@ -925,6 +928,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
 
     /**
      * Checks if the status is associated with a member
+     *
      * @param token The token session
      * @param id_message The ID of the message to check
      * @param status The status to check
@@ -935,5 +939,10 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
         return (id != null && Project_Management_Presenter_Intern_Methods.model.messageHasStatusAssociatedWithAMember(id, id_message, this.parseMessageStatus(status)));
     }
 
-    
+    public String[] getDataFromDB(String table, String colName, String input, String id) {
+        ArrayList<String> searchResult = Project_Management_Presenter_Intern_Methods.model.searchExprInTable(table, colName, input, id);
+        String[] temp = searchResult == null ? new String[]{} : searchResult.toArray(new String[]{});
+        return temp;
+    }
+
 }
