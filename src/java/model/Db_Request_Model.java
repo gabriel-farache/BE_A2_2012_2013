@@ -567,7 +567,7 @@ public class Db_Request_Model implements User_Model_Interface, Group_Model_Inter
      * Checks if the token is valid
      *
      * @param token The token of the session
-     * @return
+     * @return The ID of the member if valid, null else
      */
     public String isValidToken(String token) {
         return (Db_Request_Model.tokenID.get(token));

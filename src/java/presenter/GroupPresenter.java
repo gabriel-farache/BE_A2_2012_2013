@@ -43,7 +43,7 @@ public class GroupPresenter extends Project_Management_Presenter {
         //Récupération du token de la session
         String token = this.getTokenSession(request.getSession(), mm);
         if (Project_Management_Presenter.model.isValidToken(token) != null) {
-            ArrayList<GroupHeader> groupList = this.getGroups();
+            ArrayList<GroupHeader> groupList = this.getGroups(token);
             request.setAttribute("groupsTable", groupList);
 
             try {
@@ -75,7 +75,7 @@ public class GroupPresenter extends Project_Management_Presenter {
             token = getTokenSession(request.getSession(), mm);
 
             if (Project_Management_Presenter.model.isAdmin(token)) {
-                ArrayList<Member> liste_membres = getAvailableMembers();
+                ArrayList<Member> liste_membres = getAvailableMembers(token);
 
                 html_liste = "<select id=\"ListeMembres\" name=\"ListeMembres\" multiple=\"multiple\" size=30>";
                 for (int i = 0; i < liste_membres.size(); i++) {

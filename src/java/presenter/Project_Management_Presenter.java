@@ -382,7 +382,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             ArrayList<TaskHeader> tHeaders = this.getAllTasks(token, true);
             ArrayList<MessageHeader> mHeaders = this.getHeaderMessages(token, true);
             ArrayList<Member> userss = this.getUsers();
-            ArrayList<GroupHeader> groups = this.getGroups();
+            ArrayList<GroupHeader> groups = this.getGroups(token);
 
             Project_Management_Presenter.tasks = "";
             Project_Management_Presenter.messages = "";

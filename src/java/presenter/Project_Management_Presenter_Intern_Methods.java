@@ -38,8 +38,8 @@ import peopleObjects.Member;
  *
  * @author gabriel
  */
-@WebService(portName = "Presenter_Intern_Methods_Interface_Port", serviceName = "Presenter_Intern_Methods_Interface_Service",
-targetNamespace = "http://Project_Management_Presenter_Intern_Methods/",
+@WebService(portName = "presenterPort", serviceName = "presenterService",
+targetNamespace = "http://presenter/",
 endpointInterface = "presenter.Presenter_Intern_Methods_Interface")
 public class Project_Management_Presenter_Intern_Methods implements Presenter_Intern_Methods_Interface {
 
@@ -49,12 +49,12 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
     public static Project_Management_Presenter_Intern_Methods getInstance() {
         if (Project_Management_Presenter_Intern_Methods.me == null) {
             Project_Management_Presenter_Intern_Methods.me = new Project_Management_Presenter_Intern_Methods();
-            Project_Management_Presenter_Intern_Methods.model = Db_Request_Model.getInstance(Project_Management_Presenter_Intern_Methods.me);
         }
         return Project_Management_Presenter_Intern_Methods.me;
     }
 
-    protected Project_Management_Presenter_Intern_Methods() {
+    public Project_Management_Presenter_Intern_Methods() {
+        Project_Management_Presenter_Intern_Methods.model = Db_Request_Model.getInstance(Project_Management_Presenter_Intern_Methods.me);
     }
 
     /**
@@ -81,7 +81,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
                 } else {
                     ok = true;
                 }
-                
+
             }
             // implement here...
         } catch (SQLException ex) {
@@ -90,6 +90,26 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
             return ok;
 
         }
+    }
+
+    /**
+     * Adds members to a group
+     *
+     * @param token The token of the session
+     * @param membersID IDs of the members to add in the group separated by a comma
+     * @param id_group The ID of the group
+     * @return TRUE : ok, FALSE : error
+     */
+    @Override
+    public Boolean addMembersGroup(String token, String membersID, String id_group)
+    {
+        ArrayList<String> membersArr = new ArrayList<String>();
+        String membersTmp[] = membersID.replaceAll(", ", ",").split(",");
+
+        for (String m : membersTmp) {
+            membersArr.add(m.replaceAll(" ", ""));
+        }
+        return this.addMembersGroup(token, membersArr, id_group);
     }
 
     /**
@@ -207,6 +227,42 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
     }
 
     /**
+     * Creates a new task with members and groups separated by a comma
+     *
+     * @param content The content of the task
+     * @param title he title of the taks
+     * @param projectTopic The project/topic of the task
+     * @param creationDate The date of the creation of the task
+     * @param dueDate The due date of the task
+     * @param statutString The status of the task as a String
+     * @param budget The budget of the task
+     * @param consumed The consumed value of the task
+     * @param rae The value that the task still get to be completed
+     * @param members The IDs of the members affected to the task separated by a
+     * comma
+     * @param groups The IDs of the groups affected to the task separated by a
+     * comma
+     * @param token The token of the session
+     * @return The ID of the new task
+     */
+    @Override
+    public String createNewTask(String content, String title, String projectTopic, String creationDate, String dueDate, String statutString, Float budget, Float consumed, Float rae, String members, String groups, String token) {
+        ArrayList<String> membersArr = new ArrayList<String>();
+        ArrayList<String> groupsArr = new ArrayList<String>();
+        String membersTmp[] = members.replaceAll(", ", ",").split(",");
+        String GroupsTmp[] = members.replaceAll(", ", ",").split(",");
+
+        for (String m : membersTmp) {
+            membersArr.add(m.replaceAll(" ", ""));
+        }
+
+        for (String g : GroupsTmp) {
+            groupsArr.add(g.replaceAll(" ", ""));
+        }
+        return this.createNewTask(content, title, projectTopic, creationDate, dueDate, statutString, budget, consumed, rae, membersArr, groupsArr, token);
+    }
+
+    /**
      * Update a task.
      *
      * @param token The token of the session
@@ -286,6 +342,27 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
     }
 
     /**
+     * Create a new user and check if there are enough right
+     *
+     * @param user The new user to create
+     * @param token The token to check the rights
+     * @return The ID of the member created
+     */
+    @Override
+    public String createNewUserAndCheck(Member user, String token) {
+        try {
+            if (Project_Management_Presenter_Intern_Methods.model.isAdmin(token)) {
+                return this.createNewUser(user);
+            } else {
+                return null;
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+    }
+
+    /**
      * Deletes a task
      *
      * @param token The token of the session
@@ -354,8 +431,12 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
      * @return The list of the available members
      */
     @Override
-    public java.util.ArrayList<Member> getAvailableMembers() {
-        return Project_Management_Presenter_Intern_Methods.model.getAvailableMembers();
+    public java.util.ArrayList<Member> getAvailableMembers(String token) {
+        if (Project_Management_Presenter_Intern_Methods.model.isValidToken(token) != null) {
+            return Project_Management_Presenter_Intern_Methods.model.getAvailableMembers();
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -414,9 +495,13 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
      * @return All groups store in the DB.
      */
     @Override
-    public java.util.ArrayList<GroupHeader> getGroups() {
+    public java.util.ArrayList<GroupHeader> getGroups(String token) {
         try {
-            return Project_Management_Presenter_Intern_Methods.model.getExistingGroups();
+            if (Project_Management_Presenter_Intern_Methods.model.isValidToken(token) != null) {
+                return Project_Management_Presenter_Intern_Methods.model.getExistingGroups();
+            } else {
+                return null;
+            }
         } catch (SQLException ex) {
             return null;
         }
@@ -612,7 +697,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
         } catch (SQLException ex) {
             Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
         }
-
+        System.out.println("token : " + token);
         return token;
     }
 
@@ -738,7 +823,6 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
         boolean ok = false;
         if (id != null) {
             try {
-
                 Project_Management_Presenter_Intern_Methods.model.saveMessage(message);
                 ok = true;
             } catch (SQLException ex) {
@@ -939,16 +1023,43 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
         return (id != null && Project_Management_Presenter_Intern_Methods.model.messageHasStatusAssociatedWithAMember(id, id_message, this.parseMessageStatus(status)));
     }
 
+    /**
+     * Get data from the DB
+     * @param table The table in which search
+     * @param colName The column in which search
+     * @param input The expression to search
+     * @param id The name of ID column in the table
+     * @return Array of String in format colValue (idValue)
+     */
     public String[] getDataFromDB(String table, String colName, String input, String id) {
         ArrayList<String> searchResult = Project_Management_Presenter_Intern_Methods.model.searchExprInTable(table, colName, input, id);
         String[] temp = searchResult == null ? new String[]{} : searchResult.toArray(new String[]{});
         return temp;
     }
-    
+
+    /**
+     * Get data from the DB with more details
+     * @param table The table in which search
+     * @param colNameToSearch The column in which search
+     * @param colNameDetail The colum detail
+     * @param input The expression to search
+     * @param id The name of ID column in the table
+     * @return Array of String in format colSearchValue colDetailValue (idValue)
+     */
     public String[] getDataFromDB(String table, String colNameToSearch, String colNameDetail, String input, String id) {
-        ArrayList<String> searchResult = Project_Management_Presenter_Intern_Methods.model.searchExprInTable(table, colNameToSearch,colNameDetail, input, id);
+        ArrayList<String> searchResult = Project_Management_Presenter_Intern_Methods.model.searchExprInTable(table, colNameToSearch, colNameDetail, input, id);
         String[] temp = searchResult == null ? new String[]{} : searchResult.toArray(new String[]{});
         return temp;
     }
-
+    
+    /**
+     * Checks if the token is valid
+     * @param token The token
+     * @return the ID of the member if valid, null else
+     */
+    @Override
+    public String isValidToken(String token)
+    {
+        return Project_Management_Presenter_Intern_Methods.model.isValidToken(token);
+}
 }
