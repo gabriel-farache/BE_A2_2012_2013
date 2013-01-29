@@ -157,14 +157,17 @@
         </div>
 
 
-        <div class="container">
+        <div class="container-fluid">
+            ${connectionError}
+            <div class="row-fluid">
 
-            <form class="form-signin" action="/BE_A2_2012_2013/welcome" method="POST">
-                <h2 class="form-signin-heading">Identification</h2>
-                <input type="text" class="input-block-level" placeholder="Username" id="utilisateur" name ="utilisateur">
-                <input type="password" class="input-block-level" placeholder="Password" id="pass" name="pass">
-                <button class="btn btn-large btn-primary" type="submit">Se connecter</button>
-            </form>
+                <form class="form-signin" action="/BE_A2_2012_2013/welcome" method="POST">
+                    <h2 class="form-signin-heading">Identification</h2>
+                    <input type="text" class="input-block-level" placeholder="Username" id="utilisateur" name ="utilisateur">
+                    <input type="password" class="input-block-level" placeholder="Password" id="pass" name="pass">
+                    <button class="btn btn-large btn-primary" type="submit">Se connecter</button>
+                </form>
+            </div>
 
 
         </div> <!-- /container -->

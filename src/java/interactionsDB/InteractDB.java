@@ -1011,16 +1011,21 @@ public class InteractDB implements InteractDB_Interface {
      */
     @Override
     public boolean authenticate(String login, String hashPwd) {
-        boolean ok = true;
-        String rqst = "SELECT m.idMembre "
+        boolean ok = false;
+        String rqst = "SELECT m.idMembre as idMembre "
                 + "FROM APP.T_Membre m "
                 + "WHERE m.idMembre = '" + login.trim() + "' "
                 + "AND m.motDePasse = '" + hashPwd.trim() + "' ";
+        System.err.println("----------**** iciiiiiiiiiiiii   +++");
         try {
-            this.doRequest(rqst, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
+            if (this.doRequest(rqst, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY).first()) {
+                ok = true;
+                System.err.println("----------**** iciiiiiiiiiiiii  222222 +++");
+            }
+            
+
         } catch (SQLException ex) {
             Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);
-            ok = false;
         }
         return ok;
     }

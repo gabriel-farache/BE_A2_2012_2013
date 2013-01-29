@@ -21,6 +21,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.xml.ws.Endpoint;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
@@ -56,15 +57,15 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
     public Project_Management_Presenter() {
         System.out.println("Lancement du serveur web");
 
-        /*try {
-         Endpoint.publish(
-         "http://localhost:8081/BE_A2_2012_2013/Project_Management_Presenter_Intern_Methods",
-         Project_Management_Presenter_Intern_Methods.getInstance());
-         Project_Management_Presenter_Intern_Methods.getInstance();
-         } catch (Exception ex) {
-         Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
+        try {
+            Endpoint.publish(
+                    "http://localhost:8081/BE_A2_2012_2013/presenterService",
+                    Project_Management_Presenter_Intern_Methods.getInstance());
+            Project_Management_Presenter_Intern_Methods.getInstance();
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
 
-         }*/
+        }
     }
 
     @RequestMapping(value = {"*"}, method = {RequestMethod.GET, RequestMethod.POST})
@@ -92,7 +93,8 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         this.addAttribute(m);
         token = this.getTokenSession(session, m);
         String id = Project_Management_Presenter.model.isValidToken(token);
-        
+
+
         if (token == null || id == null) {
             return "connection";
         } else {
@@ -142,7 +144,9 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         if (Project_Management_Presenter.model.isValidToken(token) != null) {
             return "welcome";
         } else {
-            return "redirect:connection";
+            model.addAttribute("connectionError", "<div class=\"alert alert-error\"> <a class=\"close\" data-dismiss=\"alert\">×</a> Erreur : identifiant et/ou mot de passe invalide !</div> ");
+
+            return "connection";
         }
 
     }
@@ -416,6 +420,4 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         m.addAttribute("users", Project_Management_Presenter.users);
         m.addAttribute("groups", Project_Management_Presenter.groupes);
     }
-
-    
 }
