@@ -612,9 +612,10 @@ public interface InteractDB_Interface {
 
     /**
      * Gets the tasks of a member
+     *
      * @param id_member The ID of the member
      * @return The list of the tasks of the member separated by a comma
-     * @throws SQLException 
+     * @throws SQLException
      */
     public String getTasksMember(String id_member) throws SQLException;
 
@@ -677,15 +678,18 @@ public interface InteractDB_Interface {
 
     /**
      * Updates the group with the new informations
+     *
      * @param g The group containing the new informations
-     * @param newRecipients The new recipients : <ID of the recipient, (TRUE : add the recipient, FALSE : delete the recpient)>
+     * @param newRecipients The new recipients : <ID of the recipient, (TRUE :
+     * add the recipient, FALSE : delete the recpient)>
      * @param idChef The new chief
      * @return 1 : ok, != 1 error
      */
     public int updateGroup(Group g, HashMap<String, Boolean> newRecipients, String idChef);
 
     /**
-     *Checks if the group is associated with the given member
+     * Checks if the group is associated with the given member
+     *
      * @param idGroup The ID of the group
      * @param id_member The ID of the given member
      * @return TRUE : yes, FALSE : no

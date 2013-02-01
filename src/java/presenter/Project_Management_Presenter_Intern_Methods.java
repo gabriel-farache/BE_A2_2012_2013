@@ -743,11 +743,12 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
      * @return TRUE : ok, FALSE : error
      */
     @Override
-    public boolean saveMessageToMembers(String idSender, ArrayList<Recipient> rcpts, String title, String messageBody, MessageStatus ms, ArrayList<Attachment> attachments, String token) {
+    public Message saveMessageToMembers(String idSender, ArrayList<Recipient> rcpts, String title, String messageBody, MessageStatus ms, ArrayList<Attachment> attachments, String token) {
         String id = Project_Management_Presenter_Intern_Methods.model.isValidToken(token);
         boolean ok = false;
+        Message m = null;
         if (id != null) {
-            Message m = Project_Management_Presenter_Intern_Methods.model.createMessage(idSender, rcpts, title, messageBody, ms);
+            m = Project_Management_Presenter_Intern_Methods.model.createMessage(idSender, rcpts, title, messageBody, ms);
             for (Attachment attachment : attachments) {
                 m.addAttachment(attachment);
             }
@@ -760,7 +761,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
             }
         }
 
-        return (ok);
+        return (m);
     }
 
     /**
@@ -776,9 +777,10 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
      * @return
      */
     @Override
-    public boolean saveMessage(String idSender, ArrayList<String> groups, ArrayList<String> members, String title, String messageBody, MessageStatus ms, ArrayList<Attachment> attachments, String token) {
+    public Message saveMessage(String idSender, ArrayList<String> groups, ArrayList<String> members, String title, String messageBody, MessageStatus ms, ArrayList<Attachment> attachments, String token) {
         String id = Project_Management_Presenter_Intern_Methods.model.isValidToken(token);
         boolean ok = true;
+        Message m = null;
         ArrayList<Recipient> rcpts = new ArrayList<Recipient>();
         if (id != null) {
             if (groups != null && !groups.isEmpty()) {
@@ -792,21 +794,22 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
                 }
             }
             MessageHeader mH = new MessageHeader("");
-            Message m = new Message(mH);
+            m = new Message(mH);
             m.setCreationDate(Calendar.getInstance().getTime().toString());
             m.setTitle(title);
             m.setSender(idSender);
             m.setContent(messageBody);
             m.addRecipients(rcpts);
+            m.addAttachments(attachments);
             try {
                 Project_Management_Presenter_Intern_Methods.model.saveMessage(m);
             } catch (SQLException ex) {
                 Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
                 ok = false;
             }
-            return (ok);
+            return (m);
         }
-        return (false);
+        return (m);
     }
 
     /**

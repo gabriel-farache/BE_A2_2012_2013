@@ -5,6 +5,7 @@ import dataObjects.Item;
 import dataObjects.Task;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Properties;
 
@@ -37,7 +38,7 @@ public class ManageAttachements {
      * @param filename Name of the file to save.
      * @param fis File input stream of the file to save.
      */
-     public static void createAndSaveAttachments(Item it, String filename, FileInputStream fis) {
+     public static void createAndSaveAttachments(Item it, String filename,InputStream fis) {
          SaveAttachments.createAndSaveAttachments(it,filename, fis);
      }
 

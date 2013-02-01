@@ -464,8 +464,9 @@ public class Db_Request_Model implements User_Model_Interface, Group_Model_Inter
     public Member getInfosMember(String id_member) {
         try {
             Db_Request_Model.idb = InteractDB.getInstance();
-
-            return Db_Request_Model.idb.getMemberInfos(id_member);
+            Member m = Db_Request_Model.idb.getMemberInfos(id_member);
+            System.err.println(m.getName() + " " + m.getFirst_name() + " " + m.getEmail() + " (" + m.getId_member() + ")  --  " + id_member);
+            return m;
         } catch (SQLException ex) {
             Logger.getLogger(Db_Request_Model.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -587,6 +588,7 @@ public class Db_Request_Model implements User_Model_Interface, Group_Model_Inter
         Integer idMess = Db_Request_Model.idb.addMessage(m.getTitle(), m.getCreationDate().getTime(), m.getContent());
 
         if (idMess != null) {
+            m.setId(""+idMess);
             for (Recipient recipient : recipients) {
                 if (recipient.getId() != null && recipient.getId().trim().compareToIgnoreCase("") != 0) {
                     if (recipient.getType().equals(RecipientType.GROUP)) {
@@ -609,7 +611,7 @@ public class Db_Request_Model implements User_Model_Interface, Group_Model_Inter
             }
             if (m.hasAttachments()) {
                 for (Attachment att : m.getAttachments()) {
-                    Db_Request_Model.idb.addAttachedFileToMessage(Integer.parseInt(m.getId()), att);
+                    Db_Request_Model.idb.addAttachedFileToMessage(idMess, att);
                 }
             }
         } else {
@@ -994,8 +996,7 @@ public class Db_Request_Model implements User_Model_Interface, Group_Model_Inter
 
     public void sendEmailToMember(String idMember, String messageBody, String messageSubject) {
         try {
-            Member user = this.getInfosMember(idMember);
-            SendEmail.sendEmail(user, messageSubject, messageBody);
+            new Thread(new SendMailThread(this.getInfosMember(idMember), messageBody, messageSubject)).start();
         } catch (Exception ex) {
             Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -1003,10 +1004,31 @@ public class Db_Request_Model implements User_Model_Interface, Group_Model_Inter
 
     public void sendEmailToMember(Member member, String messageBody, String messageSubject) {
         try {
-            Member user = member;
-            SendEmail.sendEmail(user, messageSubject, messageBody);
+           new Thread(new SendMailThread(member, messageBody, messageSubject)).start();
         } catch (Exception ex) {
             Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public class SendMailThread implements Runnable {
+
+        private Member user;
+        private String messageBody;
+        private String messageSubject;
+
+        public SendMailThread(Member member, String messageBody, String messageSubject) {
+            this.user = member;
+            this.messageBody = messageBody;
+            this.messageSubject = messageSubject;
+        }
+
+        @Override
+        public void run() {
+            try {
+                SendEmail.sendEmail(this.user, this.messageSubject, this.messageBody);
+            } catch (Exception ex) {
+                Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 }

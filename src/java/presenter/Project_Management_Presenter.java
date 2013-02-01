@@ -7,6 +7,7 @@ package presenter;
 import attachmentsManagement.ManageAttachements;
 import dataObjects.*;
 import errorsLogging.LogErrors;
+import importXML.ItemParser;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -59,7 +60,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
 
         try {
             Endpoint.publish(
-                    "http://localhost:8081/BE_A2_2012_2013/presenterService",
+                    "http://10.32.40.218:8081/BE_A2_2012_2013/presenterService",
                     Project_Management_Presenter_Intern_Methods.getInstance());
             Project_Management_Presenter_Intern_Methods.getInstance();
         } catch (Exception ex) {
@@ -299,9 +300,11 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             items = new ServletFileUpload(new DiskFileItemFactory()).parseRequest(request);
 
             for (FileItem item : items) {
+            System.err.println("---------------------------------------------------   ");
                 if (!item.isFormField()) {
                     // Process form file field (input type="file").
                     String filename = item.getName();
+                    System.err.println("---------------------------------------------------   "+filename);
                     InputStream filecontent = null;
                     try {
                         filecontent = item.getInputStream();
@@ -419,5 +422,23 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         m.addAttribute("myMessages", Project_Management_Presenter.messages);
         m.addAttribute("users", Project_Management_Presenter.users);
         m.addAttribute("groups", Project_Management_Presenter.groupes);
+    }
+
+    protected class SaveAttachmentsThread implements Runnable {
+
+        HttpServletRequest request;
+        Item it;
+
+        public SaveAttachmentsThread(HttpServletRequest r, Item it) {
+            this.request = r;
+            this.it = it;
+        }
+
+        @Override
+        public void run() {
+            System.err.println("---****---- IN ----***---");
+            uploadAttachments(this.it, this.request);
+            System.err.println("---****---- OUT ----***---");
+        }
     }
 }

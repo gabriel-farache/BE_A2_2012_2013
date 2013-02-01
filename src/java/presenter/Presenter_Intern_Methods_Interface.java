@@ -309,7 +309,7 @@ public interface Presenter_Intern_Methods_Interface {
      * @return TRUE : ok, FALSE : error
      */
     @WebMethod(operationName = "saveMessageToMembers")
-    public boolean saveMessageToMembers(@WebParam(name = "idSender") String idSender, @WebParam(name = "members") ArrayList<Recipient> rcpts, @WebParam(name = "title") String title, @WebParam(name = "messageBody") String messageBody, @WebParam(name = "ms") MessageStatus ms, @WebParam(name = "attachments") ArrayList<Attachment> attachments, @WebParam(name = "token") String token);
+    public Message saveMessageToMembers(@WebParam(name = "idSender") String idSender, @WebParam(name = "members") ArrayList<Recipient> rcpts, @WebParam(name = "title") String title, @WebParam(name = "messageBody") String messageBody, @WebParam(name = "ms") MessageStatus ms, @WebParam(name = "attachments") ArrayList<Attachment> attachments, @WebParam(name = "token") String token);
 
     /**
      * Save the message in the DB
@@ -386,7 +386,7 @@ public interface Presenter_Intern_Methods_Interface {
      * @return
      */
     @WebMethod(operationName = "saveMessage")
-    public boolean saveMessage(@WebParam(name = "idSender") String idSender, @WebParam(name = "groups") ArrayList<String> groups, @WebParam(name = "members") ArrayList<String> members, @WebParam(name = "title") String title, @WebParam(name = "messageBody") String messageBody, @WebParam(name = "ms") MessageStatus ms, @WebParam(name = "attachments") ArrayList<Attachment> attachments, @WebParam(name = "token") String token);
+    public Message saveMessage(@WebParam(name = "idSender") String idSender, @WebParam(name = "groups") ArrayList<String> groups, @WebParam(name = "members") ArrayList<String> members, @WebParam(name = "title") String title, @WebParam(name = "messageBody") String messageBody, @WebParam(name = "ms") MessageStatus ms, @WebParam(name = "attachments") ArrayList<Attachment> attachments, @WebParam(name = "token") String token);
 
     /**
      * Updates an user

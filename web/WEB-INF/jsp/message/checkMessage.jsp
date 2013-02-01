@@ -407,14 +407,17 @@
                         <fieldset>
                             <legend>Destinataire(s)</legend>
                             <div>
-                                <p>Membre(s)</p> <hr>
+                                <legend>Membre(s)</legend>
                                 <p>${recipientsM}</p>
-                                <p>Groupe(s)</p> <hr>
+                                <legend>Groupe(s)</legend>
                                 <p>${recipientsG}</p>
                             </div>
                         </fieldset>
                         <fieldset>
-
+                            <legend>Fichiers joints</legend>
+                            ${attch}
+                        </fieldset>
+                        <fieldset>
                             <legend>Objet</legend>
                             <div>
                                 <p>${title}</p>

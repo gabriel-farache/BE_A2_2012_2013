@@ -2,9 +2,10 @@ package dataObjects;
 
 /**
  * This class represents an attachment of an item.
+ *
  * @author durban
  */
-public class Attachment{
+public class Attachment {
 
     private String name;        //Filename of the attachment.
     private String content;     //Base64 content of the attachment.
@@ -16,6 +17,7 @@ public class Attachment{
 
     /**
      * Gives the name of the Attachment (name of the file).
+     *
      * @return the name
      */
     public String getName() {
@@ -24,6 +26,7 @@ public class Attachment{
 
     /**
      * Sets the file name of the attachment.
+     *
      * @param name the name to set
      */
     public void setName(String name) {
@@ -32,6 +35,7 @@ public class Attachment{
 
     /**
      * Gives the base64 content of the attachment.
+     *
      * @return the content
      */
     public String getContent() {
@@ -40,6 +44,7 @@ public class Attachment{
 
     /**
      * Sets the base64 content of the attachment.
+     *
      * @param content the content to set
      */
     public void setContent(String content) {
@@ -51,8 +56,6 @@ public class Attachment{
      * Gives a stringified version of the object.
      */
     public String toString() {
-        return "Name="+this.getName();
+        return "Name=" + this.getName();
     }
-
-    
 }

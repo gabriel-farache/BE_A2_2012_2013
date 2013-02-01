@@ -1022,7 +1022,7 @@ public class InteractDB implements InteractDB_Interface {
                 ok = true;
                 System.err.println("----------**** iciiiiiiiiiiiii  222222 +++");
             }
-            
+
 
         } catch (SQLException ex) {
             Logger.getLogger(InteractDB.class.getName()).log(Level.SEVERE, null, ex);

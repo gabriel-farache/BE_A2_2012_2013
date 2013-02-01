@@ -392,7 +392,7 @@
                     </div>
                     <!-- Example row of columns -->
                     <div class="row-fluid"> 
-                        <form method="POST" name="saisieNouveauMessage" id="saisieNouveauMessage" action="<c:url value="messageCreated"/>">
+                        <form method="POST" name="saisieNouveauMessage" id="saisieNouveauMessage" action="<c:url value="messageCreated"/>" enctype="multipart/form-data">
                             <fieldset>
                                 <legend for="projet" class="rubrique">Membre(s)</legend>
                                 <input type="text" id="choixUtilsMBox" name ="choixUtilsMBox" onkeyup='lookupM(this.value);' for="projet" />

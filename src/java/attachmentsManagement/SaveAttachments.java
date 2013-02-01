@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * This class browses the attachments of an Item and create the attachement
@@ -60,7 +61,7 @@ public class SaveAttachments {
      * @param filename Name of the file to save.
      * @param fis File input stream of the file to save.
      */
-    protected static void createAndSaveAttachments(Item it, String filename, FileInputStream fis) {
+    protected static void createAndSaveAttachments(Item it, String filename, InputStream fis) {
         if(it != null && it.hasAttachments()) {
             File working_dir = prepareDirectories(it);
             try {
@@ -97,7 +98,7 @@ public class SaveAttachments {
      * @param it the item from which to retrieve the attachments.
      * @return the deepest directory.
      */
-    private static File prepareDirectories(Item it) {
+    public static File prepareDirectories(Item it) {
         String working_path = ManageAttachements.getRootPath();
         File working_dir = null;
         //First step: main attachments directory
