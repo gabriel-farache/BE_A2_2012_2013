@@ -585,12 +585,14 @@ public class Db_Request_Model implements User_Model_Interface, Group_Model_Inter
     public void saveMessage(Message m) throws SQLException {
         ArrayList<Recipient> recipients = m.getRecipients();
         ArrayList<String> gpMemb;
-        Integer idMess = Db_Request_Model.idb.addMessage(m.getTitle(), m.getCreationDate().getTime(), m.getContent());
+        Integer idMess = Db_Request_Model.idb.addMessage(m.getTitle(), m.getCreationDate().getTime(), m.getContent(), m.getSender());
 
         if (idMess != null) {
-            m.setId(""+idMess);
+            m.setId("" + idMess);
             for (Recipient recipient : recipients) {
-                if (recipient.getId() != null && recipient.getId().trim().compareToIgnoreCase("") != 0) {
+                System.err.println("**** "+recipient.getId() + "   "+recipient.getType()+"--------------------------------------------------------------------------------------------------------------------------------------------------------------   ");
+
+                if (recipient.getId() != null && (recipient.getId().trim().compareToIgnoreCase("") != 0 || recipient.getType().equals(RecipientType.ALL))) {
                     if (recipient.getType().equals(RecipientType.GROUP)) {
                         Db_Request_Model.idb.addSendMessageToGroupAndAssociateToMembers(m.getSender().trim(), recipient.getId(), idMess);
                         gpMemb = Db_Request_Model.idb.getMembersGroup(recipient.getId());
@@ -598,8 +600,11 @@ public class Db_Request_Model implements User_Model_Interface, Group_Model_Inter
                             notifyNewMessage(mem, m);
                         }
                     } else if (recipient.getType().equals(RecipientType.ALL)) {
+                        System.err.println("0000000000 --------------------------------------------------------------------------------------------------------------------------------------------------------------   ");
+
                         ArrayList<Member> members = Db_Request_Model.idb.getAllMembers();
                         for (Member member : members) {
+                            System.err.println("--------------------------------------------------------------------------------------------------------------------------------------------------------------   ");
                             Db_Request_Model.idb.addSendMessageToMember(m.getSender().trim(), member.getId_member(), idMess, RecipientType.USER);
                         }
 
@@ -1004,7 +1009,7 @@ public class Db_Request_Model implements User_Model_Interface, Group_Model_Inter
 
     public void sendEmailToMember(Member member, String messageBody, String messageSubject) {
         try {
-           new Thread(new SendMailThread(member, messageBody, messageSubject)).start();
+            new Thread(new SendMailThread(member, messageBody, messageSubject)).start();
         } catch (Exception ex) {
             Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
         }

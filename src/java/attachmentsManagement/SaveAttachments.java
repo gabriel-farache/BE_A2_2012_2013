@@ -1,14 +1,16 @@
 
 package attachmentsManagement;
 
+import dataObjects.Attachment;
 import dataObjects.Item;
 import dataObjects.Task;
-import dataObjects.Attachment;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.commons.fileupload.FileItemStream;
 
 /**
  * This class browses the attachments of an Item and create the attachement
@@ -61,12 +63,12 @@ public class SaveAttachments {
      * @param filename Name of the file to save.
      * @param fis File input stream of the file to save.
      */
-    protected static void createAndSaveAttachments(Item it, String filename, InputStream fis) {
+    protected static void createAndSaveAttachments(Item it, String filename, InputStream fist) {
         if(it != null && it.hasAttachments()) {
             File working_dir = prepareDirectories(it);
             try {
                 String working_path = working_dir.getAbsolutePath();
-
+                InputStream fis = ((fist instanceof FileItemStream) ? ((FileItemStream)fist).openStream() : fist);
                     //Creating the file and replacing it if needed.
                     working_dir = new File(working_path+File.separatorChar+filename);
                     if(!working_dir.exists() || !working_dir.isDirectory()) {
@@ -86,7 +88,9 @@ public class SaveAttachments {
                         System.out.println("Bytes written "+totalRead+".");
 
                     }
-            } catch (IOException ioe) {
+            } catch (IOException ex) {
+                Logger.getLogger(SaveAttachments.class
+                    .getName()).log(Level.SEVERE, null, ex);
                 System.err.println("Error: An error occurred while trying to create the directory "
                         +working_dir.getAbsolutePath()+".");
             }

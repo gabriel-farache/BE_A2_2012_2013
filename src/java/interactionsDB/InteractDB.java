@@ -376,19 +376,20 @@ public class InteractDB implements InteractDB_Interface {
      * @param objet Subject of the message
      * @param date Date of the message
      * @param contenu The message itself
+     * @param idSender The ID of the sender
      * @return null error, else ID of the message newly inserted in the DB
      * @throws SQLException
      */
     @Override
-    public Integer addMessage(String objet, java.util.Date date, String contenu) throws SQLException {
+    public Integer addMessage(String objet, java.util.Date date, String contenu, String idSender) throws SQLException {
         Integer idM;
         String addMemberRequest;
         synchronized (InteractDB.nextIDMessage) {
             // traitement du cas dateDebut < dateFin
             System.err.print(date);
             String dcreat = this.formatStringAsTimestamp(date);
-            addMemberRequest = "INSERT INTO APP.T_Message (idMessage, objet, date, contenu) "
-                    + "VALUES (" + InteractDB.nextIDMessage + ", '" + objet.trim() + "',  TIMESTAMP('" + dcreat + "'), '" + contenu.trim() + "' )";
+            addMemberRequest = "INSERT INTO APP.T_Message (idMessage, objet, date, contenu, idPersonneSource ) "
+                    + "VALUES (" + InteractDB.nextIDMessage + ", '" + objet.trim() + "',  TIMESTAMP('" + dcreat + "'), '" + contenu.trim() + "', '"+idSender+"' )";
             idM = InteractDB.nextIDMessage++;
         }
         return ((doModif(addMemberRequest, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE) == 1) ? idM : null);
@@ -426,8 +427,8 @@ public class InteractDB implements InteractDB_Interface {
         if (typeDestinataire.equals(RecipientType.USER) || typeDestinataire.equals(RecipientType.USER_IN_GROUP)) {
             if (!this.messageIsAssociatedWithMember(idMessage, idPersonneDestination)) {
                 //Envoyer les message
-                String addSendMessageToMemberRequest = "INSERT INTO APP.T_EnvoiMessageMembre (idPersonneSource, idPersonneDestination, idMessage, typeDestinataire) "
-                        + "VALUES ( '" + idPersonneSource.trim() + "', '" + idPersonneDestination.trim() + "', " + idMessage + ", '" + typeDestinataire + "')";
+                String addSendMessageToMemberRequest = "INSERT INTO APP.T_EnvoiMessageMembre (idPersonneSource, idPersonneDestination, idMessage, typeDestinataire, display) "
+                        + "VALUES ( '" + idPersonneSource.trim() + "', '" + idPersonneDestination.trim() + "', " + idMessage + ", '" + typeDestinataire + "', 'Y')";
                 return doModif(addSendMessageToMemberRequest, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE);
             } else {
                 return 1;
@@ -648,7 +649,7 @@ public class InteractDB implements InteractDB_Interface {
     @Override
     public ArrayList<TaskHeader> getTasksHeaders(String id_member) throws SQLException {
         ArrayList<TaskHeader> tasksHeaders = new ArrayList<TaskHeader>();
-        String request = "SELECT e.idPersonneSource as idPersonneSource, t.idTache as idTache, t.titre as titre, t.dateCreation as dateCreation, t.dateFin as dateFin, t.topicProjet as topicProjet, t.statut as statut "
+        String request = "SELECT e.idPersonneSource as idPersonneSource, t.idTache as idTache, t.titre as titre, t.dateCreation as dateDebut, t.dateFin as dateFin, t.topicProjet as topicProjet, t.statut as statut "
                 + "FROM APP.T_Tache t, APP.T_EnvoiTacheMembre e "
                 + "WHERE e.idPersonneDestination = '" + id_member.trim() + "' "
                 + "AND e.idTache = t.idTache "
@@ -683,7 +684,7 @@ public class InteractDB implements InteractDB_Interface {
             status = TaskStatus.URGENT;
         }
         //Créer la tâche avec les infos récupérés
-        taskHeader = new TaskHeader(donnees.getString("idTache"), donnees.getString("titre"), donnees.getString("idPersonneSource"), donnees.getString("dateCreation"), true, donnees.getString("topicProjet"), donnees.getString("dateFin"), status);
+        taskHeader = new TaskHeader(donnees.getString("idTache"), donnees.getString("titre"), donnees.getString("idPersonneSource"), donnees.getString("dateDebut"), true, donnees.getString("topicProjet"), donnees.getString("dateFin"), status);
         taskHeader.setHasAttachments(this.taskHasAttachement(Integer.parseInt(taskHeader.getId())));
 
         return taskHeader;
@@ -1206,13 +1207,11 @@ public class InteractDB implements InteractDB_Interface {
     public Message getSendMessage(int id_message, String id_membre) throws SQLException {
         Message message = null;
         //recupération informations générales message
-        String request = "SELECT DISTINCT m.objet as titre, m.date as dateCreation, e.idPersonneSource as idPersonneSource, m.contenu as contenu, e.typeDestinataire as typeDestinataire "
-                + "FROM APP.T_Message m, APP.T_EnvoiMessageMembre e "
-                + "WHERE e.idPersonneSource = '" + id_membre.trim() + "' "
+        String request = "SELECT DISTINCT m.objet as titre, m.date as dateCreation, m.idPersonneSource as idPersonneSource, m.contenu as contenu "
+                + "FROM APP.T_Message m "
+                + "WHERE m.idPersonneSource = '" + id_membre.trim() + "' "
                 + "AND m.idMessage = " + id_message + " "
-                + "AND e.idMessage = " + id_message + " "
-                + "AND e.idMessage = m.idMessage "
-                + "ORDER BY date DESC";
+                + "ORDER BY m.date DESC";
         ResultSet donnees = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
 
         while (donnees.next()) {
@@ -1241,6 +1240,7 @@ public class InteractDB implements InteractDB_Interface {
                 + "FROM APP.T_Message m, APP.T_EnvoiMessageMembre e "
                 + "WHERE e.idPersonneDestination = '" + id_membre.trim() + "' "
                 + "AND e.idMessage = m.idMessage "
+                + "AND e.display = 'Y' "
                 + "ORDER BY m.idMessage DESC";
         ResultSet donnees = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
         String statut;
@@ -1294,10 +1294,9 @@ public class InteractDB implements InteractDB_Interface {
     @Override
     public ArrayList<MessageHeader> getSendMessagesHeader(String id_membre) throws SQLException {
         ArrayList<MessageHeader> messagesHeaders = new ArrayList<MessageHeader>();
-        String request = "SELECT m.idMessage as idMessage, m.objet as titre, m.date as dateCreation, e.idPersonneSource as idPersonneSource "
-                + "FROM APP.T_Message m, APP.T_EnvoiMessageMembre e "
-                + "WHERE e.idPersonneSource = '" + id_membre.trim() + "' "
-                + "AND e.idMessage = m.idMessage "
+        String request = "SELECT DISTINCT m.idMessage as idMessage, m.objet as titre, m.date as dateCreation, m.idPersonneSource as idPersonneSource "
+                + "FROM APP.T_Message m "
+                + "WHERE m.idPersonneSource = '" + id_membre.trim() + "' "
                 + "ORDER BY m.idMessage DESC";
         ResultSet donnees = this.doRequest(request, java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE, java.sql.ResultSet.CONCUR_READ_ONLY);
         MessageHeader messageHeader;
@@ -1400,25 +1399,12 @@ public class InteractDB implements InteractDB_Interface {
         boolean allOk = true;
         String request;
 
-        if (this.messageHasStatusAssociatedWithAMember(id_membre, id_message)) {
-            //Delete the status of the message for this member
-            request = "DELETE FROM APP.T_StatusMessageMembre "
-                    + "WHERE idPersonneDestination = '" + id_membre.trim() + "' "
-                    + "AND  idMessage = " + id_message + " ";
-            allOk = allOk && (this.doModif(request, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE) == 1);
-        }
-
-        //Delete the association membre - message
-        request = "DELETE FROM APP.T_EnvoiMessageMembre "
+        //Make the message invisible for the member
+        request = "UPDATE APP.T_EnvoiMessageMembre SET display='N'"
                 + "WHERE idPersonneDestination = '" + id_membre.trim() + "' "
                 + "AND  idMessage = " + id_message + " ";
         allOk = allOk && (this.doModif(request, java.sql.ResultSet.TYPE_SCROLL_SENSITIVE, java.sql.ResultSet.CONCUR_UPDATABLE) == 1);
-
-        //Test si reste des membre associé au message
-        if (!this.messageHasAssociatedMembers(id_message)) {
-            this.cleanAndDeleteMessage(allOk, id_message);
-        }
-
+ 
         return (allOk);
     }
 

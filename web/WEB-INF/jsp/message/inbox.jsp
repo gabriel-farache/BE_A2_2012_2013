@@ -74,78 +74,97 @@
             function addRowHandlers(url, paramName, columnIndex) {
                 
                 var table = document.getElementById('rowFwd');
-                var rows = table.getElementsByTagName("tr");
-                for (i = 1; i < rows.length; i++) {
-                    rows[i].className = 'success';
-                    rows[i].onclick = function () {
-                        var cell = this.getElementsByTagName("td")[columnIndex];
-                        var paramValue = cell.innerHTML;
-                        location.href = url + "?" + paramName + "=" + paramValue + "&fromInbox=yes";
-                    };
+                if(table != null)
+                {
+                    var rows = table.getElementsByTagName("tr");                
+                    for (i = 1; i < rows.length; i++) {
+                        rows[i].className = 'success';
+                        rows[i].onclick = function () {
+                            var cell = this.getElementsByTagName("td")[columnIndex];
+                            var paramValue = cell.innerHTML;
+                            location.href = url + "?" + paramName + "=" + paramValue + "&fromInbox=yes";
+                        };
+                    }
                 }
                 
                 var table = document.getElementById('row2Answ');
-                var rows = table.getElementsByTagName("tr");
-                for (i = 1; i < rows.length; i++) {
-                    rows[i].className = 'info';
-                    rows[i].onclick = function () {
-                        var cell = this.getElementsByTagName("td")[columnIndex];
-                        var paramValue = cell.innerHTML;
-                        location.href = url + "?" + paramName + "=" + paramValue + "&fromInbox=yes";
-                    };
+                if(table != null)
+                {
+                    var rows = table.getElementsByTagName("tr");               
+                    for (i = 1; i < rows.length; i++) {
+                        rows[i].className = 'info';
+                        rows[i].onclick = function () {
+                            var cell = this.getElementsByTagName("td")[columnIndex];
+                            var paramValue = cell.innerHTML;
+                            location.href = url + "?" + paramName + "=" + paramValue + "&fromInbox=yes";
+                        };
+                    }
                 }
                 var table = document.getElementById('rowUrg');
-                var rows = table.getElementsByTagName("tr");
-                for (i = 1; i < rows.length; i++) {
-                    rows[i].className = 'error';
-                    rows[i].onclick = function () {
-                        var cell = this.getElementsByTagName("td")[columnIndex];
-                        var paramValue = cell.innerHTML;
-                        location.href = url + "?" + paramName + "=" + paramValue + "&fromInbox=yes";
-                    };
+                if(table != null)
+                {
+                    var rows = table.getElementsByTagName("tr");               
+                    for (i = 1; i < rows.length; i++) {
+                        rows[i].className = 'error';
+                        rows[i].onclick = function () {
+                            var cell = this.getElementsByTagName("td")[columnIndex];
+                            var paramValue = cell.innerHTML;
+                            location.href = url + "?" + paramName + "=" + paramValue + "&fromInbox=yes";
+                        };
+                    }
                 }
                 
                 var table = document.getElementById('rowImp');
-                var rows = table.getElementsByTagName("tr");
-                for (i = 1; i < rows.length; i++) {
-                    rows[i].className = 'warning';
-                    rows[i].onclick = function () {
-                        var cell = this.getElementsByTagName("td")[columnIndex];
-                        var paramValue = cell.innerHTML;
-                        location.href = url + "?" + paramName + "=" + paramValue + "&fromInbox=yes";
-                    };
-                } 
-                
+                if(table != null)
+                {
+                    var rows = table.getElementsByTagName("tr");
+                    for (i = 1; i < rows.length; i++) {
+                        rows[i].className = 'warning';
+                        rows[i].onclick = function () {
+                            var cell = this.getElementsByTagName("td")[columnIndex];
+                            var paramValue = cell.innerHTML;
+                            location.href = url + "?" + paramName + "=" + paramValue + "&fromInbox=yes";
+                        };
+                    } 
+                }
                 var table = document.getElementById('rowRead');
-                var rows = table.getElementsByTagName("tr");
-                for (i = 1; i < rows.length; i++) {
-                    rows[i].onclick = function () {
-                        var cell = this.getElementsByTagName("td")[columnIndex];
-                        var paramValue = cell.innerHTML;
-                        location.href = url + "?" + paramName + "=" + paramValue + "&fromInbox=yes";
-                    };
-                } 
-                
+                if(table != null)
+                {
+                    var rows = table.getElementsByTagName("tr");
+                    for (i = 1; i < rows.length; i++) {
+                        rows[i].onclick = function () {
+                            var cell = this.getElementsByTagName("td")[columnIndex];
+                            var paramValue = cell.innerHTML;
+                            location.href = url + "?" + paramName + "=" + paramValue + "&fromInbox=yes";
+                        };
+                    } 
+                }
                 var table = document.getElementById('rowOut');
-                var rows = table.getElementsByTagName("tr");
-                for (i = 1; i < rows.length; i++) {
-                    rows[i].onclick = function () {
-                        var cell = this.getElementsByTagName("td")[columnIndex];
-                        var paramValue = cell.innerHTML;
-                        location.href = url + "?" + paramName + "=" + paramValue + "&fromInbox=no";
-                    };
-                } 
+                if(table != null)
+                {
+                    var rows = table.getElementsByTagName("tr");
+                    for (i = 1; i < rows.length; i++) {
+                        rows[i].onclick = function () {
+                            var cell = this.getElementsByTagName("td")[columnIndex];
+                            var paramValue = cell.innerHTML;
+                            location.href = url + "?" + paramName + "=" + paramValue + "&fromInbox=no";
+                        };
+                    } 
+                }
                 
                 var table = document.getElementById('rowUnread');
-                var rows = table.getElementsByTagName("tr");
-                for (i = 1; i < rows.length; i++) {
-                    rows[i].className = 'default';
-                    rows[i].onclick = function () {
-                        var cell = this.getElementsByTagName("td")[columnIndex];
-                        var paramValue = cell.innerHTML;
-                        location.href = url + "?" + paramName + "=" + paramValue + "&fromInbox=yes";
-                    };
-                } 
+                if(table != null)
+                {
+                    var rows = table.getElementsByTagName("tr");
+                    for (i = 1; i < rows.length; i++) {
+                        rows[i].className = 'default';
+                        rows[i].onclick = function () {
+                            var cell = this.getElementsByTagName("td")[columnIndex];
+                            var paramValue = cell.innerHTML;
+                            location.href = url + "?" + paramName + "=" + paramValue + "&fromInbox=yes";
+                        };
+                    } 
+                }
                 
                 
                 

@@ -145,10 +145,11 @@ public interface InteractDB_Interface {
      * @param objet Subject of the message
      * @param date Date of the message
      * @param contenu The message itself
+     * @param idSender The ID of the sender
      * @return null error, else ID of the message newly inserted in the DB
      * @throws SQLException
      */
-    public Integer addMessage(String objet, java.util.Date date, String contenu) throws SQLException;
+    public Integer addMessage(String objet, java.util.Date date, String contenu, String idSender) throws SQLException;
 
     /**
      * Attach a file with a message

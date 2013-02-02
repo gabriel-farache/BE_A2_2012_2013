@@ -7,17 +7,18 @@ package presenter;
 import attachmentsManagement.ManageAttachements;
 import dataObjects.*;
 import errorsLogging.LogErrors;
-import importXML.ItemParser;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLEncoder;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.activation.MimetypesFileTypeMap;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,6 +30,7 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import peopleObjects.*;
@@ -78,13 +80,22 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
 
     @RequestMapping(value = {"error"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String errorPage(HttpServletRequest request, ModelMap m) {
+
         String token = this.getTokenSession(request.getSession(), m);
-        if (token != null) {
-            if ((Project_Management_Presenter_Intern_Methods.model.isValidToken(token)) != null) {
-                return null;
+        try {
+            if (token != null) {
+                if ((Project_Management_Presenter_Intern_Methods.model.isValidToken(token)) != null) {
+                    return null;
+                } else {
+
+                    this.fillAccordionMenu(token, m);
+                }
             }
+        } catch (Exception ex) {
+        } finally {
+            m.addAttribute("errorMessage", "<h1>404 Page not found</h1>");
+            return "error";
         }
-        return "connection";
     }
 
     @RequestMapping(value = {"connection", "index", "/"}, method = {RequestMethod.GET, RequestMethod.POST})
@@ -130,11 +141,8 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         } catch (Exception ex) {
             Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
         }
-        //} else {
-        System.out.println("ici1");
+
         try {
-            // token = this.getTokenSession(request.getSession());
-            // }
             if (Project_Management_Presenter.model.isAdmin(token)) {
                 request.getSession().setAttribute("isAdmin", true);
 
@@ -237,6 +245,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
                                 return "importXML";
                             }
                         }
+
                     }
                 } catch (FileUploadException ex) {
                     mm.addAttribute("resultImport", "Echec de l'import");
@@ -300,11 +309,9 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
             items = new ServletFileUpload(new DiskFileItemFactory()).parseRequest(request);
 
             for (FileItem item : items) {
-            System.err.println("---------------------------------------------------   ");
                 if (!item.isFormField()) {
                     // Process form file field (input type="file").
                     String filename = item.getName();
-                    System.err.println("---------------------------------------------------   "+filename);
                     InputStream filecontent = null;
                     try {
                         filecontent = item.getInputStream();
@@ -424,6 +431,50 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         m.addAttribute("groups", Project_Management_Presenter.groupes);
     }
 
+    /**
+     * Page pour télécharger les fichiers joints
+     *
+     * @param response
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = {"download"}, method = {RequestMethod.GET, RequestMethod.POST})
+    public String dowloadAtt(HttpServletResponse response, HttpServletRequest request, ModelMap m) {
+        InputStream is = null;
+        try {
+            String filepath = request.getParameter("dir");
+            String filename = request.getParameter("name");
+            File file = new File(filepath);
+            response.setContentType(new MimetypesFileTypeMap().getContentType(file));
+            response.setContentLength((int) file.length());
+            response.setHeader("content-disposition", "attachment; filename=" + URLEncoder.encode(filename, "UTF-8"));
+            is = new FileInputStream(file);
+            FileCopyUtils.copy(is, response.getOutputStream());
+            return null;
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(MessagePresenter.class.getName()).log(Level.SEVERE, null, ex);
+            m.addAttribute("errorMessage", "404 File Not Found.");
+            return "redirect:/error";
+        } catch (Exception ex) {
+            Logger.getLogger(MessagePresenter.class.getName()).log(Level.SEVERE, null, ex);
+            m.addAttribute("errorMessage", "404 File Not Found.");
+            return "redirect:/error";
+        } finally {
+            try {
+                is.close();
+            } catch (IOException ex) {
+                Logger.getLogger(MessagePresenter.class.getName()).log(Level.SEVERE, null, ex);
+                m.addAttribute("errorMessage", "404 File Not Found.");
+                return "redirect:/error";
+            } catch (Exception ex) {
+                Logger.getLogger(MessagePresenter.class.getName()).log(Level.SEVERE, null, ex);
+                m.addAttribute("errorMessage", "404 File Not Found.");
+                return "redirect:/error";
+            }
+            return null;
+        }
+    }
+
     protected class SaveAttachmentsThread implements Runnable {
 
         HttpServletRequest request;
@@ -436,9 +487,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
 
         @Override
         public void run() {
-            System.err.println("---****---- IN ----***---");
             uploadAttachments(this.it, this.request);
-            System.err.println("---****---- OUT ----***---");
         }
     }
 }

@@ -4,6 +4,7 @@
  */
 package presenter;
 
+import attachmentsManagement.ManageAttachements;
 import dataObjects.Attachment;
 import dataObjects.Item;
 import dataObjects.Message;
@@ -647,12 +648,14 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
                         Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, "saveMessageGiven : fail to insert the message into the DB.");
                     } else {
                         nbInsert++;
+                        ManageAttachements.createAndSaveAttachments(it);
                     }
                 } else {
                     try {
                         Task t = (Task) it;
                         InteractDB.getInstance().addTaskAndAssociate(t);
                         nbInsert++;
+                        ManageAttachements.createAndSaveAttachments(it);
                     } catch (SQLException ex) {
                         Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
                     } catch (Exception ex) {

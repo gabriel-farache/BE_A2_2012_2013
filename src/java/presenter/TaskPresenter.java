@@ -39,14 +39,20 @@ public class TaskPresenter extends Project_Management_Presenter {
      */
     @RequestMapping(value = {"listOfTasks"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptPageListOfTasks(HttpServletRequest request, ModelMap mm) {
-        //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession(), mm);
-        if (Project_Management_Presenter.model.isValidToken(token) != null) {
-            this.createTaskConsult(mm, token, false, request);
-            mm.addAttribute("typeTask", "Toutes les tâches");
-            return null;
-        } else {
-            return "connection";
+        try {
+            //Récupération du token de la session
+            String token = this.getTokenSession(request.getSession(), mm);
+            if (Project_Management_Presenter.model.isValidToken(token) != null) {
+                this.createTaskConsult(mm, token, false, request);
+                mm.addAttribute("typeTask", "Toutes les tâches");
+                return null;
+            } else {
+                return "connection";
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+            mm.addAttribute("errorMessage", "Erreur lors de la suppression.");
+            return "error";
         }
     }
 
@@ -58,14 +64,20 @@ public class TaskPresenter extends Project_Management_Presenter {
      */
     @RequestMapping(value = {"myTasks"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptMyTasks(HttpServletRequest request, ModelMap mm) {
-        //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession(), mm);
-        if (Project_Management_Presenter.model.isValidToken(token) != null) {
-            this.createTaskConsult(mm, token, true, request);
-            mm.addAttribute("typeTask", "Mes tâches");
-            return TaskPresenter.urlDomain + "listOfTasks";
-        } else {
-            return "connection";
+        try {
+            //Récupération du token de la session
+            String token = this.getTokenSession(request.getSession(), mm);
+            if (Project_Management_Presenter.model.isValidToken(token) != null) {
+                this.createTaskConsult(mm, token, true, request);
+                mm.addAttribute("typeTask", "Mes tâches");
+                return TaskPresenter.urlDomain + "listOfTasks";
+            } else {
+                return "connection";
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+            mm.addAttribute("errorMessage", "Erreur lors de la suppression.");
+            return "error";
         }
     }
 
@@ -77,14 +89,19 @@ public class TaskPresenter extends Project_Management_Presenter {
      */
     @RequestMapping(value = {"checkTask"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptPageToUpdate(HttpServletRequest request, ModelMap mm) {
-
-        //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession(), mm);
-        if (token != null) {
-            this.fillFormUpTask(request, mm, token);
-            return null;
-        } else {
-            mm.addAttribute("errorMessage", "Vous n'êtes pas identifié");
+        try {
+            //Récupération du token de la session
+            String token = this.getTokenSession(request.getSession(), mm);
+            if (token != null) {
+                this.fillFormUpTask(request, mm, token);
+                return null;
+            } else {
+                mm.addAttribute("errorMessage", "Vous n'êtes pas identifié");
+                return "error";
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+            mm.addAttribute("errorMessage", "Erreur lors de la suppression.");
             return "error";
         }
 
@@ -98,18 +115,24 @@ public class TaskPresenter extends Project_Management_Presenter {
      */
     @RequestMapping(value = {"updateTask", "createTask"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptCreateTask(HttpServletRequest request, ModelMap m) {
-        //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession(), m);
-        //Appel méthode interne correspondante
-        if (token != null && Project_Management_Presenter.model.getCreateTaskForm()) {
-            try {
-                this.fillFormUpTask(request, m, token);
-            } catch (Exception ex) {
-                Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+        try {
+            //Récupération du token de la session
+            String token = this.getTokenSession(request.getSession(), m);
+            //Appel méthode interne correspondante
+            if (token != null && Project_Management_Presenter.model.getCreateTaskForm()) {
+                try {
+                    this.fillFormUpTask(request, m, token);
+                } catch (Exception ex) {
+                    Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return null;
+            } else {
+                //Retour
+                return "error";
             }
-            return null;
-        } else {
-            //Retour
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+            m.addAttribute("errorMessage", "Erreur lors de la suppression.");
             return "error";
         }
     }
@@ -123,63 +146,82 @@ public class TaskPresenter extends Project_Management_Presenter {
      */
     @RequestMapping(value = {"taskCreated"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptTaskCreated(HttpServletRequest request, ModelMap map) {
-        String alertMess = "<div class=\"alert alert-success\">"
-                + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
-                + "<strong>Création de la tâche \"" + request.getParameter("titreTache").trim() + " réussie ! </strong></div>";
         try {
-            //Récupération du token de la session
+            String alertMess = "<div class=\"alert alert-success\">"
+                    + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                    + "<strong>Création de la tâche \"" + request.getParameter("titreTache").trim() + " réussie ! </strong></div>";
+            try {
+                //Récupération du token de la session
+                String token = this.getTokenSession(request.getSession(), map);
+                //Appel méthode interne correspondante
+                if (token != null && TaskPresenter.model.isAdmin(token)) {
+                    //Récupération des utilisateurs et des groupes
+                    ArrayList<String> members = new ArrayList<String>();
+                    ArrayList<String> groups = new ArrayList<String>();
+                    this.parseMembersAndGroups(request, members, groups);
 
-            String token = this.getTokenSession(request.getSession(), map);
-            //Appel méthode interne correspondante
-            if (token != null && TaskPresenter.model.isAdmin(token)) {
-                //Récupération des utilisateurs et des groupes
-                ArrayList<String> members = new ArrayList<String>();
-                //Collections.addAll(members, allParams.get("selectUtilisateur"));
-                ArrayList<String> groups = new ArrayList<String>();
-                String[] memberss = request.getParameterValues("choixUtilsMChk");
-                String[] groupss = request.getParameterValues("choixUtilsGChk");
-                if (memberss != null) {
-                    for (String s : memberss) {
-                        members.add((s.split("[(]")[1].split("[)]")[0]).trim());
+                    //On créé la tache
+                    String result = this.createNewTask((String) request.getParameter("descriptionTache"), (String) request.getParameter("titreTache"), (String) request.getParameter("projetTache"), (String) request.getParameter("dateDebut") + " 00:00:00", (String) request.getParameter("dateFin") + " 00:00:00", (String) request.getParameter("statutTache"), Float.parseFloat((String) request.getParameter("budget")), Float.parseFloat((String) request.getParameter("consumed")), Float.parseFloat((String) request.getParameter("rae")), members, groups, token);
+                    //Result == null si il y a eu une erreur, sinon un message de succès est donné avec (s'il y en a) les membres/groupes qui n'ont pas été trouvé dans la BDD
+                    if (result != null) {
+                        this.fillAccordionMenu(token, map);
+                    } else {
+                        alertMess = "<div class=\"alert alert-error\">"
+                                + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                                + "<strong>Echec lors de la création de la tâche \"" + request.getParameter("titreTache").trim() + " ! </strong></div>";
                     }
                 } else {
-                    members.add("");
+                    map.addAttribute("errorMessage", "Vous n'êtes pas identifier ou vous ne possèdez pas les droits suffisants.");
+                    return "error";
                 }
-                if (groupss != null) {
-                    for (String s : groupss) {
-                        groups.add((s.split("[(]")[1].split("[)]")[0]).trim());
-                    }
-                } else {
-                    groups.add("");
-                }
-                //Collections.addAll(groups, allParams.get("selectGroupe"));
-                System.err.println(" -- " + request.getParameter("titreTache") + ", " + request.getParameter("projetTache") + ", " + request.getParameter("dateDebut") + ", " + request.getParameter("dateFin") + ", " + request.getParameter("statutTache") + ", " + request.getParameter("budget") + ", " + request.getParameter("consumed") + ", " + request.getParameter("rae") + ", " + memberss + ", " + request.getParameter("descriptionTache"));
 
-                //On créé la tache
-                String result = this.createNewTask((String) request.getParameter("descriptionTache"), (String) request.getParameter("titreTache"), (String) request.getParameter("projetTache"), (String) request.getParameter("dateDebut") + " 00:00:00", (String) request.getParameter("dateFin") + " 00:00:00", (String) request.getParameter("statutTache"), Float.parseFloat((String) request.getParameter("budget")), Float.parseFloat((String) request.getParameter("consumed")), Float.parseFloat((String) request.getParameter("rae")), members, groups, token);
-                //Result == null si il y a eu une erreur, sinon un message de succès est donné avec (s'il y en a) les membres/groupes qui n'ont pas été trouvé dans la BDD
-                if (result != null) {
-                    this.fillAccordionMenu(token, map);
-                } else {
-                    alertMess = "<div class=\"alert alert-error\">"
-                            + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
-                            + "<strong>Echec lors de la création de la tâche \"" + request.getParameter("titreTache").trim() + " ! </strong></div>";
-                }
-            } else {
-                map.addAttribute("errorMessage", "Vous n'êtes pas identifier ou vous ne possèdez pas les droits suffisants.");
+            } catch (SQLException ex) {
+                Logger.getLogger(TaskPresenter.class.getName()).log(Level.SEVERE, null, ex);
+                map.addAttribute("errorMessage", "Erreur base de données.");
                 return "error";
             }
-
-        } catch (SQLException ex) {
-            Logger.getLogger(TaskPresenter.class.getName()).log(Level.SEVERE, null, ex);
-            map.addAttribute("errorMessage", "Erreur base de données.");
+            map.addAttribute("alert", alertMess);
+            map.addAttribute("typeTask", "Mes tâches");
+            return TaskPresenter.urlDomain + "listOfTasks";
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+            map.addAttribute("errorMessage", "Erreur lors de la suppression.");
             return "error";
         }
-        map.addAttribute("alert", alertMess);
-        map.addAttribute("typeTask", "Mes tâches");
-        return TaskPresenter.urlDomain + "listOfTasks";
     }
 
+    /**
+     * Parse les membres/groupes de la tâche
+     * @param request
+     * @param members
+     * @param groups 
+     */
+    private void parseMembersAndGroups(HttpServletRequest request, ArrayList<String> members, ArrayList<String> groups) {
+        String[] memberss = request.getParameterValues("choixUtilsMChk");
+        String[] groupss = request.getParameterValues("choixUtilsGChk");
+
+        if (memberss != null) {
+            for (String s : memberss) {
+                members.add((s.split("[(]")[1].split("[)]")[0]).trim());
+            }
+        } else {
+            members.add("");
+        }
+        if (groupss != null) {
+            for (String s : groupss) {
+                groups.add((s.split("[(]")[1].split("[)]")[0]).trim());
+            }
+        } else {
+            groups.add("");
+        }
+    }
+
+    /**
+     * Intercepte la demande de chargement de la page "taskUpdated". Mets à jour la tâche.
+     * @param request
+     * @param map
+     * @return 
+     */
     @RequestMapping(value = {"taskUpdated"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptUpdateCreated(HttpServletRequest request, ModelMap map) {
         try {
@@ -194,35 +236,15 @@ public class TaskPresenter extends Project_Management_Presenter {
                     if (id != null && Project_Management_Presenter.model.isAdmin(token)) {
                         //Récupération des utilisateurs et des groupes
                         ArrayList<String> members = new ArrayList<String>();
-                        //Collections.addAll(members, allParams.get("selectUtilisateur"));
                         ArrayList<String> groups = new ArrayList<String>();
-                        //Collections.addAll(groups, allParams.get("selectGroupe"));
-                        String[] memberss = request.getParameterValues("choixUtilsMChk");
-                        String[] groupss = request.getParameterValues("choixUtilsGChk");
 
-                        if (memberss != null) {
-                            for (String s : memberss) {
-                                System.err.println(" MMM-*- " + s);
-                                members.add((s.split("[(]")[1].split("[)]")[0]).trim());
-                            }
-                        } else {
-                            members.add("");
-                        }
-                        if (groupss != null) {
-                            for (String s : groupss) {
-                                System.err.println(" GGG-*- " + s);
-
-                                groups.add((s.split("[(]")[1].split("[)]")[0]).trim());
-                            }
-                        } else {
-                            groups.add("");
-                        }
-
+                        this.parseMembersAndGroups(request, members, groups);
 
                         //On créé la tache
-                        //public boolean updateTask(Task newTask, int id_task, ArrayList<String> idsNewMembers, ArrayList<String> idsNewGroups, String chief)
-                        Task newTask = new Task(request.getParameter("idTask").trim(), id, (String) request.getParameter("titreTache"), (String) request.getParameter("dateDebut") + " 00:00:00", (String) request.getParameter("descriptionTache"), (String) request.getParameter("dateFin") + " 00:00:00", (String) request.getParameter("projetTache"), Float.parseFloat((String) request.getParameter("budget")), Float.parseFloat((String) request.getParameter("consumed")), Float.parseFloat((String) request.getParameter("rae")), (String) request.getParameter("statutTache"), (String) request.getParameter("chef").split(",")[0]);
-                        System.err.println(" *-*" + newTask.getStringCreationDate() + " --- " + newTask.getStringDueDate());
+                        Task newTask = new Task(request.getParameter("idTask").trim(), id, (String) request.getParameter("titreTache"), (String) request.getParameter("dateDebut") + " 00:00:00",
+                                (String) request.getParameter("descriptionTache"), (String) request.getParameter("dateFin") + " 00:00:00", (String) request.getParameter("projetTache"),
+                                Float.parseFloat((String) request.getParameter("budget")), Float.parseFloat((String) request.getParameter("consumed")), Float.parseFloat((String) request.getParameter("rae")),
+                                (String) request.getParameter("statutTache"), (String) request.getParameter("chef").split(",")[0]);
 
                         result = this.updateTask(newTask, Integer.parseInt(request.getParameter("idTask").trim()), members, groups, token);
 
@@ -270,24 +292,42 @@ public class TaskPresenter extends Project_Management_Presenter {
 
     }
 
-    @RequestMapping(value = {"/deleteTask"}, method = {RequestMethod.GET, RequestMethod.POST})
+    /**
+     * Intercepte la demande de chargement de la page "deleteTask".
+     * @param request
+     * @param m
+     * @return 
+     */
+    @RequestMapping(value = {"deleteTask"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptDeleteTask(HttpServletRequest request, ModelMap m) {
-        //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession(), m);
+        try {
+            //Récupération du token de la session
+            String token = this.getTokenSession(request.getSession(), m);
 
-        Map<String, String[]> allParams = request.getParameterMap();
-        //Récuperation de l'id de la tâche
-        String[] id_task_params = allParams.get("id_task");
-        int idTask = Integer.parseInt(id_task_params[0].trim());
-        //Appel méthode interne correspondante
-        if (this.deleteTask(token, idTask)) {
-            return null;
-        } else {
+            Map<String, String[]> allParams = request.getParameterMap();
+            //Récuperation de l'id de la tâche
+            String[] id_task_params = allParams.get("id_task");
+            int idTask = Integer.parseInt(id_task_params[0].trim());
+            //Appel méthode interne correspondante
+            if (this.deleteTask(token, idTask)) {
+                return null;
+            } else {
+                return "error";
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+            m.addAttribute("errorMessage", "Erreur lors du chargement/traitement  de la page.");
             return "error";
         }
-        //Retour
     }
 
+    /**
+     * Replis les champs relatif aux tâches avec les bonnes infos si possible.
+     * @param request
+     * @param modelMap
+     * @param token
+     * @return 
+     */
     public String fillFormUpTask(HttpServletRequest request, ModelMap modelMap, String token) {
         //Récuperation de l'id de la tâche
         try {
@@ -355,11 +395,19 @@ public class TaskPresenter extends Project_Management_Presenter {
         return null;
     }
 
+    /**
+     * Créer la mise en page pour consulter les tâches.
+     * @param mm
+     * @param token
+     * @param onlyUserTasks
+     * @param request 
+     */
     public void createTaskConsult(ModelMap mm, String token, boolean onlyUserTasks, HttpServletRequest request) {
-        //Récuperation de toutes les taches
-        ArrayList<TaskHeader> tasksHeader = this.getAllTasks(token, onlyUserTasks);
-        request.setAttribute("tasks", tasksHeader);
         try {
+            //Récuperation de toutes les taches
+            ArrayList<TaskHeader> tasksHeader = this.getAllTasks(token, onlyUserTasks);
+            request.setAttribute("tasks", tasksHeader);
+
             if (Project_Management_Presenter.model.isAdmin(token)) {
                 mm.addAttribute("display", "submit");
             } else {

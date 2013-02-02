@@ -14,27 +14,27 @@ import dataObjects.Recipient;
 import dataObjects.RecipientType;
 import dataObjects.Task;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URLEncoder;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.activation.MimetypesFileTypeMap;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.util.Streams;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import peopleObjects.Group;
@@ -59,31 +59,71 @@ public class MessagePresenter extends Project_Management_Presenter {
      */
     @RequestMapping(value = {"inbox"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptPageinbox(HttpServletRequest request, ModelMap mm) {
-        //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession(), mm);
-        String pageToLoad = null;
-        String id = Project_Management_Presenter.model.isValidToken(token);
-        if (id != null) {
-            String autoAccordi = (String) request.getParameter("displayAccordi");
-            this.generateAndAddMessagesInbox(token, request);
-            this.generateAndAddMessagesOutbox(token, request);
-            if (autoAccordi != null && !autoAccordi.equalsIgnoreCase("")) {
-                if (!autoAccordi.equalsIgnoreCase("autoOut")) {
-                    mm.addAttribute("autoIn", "auto");
-                }
-                mm.addAttribute(autoAccordi, "auto");
-            }
-            mm.addAttribute("nbNewMessages", this.getNbMessagesForStatus(token, ""));
 
-        } else {
+        String pageToLoad = null;
+        try {
+            //Récupération du token de la session
+            String token = this.getTokenSession(request.getSession(), mm);
+
+            String id = Project_Management_Presenter.model.isValidToken(token);
+            if (id != null) {
+                String autoAccordi = (String) request.getParameter("displayAccordi");
+                this.generateAndAddMessagesInbox(token, request);
+                this.generateAndAddMessagesOutbox(token, request);
+                if (autoAccordi != null && !autoAccordi.equalsIgnoreCase("")) {
+                    if (!autoAccordi.equalsIgnoreCase("autoOut")) {
+                        mm.addAttribute("autoIn", "auto");
+                    }
+                    mm.addAttribute(autoAccordi, "auto");
+                }
+                mm.addAttribute("nbNewMessages", this.getNbMessagesForStatus(token, ""));
+
+            } else {
+                pageToLoad = "connection";
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
             pageToLoad = "connection";
+            mm.addAttribute("errorMessage", "Erreur.");
         }
         return pageToLoad;
     }
 
+    /**
+     * Méthode interceptant la requête de chargement de la page "createMessage"
+     *
+     * @param request
+     * @param m
+     * @return La page a chargé
+     */
     @RequestMapping(value = {"createMessage"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String createMessage(HttpServletRequest request, ModelMap m) {
         String token = this.getTokenSession(request.getSession(), m);
+        try {
+            if (token != null) {
+                if ((Project_Management_Presenter_Intern_Methods.model.isValidToken(token)) != null) {
+                    return null;
+                } else {
+                    this.createNewMessage(request, m);
+                    this.createFwdAnswMessage(request, m, token);
+                    this.createTaskMessage(request, m);
+                }
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+            m.addAttribute("errorMessage", "Erreur lors du chargement de la page.");
+            return "error";
+        }
+        return "connection";
+    }
+
+    /**
+     * Créer un nouveau message vierge
+     *
+     * @param request
+     * @param m
+     */
+    private void createNewMessage(HttpServletRequest request, ModelMap m) {
         try {
             String[] userss = request.getParameterValues("selectUsersForm");
             String uss = "";
@@ -91,8 +131,19 @@ public class MessagePresenter extends Project_Management_Presenter {
                 uss += u + ", ";
             }
             m.addAttribute("user", uss);
-        } catch (Exception e) {
+        } catch (Exception ex) {
         }
+    }
+
+    /**
+     * Créer un nouveau message étant transféré ou à répondre (clic sur
+     * transféré ou répondre)
+     *
+     * @param request
+     * @param m
+     * @param token
+     */
+    private void createFwdAnswMessage(HttpServletRequest request, ModelMap m, String token) {
         try {
             Message mess = this.getMessageBody((String) request.getParameter("idMess"), token, (((String) request.getParameter("fromInbox")).compareToIgnoreCase("yes") == 0 ? true : false));
             if (request.getParameter("fwd") == null) {
@@ -107,8 +158,17 @@ public class MessagePresenter extends Project_Management_Presenter {
                 m.addAttribute("title", "Fwd : " + mess.getTitle());
                 m.addAttribute("message", "\n\n------- Message original envoyé le " + mess.getStringCreationDate() + " par " + mess.getSender() + " -------\n" + mess.getContent());
             }
-        } catch (Exception e) {
+        } catch (Exception ex) {
         }
+    }
+
+    /**
+     * Créer un mesage relatif à une tâche (champs pré-remplis)
+     *
+     * @param request
+     * @param m
+     */
+    private void createTaskMessage(HttpServletRequest request, ModelMap m) {
         try {
             if (request.getParameter("fromTask") != null) {
                 String idTask = request.getParameter("idTask");
@@ -135,153 +195,194 @@ public class MessagePresenter extends Project_Management_Presenter {
             }
         } catch (Exception e) {
         }
-        if (token != null) {
-            if ((Project_Management_Presenter_Intern_Methods.model.isValidToken(token)) != null) {
-                return null;
-            }
-        }
-        return "connection";
     }
 
+    /**
+     * Intercepte la demande de chargement de la page "supprMessage"
+     *
+     * @param request
+     * @param m
+     * @return La page a chargé
+     */
     @RequestMapping(value = {"supprMessage"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptDeleteMess(HttpServletRequest request, ModelMap m) {
-        //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession(), m);
-        boolean fromInbox = request.getParameter("fromInbox").compareToIgnoreCase("yes") == 0;
-        String alertMess = "<div class=\"alert alert-error\">"
-                + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
-                + "<strong>Vous ne pouvez pas supprimer un message que vous avez envoyé ! </strong>"
-                + "</div>";
-        //Récuperation de l'id de la tâche
-        String idMess = request.getParameter("idMess").trim();
-        //Appel méthode interne correspondante
-        if (Project_Management_Presenter.model.isValidToken(token) != null) {
-            if (fromInbox) {
-                if (this.deleteMessage(token, idMess)) {
-                    m.addAttribute("errorMessage", "");
-                    alertMess = "<div class=\"alert alert-success\">"
-                            + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
-                            + "<strong>Suppression terminé avec succès.</strong>"
-                            + "</div>";
-                } else {
-                    m.addAttribute("errorMessage", "Erreur lors de la suppression du message.");
-                    alertMess = "<div class=\"alert alert-error\">"
-                            + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
-                            + "<strong>\"Erreur lors de la suppression du message.\"</strong>"
-                            + "</div>";
-                }
-            }
-        } else {
-            alertMess = "<div class=\"alert alert-error\">"
+        try {
+            //Récupération du token de la session
+            String token = this.getTokenSession(request.getSession(), m);
+            boolean fromInbox = request.getParameter("fromInbox").compareToIgnoreCase("yes") == 0;
+            String alertMess = "<div class=\"alert alert-error\">"
                     + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
-                    + "<strong>Vous n'êtes pas identifié ! </strong>"
+                    + "<strong>Vous ne pouvez pas supprimer un message que vous avez envoyé ! </strong>"
                     + "</div>";
+            //Récuperation de l'id de la tâche
+            String idMess = request.getParameter("idMess").trim();
+            //Appel méthode interne correspondante
+            if (Project_Management_Presenter.model.isValidToken(token) != null) {
+                if (fromInbox) {
+                    if (this.deleteMessage(token, idMess)) {
+                        m.addAttribute("errorMessage", "");
+                        alertMess = "<div class=\"alert alert-success\">"
+                                + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                                + "<strong>Suppression terminé avec succès.</strong>"
+                                + "</div>";
+                    } else {
+                        m.addAttribute("errorMessage", "Erreur lors de la suppression du message.");
+                        alertMess = "<div class=\"alert alert-error\">"
+                                + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                                + "<strong>\"Erreur lors de la suppression du message.\"</strong>"
+                                + "</div>";
+                    }
+                }
+            } else {
+                alertMess = "<div class=\"alert alert-error\">"
+                        + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                        + "<strong>Vous n'êtes pas identifié ! </strong>"
+                        + "</div>";
+            }
+            m.addAttribute("alert", alertMess);
+            this.generateAndAddMessagesInbox(token, request);
+            this.generateAndAddMessagesOutbox(token, request);
+            m.addAttribute("nbNewMessages", this.getNbMessagesForStatus(token, ""));
+            return MessagePresenter.urlDomain + "inbox";
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+            m.addAttribute("errorMessage", "Erreur lors du chargement/traitement  de la page.");
+            return "error";
         }
-        m.addAttribute("alert", alertMess);
-        return MessagePresenter.urlDomain + "inbox";
-        //Retour
     }
 
-    /*
-     * PAGE JSP A FAIRE !!!!!!!!!!!!!!!
+    /**
+     * Intercpte la demande de chargement de la page "messageCreated". Crée et
+     * envoi le message si pas d'erreur
+     *
+     * @param request
+     * @param m
+     * @return La page a chargé
      */
     @RequestMapping(value = {"messageCreated"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptMessageToCreate(HttpServletRequest request, ModelMap m) {
-        //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession(), m);
-        String alertMess = "<div class=\"alert alert-error\">"
-                + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
-                + "<strong>Erreur fatale ! </strong></div>";
-        //Récupération des utilisateurs et des groupes
-        ArrayList<String> members = new ArrayList<String>();
-        //Collections.addAll(members, allParams.get("selectUtilisateur"));
-        ArrayList<String> groups = new ArrayList<String>();
-        String title = "";
-        String message = "";
-        HashMap<String, InputStream> assocFileName_InStrm = new HashMap<String, InputStream>();
-        ArrayList<Attachment> pj = new ArrayList<Attachment>();
         try {
-            ServletFileUpload upload = new ServletFileUpload();
-            FileItemIterator iterator = upload.getItemIterator(request);
-            while (iterator.hasNext()) {
-                FileItemStream item = iterator.next();
-                String name = item.getFieldName();
-                InputStream strm = item.openStream();
-                String value = Streams.asString(strm);
-                if (item.isFormField()) {
-                    System.err.println("Got a form field: " + name + " " + value);
-                    if (name.equals("choixUtilsMChk")) {
-                        members.add((value.split("[(]")[1].split("[)]")[0]).trim());
-                    } else if (name.equals("choixUtilsGChk")) {
-                        groups.add((value.split("[(]")[1].split("[)]")[0]).trim());
-                    } else if (name.equals("titreMessage")) {
-                        title = value;
-                        title = title.substring(0, (title.length() > 50 ? 49 : title.length()));
-                    } else if (name.equals("saisieMessage")) {
-                        message = value == null ? "" : value;
-                    }
-                } else {
-                    String filename = item.getName();
-                    if (filename != null && !filename.equals("")) {
-                        System.err.println("Got an uploaded file: " + item.getFieldName()
-                                + ", name = " + item.getName());
-                        pj.add(new Attachment(filename, filename));//pj stockée sous ce nom a cette adresse
-                        assocFileName_InStrm.put(filename, strm);
+            //Récupération du token de la session
+            String token = this.getTokenSession(request.getSession(), m);
+            String alertMess = "<div class=\"alert alert-error\">"
+                    + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                    + "<strong>Erreur fatale ! </strong></div>";
+            //Récupération des utilisateurs et des groupes
+            ArrayList<String> members = new ArrayList<String>();
+            //Collections.addAll(members, allParams.get("selectUtilisateur"));
+            ArrayList<String> groups = new ArrayList<String>();
+            String title = "";
+            String message = "";
+            HashMap<String, FileItem> assocFileName_InStrm = new HashMap<String, FileItem>();
+            ArrayList<Attachment> pj = new ArrayList<Attachment>();
+            try {
+                //Récupérer les champs du formulaire (avec enctype multiform)
+                FileItemFactory factory = new DiskFileItemFactory();
+                ServletFileUpload upload = new ServletFileUpload(factory);
+                List items = null;
+                try {
+                    items = upload.parseRequest(request);
+                } catch (FileUploadException e) {
+                    e.printStackTrace();
+                }
+                Iterator iterator = items.iterator();
+                while (iterator.hasNext()) {
+                    FileItem item = (FileItem) iterator.next();
+                    String name = item.getFieldName();
+                    InputStream strm = item.getInputStream();
+                    String value = Streams.asString(strm);
+                    if (item.isFormField()) {
+                        System.err.println("Got a form field: " + name + " " + value);
+                        if (name.equals("choixUtilsMChk")) {
+                            members.add((value.split("[(]")[1].split("[)]")[0]).trim());
+                        } else if (name.equals("choixUtilsGChk")) {
+                            groups.add((value.split("[(]")[1].split("[)]")[0]).trim());
+                        } else if (name.equals("titreMessage")) {
+                            title = value;
+                            title = title.substring(0, (title.length() > 50 ? 49 : title.length()));
+                        } else if (name.equals("saisieMessage")) {
+                            message = value == null ? "" : value;
+                        }
+                    } else {
+                        String filename = item.getName();
+                        if (filename != null && !filename.equals("")) {
+                            System.err.println("Got an uploaded file: " + item.getFieldName()
+                                    + ", name = " + item.getName());
+                            pj.add(new Attachment(filename, filename));//pj stockée sous ce nom a cette adresse
+                            assocFileName_InStrm.put(filename, item);
 
+                        }
                     }
                 }
-            }
-            //enregistrement pjs
+                if (groups.isEmpty()) {
+                    groups.add("");
+                }
+                if (members.isEmpty()) {
+                    members.add("");
+                }
+                alertMess = this.createAndSaveMessage(m, title, message, token, groups, members, alertMess, assocFileName_InStrm, pj);
 
-
-            if (groups.isEmpty()) {
-                groups.add("");
-            }
-            if (members.isEmpty()) {
-                members.add("");
-            }
-
-            String idSender = Project_Management_Presenter.model.isValidToken(token);
-            System.err.println("interceptMessageToCreate       " + token + " ---  " + idSender);
-
-            //Use ManageAttachments qui upload les fichiers
-            //Creation des Attachments(nom,nom)
-
-            Message mes = this.saveMessage(idSender, groups, members, title, message, null, pj, token);
-            if (mes == null) {
+            } catch (Exception ex) {
+                Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
                 alertMess = "<div class=\"alert alert-error\">"
-                        + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
-                        + "<strong>Envoi du message \"" + title + " Une erreur est survenue. Le message a pu être envoyé mais partielement seulement ! </strong></div>";
-
-            } else {
-                System.err.println("---------fdgsfqhdgjtdukyjhbngjhygdgjhyrsfdjwhrsfdjghg-------------           " + mes.getId());
-                // new Thread(new SaveAttachmentsThread(request, mes)).start();
-                for (Entry<String, InputStream> e : assocFileName_InStrm.entrySet()) {
-                    String fName = e.getKey();
-                    InputStream inptStrm = e.getValue();
-                    ManageAttachements.createAndSaveAttachments(mes, fName, inptStrm);
-                }
-
-                this.fillAccordionMenu(token, m);
-                alertMess = "<div class=\"alert alert-success\">"
-                        + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
-                        + "<strong>Envoi du message \"" + title + "\" terminé ! </strong></div>";
+                    + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                    + "<strong>Erreur fatale ! </strong></div>";
             }
-
-
+            m.addAttribute("alert", alertMess);
+            this.generateAndAddMessagesInbox(token, request);
+            this.generateAndAddMessagesOutbox(token, request);
+            m.addAttribute("nbNewMessages", this.getNbMessagesForStatus(token, ""));
+            return MessagePresenter.urlDomain + "inbox";
         } catch (Exception ex) {
-            Logger.getLogger(Project_Management_Presenter.class
-                    .getName()).log(Level.SEVERE, null, ex);
-
+            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+            m.addAttribute("errorMessage", "Erreur lors du chargement/traitement  de la page.");
+            return "error";
         }
-        this.generateAndAddMessagesInbox(token, request);
-        m.addAttribute("alert", alertMess);
-        return MessagePresenter.urlDomain + "inbox";
     }
 
-    /*
-     * PAGE JSP A FAIRE !!!!!!!!!!!!!!!
+    /**
+     * Créé le message et l'envoi dans le BDD
+     *
+     * @param m
+     * @param title
+     * @param message
+     * @param token
+     * @param groups
+     * @param members
+     * @param alertMess
+     * @param assocFileName_InStrm
+     * @param pj
      */
+    private String createAndSaveMessage(ModelMap m, String title, String message, String token, ArrayList<String> groups, ArrayList<String> members, String alertMess, HashMap<String, FileItem> assocFileName_InStrm, ArrayList<Attachment> pj) {
+        String idSender = Project_Management_Presenter.model.isValidToken(token);
+        Message mes = this.saveMessage(idSender, groups, members, title, message, null, pj, token);
+        if (mes == null) {
+            alertMess = "<div class=\"alert alert-error\">"
+                    + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                    + "<strong>Envoi du message \"" + title + " Une erreur est survenue. Le message a pu être envoyé mais partielement seulement ! </strong></div>";
+
+        } else {
+            // new Thread(new SaveAttachmentsThread(request, mes)).start();
+            for (Entry<String, FileItem> e : assocFileName_InStrm.entrySet()) {
+                String fName = e.getKey();
+                InputStream inptStrm;
+                try {
+                    inptStrm = e.getValue().getInputStream();
+                    ManageAttachements.createAndSaveAttachments(mes, fName, inptStrm);
+                } catch (IOException ex) {
+                    Logger.getLogger(MessagePresenter.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                
+            }
+            this.fillAccordionMenu(token, m);
+            alertMess = "<div class=\"alert alert-success\">"
+                    + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                    + "<strong>Envoi du message \"" + title + "\" terminé ! </strong></div>";
+        }
+        
+        return alertMess;
+    }
+
     /**
      * Page appellée lorsque l'utilisateur appuit sur le bouton "Valider update"
      *
@@ -291,84 +392,62 @@ public class MessagePresenter extends Project_Management_Presenter {
     @RequestMapping(value = {"checkMessage"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptMessageToDisplay(HttpServletRequest request, ModelMap modelMap) {
         String pageToLoad = null;
-
-        //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession(), modelMap);
-        //Creation de la liste des attributs & Creation d'une map contenant la valeur associé à un champ
-
-        Message m = this.getMessageBody(request.getParameter("idMessage"), token, (((String) request.getParameter("fromInbox")).compareToIgnoreCase("yes") == 0 ? true : false));
         try {
+            //Récupération du token de la session
+            String token = this.getTokenSession(request.getSession(), modelMap);
+            //Creation de la liste des attributs & Creation d'une map contenant la valeur associé à un champ
+
+            Message m = this.getMessageBody(request.getParameter("idMessage"), token, (((String) request.getParameter("fromInbox")).compareToIgnoreCase("yes") == 0 ? true : false));
+
             Project_Management_Presenter.model.updateMessageStatus(token, m.getId(), MessageStatus.READ, true);
-        } catch (SQLException ex) {
-            Logger.getLogger(Project_Management_Presenter.class
-                    .getName()).log(Level.SEVERE, null, ex);
-        }
-        if (m != null) {
-            String groupRcpt = "";
-            String memberRcpt = "";
-            modelMap.addAttribute("title", m.getTitle());
-            modelMap.addAttribute("sender", m.getSender());
-            modelMap.addAttribute("content", m.getContent());
-            modelMap.addAttribute("idMess", request.getParameter("idMessage"));
-            request.getSession().setAttribute("idMessStatus", request.getParameter("idMessage"));
-            modelMap.addAttribute("fromInbox", request.getParameter("fromInbox"));
-            for (Recipient r : m.getRecipients()) {
-                if (r.getType().equals(RecipientType.USER)) {
-                    memberRcpt += r.getId() + ", ";
-                } else {
-                    if (r.getType().equals(RecipientType.GROUP)) {
-                        groupRcpt += r.getId() + ", ";
+
+            if (m != null) {
+                String groupRcpt = "";
+                String memberRcpt = "";
+                modelMap.addAttribute("title", m.getTitle());
+                modelMap.addAttribute("sender", m.getSender());
+                modelMap.addAttribute("content", m.getContent());
+                modelMap.addAttribute("idMess", request.getParameter("idMessage"));
+                request.getSession().setAttribute("idMessStatus", request.getParameter("idMessage"));
+                modelMap.addAttribute("fromInbox", request.getParameter("fromInbox"));
+                //reconstituer les destinataires
+                for (Recipient r : m.getRecipients()) {
+                    if (r.getType().equals(RecipientType.USER)) {
+                        memberRcpt += r.getId() + ", ";
+                    } else {
+                        if (r.getType().equals(RecipientType.GROUP)) {
+                            groupRcpt += r.getId() + ", ";
+                        }
                     }
                 }
-            }
-            /* memberRcpt = memberRcpt.substring(0, memberRcpt.length() - 2);
-             groupRcpt = groupRcpt.substring(0, groupRcpt.length() - 2);
+                //reconstituer les fichiers joints
+                if (m.hasAttachments()) {
+                    String attch = "";
+                    String dir = (SaveAttachments.prepareDirectories(m)).getAbsolutePath();
+                    for (Attachment a : m.getAttachments()) {
+                        attch += "<a href=\"download?dir=" + dir + File.separatorChar + a.getName() + "&name=" + a.getName() + "\">" + a.getName() + "</a><br>";
+                    }
 
-             memberRcpt.trim().replaceAll(",", ", ");
-             groupRcpt.trim().replaceAll(",", ", ");*/
-            System.err.println("--- *** --- *** " + memberRcpt + " -- " + groupRcpt);
-            if (m.hasAttachments()) {
-                String attch = "";
-                String dir = (SaveAttachments.prepareDirectories(m)).getAbsolutePath();
-                for (Attachment a : m.getAttachments()) {
-                    attch += "<a href=\"download?dir=" + dir + File.separatorChar + a.getName() + "&name="+a.getName()+"\">" + a.getName() + "</a><br>";
+                    modelMap.addAttribute("attch", attch.equals("") ? "Pas de fichiers joints" : attch);
                 }
-
-                modelMap.addAttribute("attch", attch.equals("") ? "Pas de fichiers joints" : attch);
+                modelMap.addAttribute("recipientsM", memberRcpt);
+                modelMap.addAttribute("recipientsG", groupRcpt);
+            } else {
+                pageToLoad = "error";
+                modelMap.addAttribute("errorMessage", "Erreur lors du chargement de la page.");
             }
-            modelMap.addAttribute("recipientsM", memberRcpt);
-            modelMap.addAttribute("recipientsG", groupRcpt);
-        } else {
+        } catch (SQLException ex) {
+            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
             pageToLoad = "error";
+            modelMap.addAttribute("errorMessage", "Erreur lors de la récupération du messages.");
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+            pageToLoad = "error";
+            modelMap.addAttribute("errorMessage", "Erreur lors du chargement de la page.");
         }
 
         return pageToLoad;
 
-    }
-
-    @RequestMapping(value = {"download"}, method = {RequestMethod.GET, RequestMethod.POST})
-    public String dowloadAtt(HttpServletResponse response, HttpServletRequest request) {
-        InputStream is = null;
-        try {
-            String filepath = request.getParameter("dir");
-            String filename = request.getParameter("name");
-            File file = new File(filepath);
-            response.setContentType(new MimetypesFileTypeMap().getContentType(file));
-            response.setContentLength((int) file.length());
-            response.setHeader("content-disposition", "attachment; filename=" + URLEncoder.encode(filename, "UTF-8"));
-            is = new FileInputStream(file);
-            FileCopyUtils.copy(is, response.getOutputStream());
-            return null;
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(MessagePresenter.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            try {
-                is.close();
-            } catch (IOException ex) {
-                Logger.getLogger(MessagePresenter.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            return null;
-        }
     }
 
     /**
@@ -423,6 +502,13 @@ public class MessagePresenter extends Project_Management_Presenter {
         return mess;
     }
 
+    /**
+     * Récupère et ajoute les messages de l'utilisateur dans la boîte de
+     * réception
+     *
+     * @param token
+     * @param request
+     */
     private void generateAndAddMessagesInbox(String token, HttpServletRequest request) {
         ArrayList<MessageHeader> mh = this.getHeaderMessages(token, true);
         //[0] : Important, [1] : Have to answer, [2] : Urgent, [3] : Forwarded, [4] : Read, [5] unread
@@ -444,6 +530,12 @@ public class MessagePresenter extends Project_Management_Presenter {
         request.setAttribute("messFwd", messFwd);
     }
 
+    /**
+     * Récupère et ajoute les messages envoyés par l'utilisateur.
+     *
+     * @param token
+     * @param request
+     */
     private void generateAndAddMessagesOutbox(String token, HttpServletRequest request) {
         ArrayList<MessageHeader> mh = this.getHeaderMessages(token, false);
         request.setAttribute("messOutbox", mh);

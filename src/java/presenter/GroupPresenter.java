@@ -4,8 +4,6 @@
  */
 package presenter;
 
-import dataObjects.Recipient;
-import dataObjects.RecipientType;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,31 +38,45 @@ public class GroupPresenter extends Project_Management_Presenter {
      */
     @RequestMapping(value = {"listOfGroup"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptPageListOfGroups(HttpServletRequest request, ModelMap mm) {
-        //Récupération du token de la session
-        String token = this.getTokenSession(request.getSession(), mm);
-        if (Project_Management_Presenter.model.isValidToken(token) != null) {
-            ArrayList<GroupHeader> groupList = this.getGroups(token);
-            request.setAttribute("groupsTable", groupList);
+        try {
+            //Récupération du token de la session
+            String token = this.getTokenSession(request.getSession(), mm);
+            if (Project_Management_Presenter.model.isValidToken(token) != null) {
+                ArrayList<GroupHeader> groupList = this.getGroups(token);
+                request.setAttribute("groupsTable", groupList);
 
-            try {
-                if (Project_Management_Presenter.model.isAdmin(token)) {
-                    mm.addAttribute("display", "submit");
-                } else {
-                    mm.addAttribute("display", "hidden");
+                try {
+                    if (Project_Management_Presenter.model.isAdmin(token)) {
+                        mm.addAttribute("display", "submit");
+                    } else {
+                        mm.addAttribute("display", "hidden");
+                    }
+                } catch (SQLException ex) {
+                    Logger.getLogger(Project_Management_Presenter.class
+                            .getName()).log(Level.SEVERE, null, ex);
+                    mm.addAttribute("errorMessage", "Erreur Base de donnée.");
+                    return "error";
                 }
-            } catch (SQLException ex) {
-                Logger.getLogger(Project_Management_Presenter.class
-                        .getName()).log(Level.SEVERE, null, ex);
+                return GroupPresenter.urlDomain + "listOfGroup";
+            } else {
                 mm.addAttribute("errorMessage", "Erreur Base de donnée.");
                 return "error";
             }
-            return GroupPresenter.urlDomain + "listOfGroup";
-        } else {
-            mm.addAttribute("errorMessage", "Erreur Base de donnée.");
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+            mm.addAttribute("errorMessage", "Erreur lors du chargement/traitement  de la page.");
             return "error";
         }
     }
 
+    /**
+     * Intercepte la demande de chargement des pages "createGroup" et
+     * "updateGroup"
+     *
+     * @param request
+     * @param mm
+     * @return
+     */
     @RequestMapping(value = {"createGroup", "updateGroup"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String groupCreationRequest(HttpServletRequest request, ModelMap mm) {
         try {
@@ -100,8 +112,7 @@ public class GroupPresenter extends Project_Management_Presenter {
 
 
                 } catch (Exception ex) {
-                    Logger.getLogger(Project_Management_Presenter.class
-                            .getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 return null;
             } else {
@@ -109,16 +120,19 @@ public class GroupPresenter extends Project_Management_Presenter {
                 return "error";
             }
         } catch (SQLException ex) {
-            Logger.getLogger(Project_Management_Presenter.class
-                    .getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
             mm.addAttribute("errorMessage", "Erreur Base de donnée.");
             return "error";
         }
     }
 
-    /*
-     * PAGE JSP A FAIRE !!!!!!!!!!!!!!!
-     * 
+    /**
+     * Intercepte la demande de chargement de la page "groupCreated". Crée le
+     * groupe à jour
+     *
+     * @param request
+     * @param mm
+     * @return
      */
     @RequestMapping(value = {"groupCreated"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String groupCreationFormSubmitted(HttpServletRequest request, ModelMap mm) {
@@ -166,101 +180,119 @@ public class GroupPresenter extends Project_Management_Presenter {
         return GroupPresenter.urlDomain + "listOfGroup";
     }
 
-
-    /* Interception de la page qui affiche les infos du groupe
-     * et la liste des utilisateurs ajoutables
-     * checkGroup
+    /**
+     * Interception de la page qui affiche les infos du groupe et la liste des
+     * utilisateurs ajoutables checkGroup
      */
-    @RequestMapping(value = {"/checkGroup"}, method = {RequestMethod.GET, RequestMethod.POST})
+    @RequestMapping(value = {"checkGroup"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String interceptPageAdminCheckGroup(HttpServletRequest request, ModelMap mm) {
+        try {
+            String token = this.getTokenSession(request.getSession(), mm);
+            Group g;
+            String id_group;
+            if ((Project_Management_Presenter.model.isValidToken(token) != null)) {// && Project_Management_Presenter.model.isAdmin(token)) {
+                if (request.getParameter("ajouter_membre_groupe") != null) {
+                    id_group = request.getParameter("id_groupe");
+                    List<String> membres_a_ajouter;
+                    membres_a_ajouter = Arrays.asList(request.getParameterValues("ListeMembresAjouter"));
+                    if (addMembersGroup(token, membres_a_ajouter, id_group)) {
+                    } else {
+                        mm.addAttribute("errorMessage", "Échec de l'ajout des membres.");
+                        return "error";
+                    }
+                } else if (request.getParameter("supprimer_membre_groupe") != null) {
+                    id_group = request.getParameter("id_groupe");
+                    List<String> membres_a_supprimer;
+                    membres_a_supprimer = Arrays.asList(request.getParameterValues("ListeMembresGroupe"));
 
-        String token = this.getTokenSession(request.getSession(), mm);
-        Group g;
-        String id_group;
-        if ((Project_Management_Presenter.model.isValidToken(token) != null)) {// && Project_Management_Presenter.model.isAdmin(token)) {
-            if (request.getParameter("ajouter_membre_groupe") != null) {
-                id_group = request.getParameter("id_groupe");
-                List<String> membres_a_ajouter;
-                membres_a_ajouter = Arrays.asList(request.getParameterValues("ListeMembresAjouter"));
-                if (addMembersGroup(token, membres_a_ajouter, id_group)) {
+                    if (deleteMembersfromGroup(token, membres_a_supprimer, id_group)) {
+                    } else {
+                        mm.addAttribute("errorMessage", "Échec de la suppression des membres.");
+                        return "error";
+                    }
                 } else {
-                    mm.addAttribute("errorMessage", "Échec de l'ajout des membres.");
-                    return "error";
+                    id_group = request.getParameter("id_groupe");
                 }
-            } else if (request.getParameter("supprimer_membre_groupe") != null) {
-                id_group = request.getParameter("id_groupe");
-                List<String> membres_a_supprimer;
-                membres_a_supprimer = Arrays.asList(request.getParameterValues("ListeMembresGroupe"));
+                g = getGroupInfos(token, id_group);
+                mm.addAttribute("id_groupe", g.getId_group());
+                mm.addAttribute("nom_groupe", g.getGroup_name());
+                mm.addAttribute("desc_groupe", g.getDescr());
+                mm.addAttribute("chef_groupe", g.getChief() != null ? g.getChief().getId_member() : "");
 
-                if (deleteMembersfromGroup(token, membres_a_supprimer, id_group)) {
-                } else {
-                    mm.addAttribute("errorMessage", "Échec de la suppression des membres.");
-                    return "error";
-                }
+                ArrayList<Member> liste_membres = g.getMembers();
+                request.setAttribute("usersTable", liste_membres);
+
+                return null;
+
+                //deleteMemberInGroup(String idMember, String idGroup)
             } else {
-                id_group = request.getParameter("id_groupe");
+                mm.addAttribute("errorMessage", "Vous ne disposez pas de droits suffisants pour effectuer cette opération.");
+                return "error";
             }
-            g = getGroupInfos(token, id_group);
-            mm.addAttribute("id_groupe", g.getId_group());
-            mm.addAttribute("nom_groupe", g.getGroup_name());
-            mm.addAttribute("desc_groupe", g.getDescr());
-            mm.addAttribute("chef_groupe", g.getChief() != null ? g.getChief().getId_member() : "");
-
-            ArrayList<Member> liste_membres = g.getMembers();
-            request.setAttribute("usersTable", liste_membres);
-
-            return null;
-
-            //deleteMemberInGroup(String idMember, String idGroup)
-        } else {
-            mm.addAttribute("errorMessage", "Vous ne disposez pas de droits suffisants pour effectuer cette opération.");
+        } catch (Exception ex) {
+            Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+            mm.addAttribute("errorMessage", "Erreur lors du chargement/traitement  de la page.");
             return "error";
         }
     }
 
+    /**
+     * Intercepte le demande de chargement de la page "goupeUpdated". Mets à
+     * jour le groupe
+     *
+     * @param session
+     * @param mm
+     * @param request
+     * @return
+     */
     @RequestMapping(value = {"groupUpdated"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String intercpetGroupUpdated(HttpSession session, ModelMap mm, HttpServletRequest request) {
-        String token = this.getTokenSession(session, mm);
-        String id = Project_Management_Presenter.model.isValidToken(token);
-        String alertMess = "<div class=\"alert alert-error\">"
-                + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
-                + "<strong>\"Vous n'avez pas les droits suffisants.\"</strong></div>";
         try {
-            if (id != null && Project_Management_Presenter.model.isAdmin(token)) {
-                String idG = request.getParameter("idGroup").trim();
-                String nom = request.getParameter("nom").trim();
-                String descr = request.getParameter("descr").trim();
-                String[] members = request.getParameterValues("choixUtilsMChk");
-
-                if (members != null) {
-                    for (int i = 0; i < members.length; i++) {
-                        System.err.println(" MMM-*- " + members[i]);
-                        members[i] = (members[i].split("[(]")[1].split("[)]")[0]).trim();
-                    }
-                } else {
-                    members = new String[]{""};
-                }
-
-                String chef = request.getParameter("chef").split(",")[0].trim();
-                System.err.println("--------- **** //// ---- " + idG + " - " + nom + " - " + descr + " - " + members + " " + chef);
-                if (this.updateGroup(idG, nom, descr, members, chef)) {
-                    alertMess = "<div class=\"alert alert-success\">"
-                            + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
-                            + "<strong>\"Mise à jour du groupe réussi.\"</strong></div>";
-                } else {
-                    alertMess = "<div class=\"alert alert-error\">"
-                            + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
-                            + "<strong>\"Echec de la mise à jour du groupe.\"</strong></div>";
-                }
-            }
-
-        } catch (SQLException ex) {
-            alertMess = "<div class=\"alert alert-error\">"
+            String token = this.getTokenSession(session, mm);
+            String id = Project_Management_Presenter.model.isValidToken(token);
+            String alertMess = "<div class=\"alert alert-error\">"
                     + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
-                    + "<strong>\"Erreur base de données.\"</strong></div>";
+                    + "<strong>\"Vous n'avez pas les droits suffisants.\"</strong></div>";
+            try {
+                if (id != null && Project_Management_Presenter.model.isAdmin(token)) {
+                    String idG = request.getParameter("idGroup").trim();
+                    String nom = request.getParameter("nom").trim();
+                    String descr = request.getParameter("descr").trim();
+                    String[] members = request.getParameterValues("choixUtilsMChk");
+
+                    if (members != null) {
+                        for (int i = 0; i < members.length; i++) {
+                            System.err.println(" MMM-*- " + members[i]);
+                            members[i] = (members[i].split("[(]")[1].split("[)]")[0]).trim();
+                        }
+                    } else {
+                        members = new String[]{""};
+                    }
+
+                    String chef = request.getParameter("chef").split(",")[0].trim();
+                    if (this.updateGroup(idG, nom, descr, members, chef)) {
+                        alertMess = "<div class=\"alert alert-success\">"
+                                + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                                + "<strong>\"Mise à jour du groupe réussi.\"</strong></div>";
+                    } else {
+                        alertMess = "<div class=\"alert alert-error\">"
+                                + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                                + "<strong>\"Echec de la mise à jour du groupe.\"</strong></div>";
+                    }
+                }
+
+            } catch (SQLException ex) {
+                alertMess = "<div class=\"alert alert-error\">"
+                        + "<a class=\"close\" data-dismiss=\"alert\">×</a>"
+                        + "<strong>\"Erreur base de données.\"</strong></div>";
+                Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            mm.addAttribute("alert", alertMess);
+            return this.interceptPageListOfGroups(request, mm);
+        } catch (Exception ex) {
             Logger.getLogger(Project_Management_Presenter.class.getName()).log(Level.SEVERE, null, ex);
+            mm.addAttribute("errorMessage", "Erreur lors du chargement/traitement  de la page.");
+            return "error";
         }
-        mm.addAttribute("alert", alertMess);
-        return this.interceptPageListOfGroups(request, mm);
     }
 }
