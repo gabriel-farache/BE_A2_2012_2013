@@ -57,7 +57,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         return Project_Management_Presenter.me;
     }
 
-    public Project_Management_Presenter() {
+    protected Project_Management_Presenter() {
         System.out.println("Lancement du serveur web");
 
         try {

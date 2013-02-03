@@ -271,6 +271,14 @@
                                     <% }%>                                  
                                 </ul>
                             </li>
+                            <% if (session.getAttribute("isAdmin") != null) {%>     
+                            <li class="dropdown">
+                                <a id="drop5" href="#" role="button" class="dropdown-toggle" data-toggle="dropdown">Import XML <b class="caret"></b></a>
+                                <ul class="dropdown-menu" role="menu" aria-labelledby="drop1">
+                                    <li><a tabindex="-1" href="/BE_A2_2012_2013/user/createNewUser">Importer un fichier XML</a></li> 
+                                </ul>
+                            </li>
+                            <% }%> 
                         </ul>
                         <% if (session.getAttribute("token") != null) {%> 
                         <a href="/BE_A2_2012_2013/deconnection"><input type="button" class="btn btn-danger pull-right" value="D&eacute;connexion"/></a>

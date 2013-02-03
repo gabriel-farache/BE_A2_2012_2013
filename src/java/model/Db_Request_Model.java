@@ -590,7 +590,6 @@ public class Db_Request_Model implements User_Model_Interface, Group_Model_Inter
         if (idMess != null) {
             m.setId("" + idMess);
             for (Recipient recipient : recipients) {
-                System.err.println("**** "+recipient.getId() + "   "+recipient.getType()+"--------------------------------------------------------------------------------------------------------------------------------------------------------------   ");
 
                 if (recipient.getId() != null && (recipient.getId().trim().compareToIgnoreCase("") != 0 || recipient.getType().equals(RecipientType.ALL))) {
                     if (recipient.getType().equals(RecipientType.GROUP)) {
@@ -600,11 +599,9 @@ public class Db_Request_Model implements User_Model_Interface, Group_Model_Inter
                             notifyNewMessage(mem, m);
                         }
                     } else if (recipient.getType().equals(RecipientType.ALL)) {
-                        System.err.println("0000000000 --------------------------------------------------------------------------------------------------------------------------------------------------------------   ");
 
                         ArrayList<Member> members = Db_Request_Model.idb.getAllMembers();
                         for (Member member : members) {
-                            System.err.println("--------------------------------------------------------------------------------------------------------------------------------------------------------------   ");
                             Db_Request_Model.idb.addSendMessageToMember(m.getSender().trim(), member.getId_member(), idMess, RecipientType.USER);
                         }
 
