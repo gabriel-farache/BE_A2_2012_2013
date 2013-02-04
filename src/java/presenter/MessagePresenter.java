@@ -97,10 +97,11 @@ public class MessagePresenter extends Project_Management_Presenter {
     @RequestMapping(value = {"createMessage"}, method = {RequestMethod.GET, RequestMethod.POST})
     public String createMessage(HttpServletRequest request, ModelMap m) {
         String token = this.getTokenSession(request.getSession(), m);
+
         try {
             if (token != null) {
-                if ((Project_Management_Presenter_Intern_Methods.model.isValidToken(token)) != null) {
-                    return null;
+                if ((Project_Management_Presenter_Intern_Methods.model.isValidToken(token)) == null) {           
+                    return "connection";
                 } else {
                     this.createNewMessage(request, m);
                     this.createFwdAnswMessage(request, m, token);
@@ -112,7 +113,7 @@ public class MessagePresenter extends Project_Management_Presenter {
             m.addAttribute("errorMessage", "Erreur lors du chargement de la page.");
             return "error";
         }
-        return "connection";
+        return null;
     }
 
     /**
