@@ -60,7 +60,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
     protected Project_Management_Presenter() {
         System.out.println("Lancement du serveur web");
 
-        try {
+       /* try {
             Endpoint.publish(
                     "http://10.32.40.218:8081/BE_A2_2012_2013/presenterService",
                     Project_Management_Presenter_Intern_Methods.getInstance());
@@ -68,7 +68,7 @@ public class Project_Management_Presenter extends Project_Management_Presenter_I
         } catch (Exception ex) {
             Logger.getLogger(Project_Management_Presenter_Intern_Methods.class.getName()).log(Level.SEVERE, null, ex);
 
-        }
+        }*/
     }
 
     @RequestMapping(value = {"*"}, method = {RequestMethod.GET, RequestMethod.POST})

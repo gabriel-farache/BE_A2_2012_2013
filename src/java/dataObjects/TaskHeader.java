@@ -138,14 +138,19 @@ public class TaskHeader extends Header {
      */
     public void setDueDate(String date) {
         int day, month, year, hours, mins;
-
         try {
             if (date.contains("-")) {
+                try {
+                    date = date.split("T")[0] + " " + date.split("T")[1];
+                } catch (Exception ex) {
+                    Logger.getLogger(TaskHeader.class.getName()).log(Level.SEVERE, null, ex);
+                }
                 year = Integer.parseInt(date.split("-")[0]);
                 month = Integer.parseInt(date.split("-")[1]);
                 day = Integer.parseInt(date.split("-")[2].split(" ")[0]);
                 hours = Integer.parseInt(date.split(" ")[1].split(":")[0]);
-                mins = Integer.parseInt(date.split(" ")[1].split(":")[1]);
+                mins = 0;
+
             } else {
                 day = Integer.parseInt(date.split("/")[0]);
                 month = Integer.parseInt(date.split("/")[1]);

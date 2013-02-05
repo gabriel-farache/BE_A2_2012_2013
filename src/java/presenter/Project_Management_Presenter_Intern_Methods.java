@@ -54,7 +54,7 @@ public class Project_Management_Presenter_Intern_Methods implements Presenter_In
         return Project_Management_Presenter_Intern_Methods.me;
     }
 
-    protected Project_Management_Presenter_Intern_Methods() {
+    public Project_Management_Presenter_Intern_Methods() {
         Project_Management_Presenter_Intern_Methods.model = Db_Request_Model.getInstance(Project_Management_Presenter_Intern_Methods.me);
     }
 
